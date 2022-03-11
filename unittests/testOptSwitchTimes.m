@@ -1,5 +1,5 @@
 % Define test values
-eps = 0.1;
+eps = 0.001;
 num_scenarios = 9;
 v_max  = [  2       2       2       1       1       8       8       8       8       ];
 a_max  = [  2       2       2       2       2       2       2       2       2       ];
@@ -40,6 +40,11 @@ for i=1:num_scenarios
         fail = fail + 1;
     end
     
+    % Skip for first test
+    if i == 1
+        continue
+    end
+
     % Execute same scenario in opposite direction
     t_ltp = ltp.optSwitchTimes(-q_goal(i), -q_0(i), -v_0(i), -a_0(i));
     if(all(abs(t_ltp - t(i,:)) < eps))
@@ -54,5 +59,5 @@ end
 
 % Print test results
 disp("TestOptSwitchTimes results:")
-disp("Sucessful: " + sucess + " out of " + 2*num_scenarios)
-disp("Failure:   " + fail + " out of " + 2*num_scenarios)
+disp("Sucessful: " + sucess + " out of " + (2 * num_scenarios - 1))
+disp("Failure:   " + fail + " out of " + (2 * num_scenarios - 1))
