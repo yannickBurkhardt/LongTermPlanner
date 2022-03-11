@@ -1,5 +1,5 @@
-classdef LTPlanner
-    %LTTPLANNER Summary of this class goes here
+classdef LTPlanner < handle
+    %LTPLANNER Summary of this class goes here
     %   Detailed explanation goes here
     
     properties
@@ -19,13 +19,15 @@ classdef LTPlanner
     end
     
     methods
-        function obj = lttPlanner(DoF, Tsample, v_max, a_max, j_max)
-            %LTTPLANNER Construct an instance of this class
-            obj.DoF = DoF;
-            obj.Tsample = Tsample;
-            obj.j_max = j_max;
-            obj.a_max = a_max;
-            obj.v_max = v_max;
+        function obj = LTPlanner(varargin)
+            %LTPLANNER Construct an instance of this class
+            if nargin>2
+                obj.v_max = varargin{3};
+                obj.a_max = varargin{4};
+                obj.j_max = varargin{5};
+            end
+            obj.DoF = varargin{1};
+            obj.Tsample = varargin{2};
         end
         
         function obj = setLimits(obj, v_max, a_max, j_max)
@@ -51,7 +53,7 @@ classdef LTPlanner
             end
         end
         
-        function t_rel = optSwitchTimes(obj,q_goal, q, v_0, a_0)
+        function t = optSwitchTimes(obj,q_goal, q, v_0, a_0)
             %OPTSWITCHTIMES Calculate time-optimal jerk swtiches
 
             % Factor by which dq is scaled down per iteration (tunable):
@@ -59,6 +61,7 @@ classdef LTPlanner
             % Smaller values -> faster runtime
             % Larger values -> smoother trajectories (joints are more likely to arrive at the same time)
             v_max_reduction = 0.9;
+            v_max_reduced = obj.v_max;
             
             % Parameters for calculation
             dir = zeros(obj.DoF,1); % Direction of the goal (only +1 or -1)
@@ -85,7 +88,7 @@ classdef LTPlanner
 
                 % If current a_0 is opposite to goal direction, first adust a_0 to zero
                 if((q_goal(i) - q(i))*a_0(i) < 0)
-                    t_rel_reset_a_0(i) = abs(a_0(i))/obj.obj.j_max(i);
+                    t_rel_reset_a_0(i) = abs(a_0(i))/obj.j_max(i);
                     v_0_ = v_0(i) + a_0(i) * t_rel_reset_a_0(i) + dir(i)*1/2*obj.j_max(i)*t_rel_reset_a_0(i)^2; % do not overwrite yet
                     q(i) = q(i) + v_0(i)*t_rel_reset_a_0(i) + 1/2*a_0(i)*t_rel_reset_a_0(i)^2 + dir(i)*1/6*obj.j_max(i)*t_rel_reset_a_0(i)^3;
                     v_0(i) = v_0_;
@@ -121,15 +124,15 @@ classdef LTPlanner
 
                     % a = +- a_max (const) -> linear v
                     % works but only if all times > 0
-                    t_rel(i,2) = (obj.v_max(i) - v_0(i) - 1/2*t_rel(i,1)*a_0(i))/obj.a_max(i) - 1/2*(t_rel(i,1) + t_rel(i,3));
-                    t_rel(i,6) = obj.v_max(i)/obj.a_max(i) - 1/2*(t_rel(i,5) + t_rel(i,7));
+                    t_rel(i,2) = (v_max_reduced(i) - v_0(i) - 1/2*t_rel(i,1)*a_0(i))/obj.a_max(i) - 1/2*(t_rel(i,1) + t_rel(i,3));
+                    t_rel(i,6) = v_max_reduced(i)/obj.a_max(i) - 1/2*(t_rel(i,5) + t_rel(i,7));
 
                     % Check if max acceleration cannot be reached
                     if(t_rel(i,2) < 0)
                         % Check if root is positive
                         % (should always be)
-                        if(obj.j_max(i)*(obj.v_max(i) - v_0(i)) + 1/2*a_0(i)^2 > 0)
-                            t_rel(i,3) = sqrt(obj.j_max(i)*(obj.v_max(i) - v_0(i)) + 1/2*a_0(i)^2)/obj.j_max(i);
+                        if(obj.j_max(i)*(v_max_reduced(i) - v_0(i)) + 1/2*a_0(i)^2 > 0)
+                            t_rel(i,3) = sqrt(obj.j_max(i)*(v_max_reduced(i) - v_0(i)) + 1/2*a_0(i)^2)/obj.j_max(i);
                             t_rel(i,1) = t_rel(i,3) - a_0(i)/obj.j_max(i);
                             t_rel(i,2) = 0;
                         else
@@ -141,8 +144,8 @@ classdef LTPlanner
                     if(t_rel(i,6)<0)
                         % Check if root is positive
                         % (should always be)
-                        if(obj.v_max(i)/obj.j_max(i) > 0)
-                            t_rel(i,5) = sqrt(obj.v_max(i)/obj.j_max(i));
+                        if(v_max_reduced(i)/obj.j_max(i) > 0)
+                            t_rel(i,5) = sqrt(v_max_reduced(i)/obj.j_max(i));
                             t_rel(i,7) = t_rel(i,5);
                             t_rel(i,6) = 0;
                         else
@@ -155,7 +158,7 @@ classdef LTPlanner
                     % v = v_max (const) -> linear q
                     q_part1 = v_0(i)*(t_rel(i,1) + t_rel(i,2) + t_rel(i,3)) + a_0(i)*(1/2*t_rel(i,1)^2 + t_rel(i,1)*(t_rel(i,2) + t_rel(i,3)) + 1/2*t_rel(i,3)^2) + obj.j_max(i)*(1/6*t_rel(i,1)^3 + 1/2*t_rel(i,1)^2*(t_rel(i,2) + t_rel(i,3)) - 1/6*t_rel(i,3)^3 + 1/2*t_rel(i,1)*t_rel(i,3)^2) + obj.a_max(i)*(1/2*t_rel(i,2)^2 + t_rel(i,2)*t_rel(i,3));
                     q_part2 = obj.j_max(i)*(1/6*t_rel(i,7)^3 + 1/2*t_rel(i,7)^2*(t_rel(i,6) + t_rel(i,5)) - 1/6*t_rel(i,5)^3 + 1/2*t_rel(i,7)*t_rel(i,5)^2) + obj.a_max(i)*(1/2*t_rel(i,6)^2 + t_rel(i,6)*t_rel(i,5));
-                    t_rel(i,4) = (abs(q_goal(i) - q(i)) - q_part1 - q_part2)/obj.v_max(i);
+                    t_rel(i,4) = (abs(q_goal(i) - q(i)) - q_part1 - q_part2)/v_max_reduced(i);
 
                     % Check if max velocity cannot be reached
                     if(t_rel(i,4) < 0)
@@ -175,9 +178,9 @@ classdef LTPlanner
                         if(t_rel(i,6) < 0 || t_rel(i,2) < 0) 
                             % Equations not solvable, reduce v_max until solution is found
                             reduce_v_max = 1;
-                            obj.v_max(i) = obj.v_max(i) * v_max_reduction;
+                            v_max_reduced(i) = v_max_reduced(i) * v_max_reduction;
                             % Stop if v_max is reduced too far
-                            if(obj.v_max(i) < abs(v_0(i)))
+                            if(v_max_reduced(i) < abs(v_0(i)))
                                 % Stop movement
                                 stop(i) = 1;
                                 break
