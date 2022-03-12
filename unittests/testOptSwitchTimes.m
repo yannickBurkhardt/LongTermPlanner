@@ -60,4 +60,8 @@ end
 % Print test results
 disp("TestOptSwitchTimes results:")
 disp("Sucessful: " + sucess + " out of " + (2 * num_scenarios - 1))
-disp("Failure:   " + fail + " out of " + (2 * num_scenarios - 1))
+
+% Throw error if at least one test failed
+if fail > 0
+    error("Failure:   " + fail + " out of " + (2 * num_scenarios - 1))
+end
