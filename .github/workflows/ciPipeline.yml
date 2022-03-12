@@ -1,8 +1,8 @@
-name: Run MATLAB Script on GitHub-Hosted Runner
+name: Unittests
 on: [push]
 jobs:
-  my-job:
-    name: Run MATLAB Script
+  testOptSwitchTimes:
+    name: testOptSwitchTimes
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
