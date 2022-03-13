@@ -56,12 +56,10 @@ classdef LTPlanner < handle
         function t = optSwitchTimes(obj,q_goal, q, v_0, a_0)
             %OPTSWITCHTIMES Calculate time-optimal jerk swtiches
 
-            % Factor by which dq is scaled down per iteration (tunable):
-            % Has to be in (0;1)
-            % Smaller values -> faster runtime
-            % Larger values -> smoother trajectories (joints are more likely to arrive at the same time)
-            v_max_reduction = 0.9;
-            v_max_reduced = obj.v_max;
+            % Set number of iteration cycles for numerc approximation
+            % (only in case v_max is not reach)
+            v_max_reduction_cycles = 10;
+            v_max_reduced = obj.v_max*ones(obj.DoF);
             
             % Parameters for calculation
             dir = zeros(obj.DoF,1); % Direction of the goal (only +1 or -1)
@@ -112,9 +110,8 @@ classdef LTPlanner < handle
                 end
 
                 % Reduction loop of v_max (if necessary)
-                reduce_v_max = 1;                
-                while(reduce_v_max)
-                    reduce_v_max = 0;
+                v_max_reduction_loop_no = 0;
+                while(v_max_reduction_loop_no < v_max_reduction_cycles)
 
                     % j = +- j_max (const) -> linear a
                     t_rel(i,1) = (obj.a_max(i) - a_0(i))/obj.j_max(i);
@@ -131,28 +128,28 @@ classdef LTPlanner < handle
                     if(t_rel(i,2) < 0)
                         % Check if root is positive
                         % (should always be)
-                        if(obj.j_max(i)*(v_max_reduced(i) - v_0(i)) + 1/2*a_0(i)^2 > 0)
+%                         if(obj.j_max(i)*(v_max_reduced(i) - v_0(i)) + 1/2*a_0(i)^2 > 0)
                             t_rel(i,3) = sqrt(obj.j_max(i)*(v_max_reduced(i) - v_0(i)) + 1/2*a_0(i)^2)/obj.j_max(i);
                             t_rel(i,1) = t_rel(i,3) - a_0(i)/obj.j_max(i);
                             t_rel(i,2) = 0;
-                        else
-                            % Stop movement
-                            stop(i) = 1;
-                            break
-                        end
+%                         else
+%                             % Stop movement
+%                             stop(i) = 1;
+%                             break
+%                         end
                     end
                     if(t_rel(i,6)<0)
                         % Check if root is positive
                         % (should always be)
-                        if(v_max_reduced(i)/obj.j_max(i) > 0)
+%                         if(v_max_reduced(i)/obj.j_max(i) > 0)
                             t_rel(i,5) = sqrt(v_max_reduced(i)/obj.j_max(i));
                             t_rel(i,7) = t_rel(i,5);
                             t_rel(i,6) = 0;
-                        else
-                            % Stop movement
-                            stop(i) = 1;
-                            break
-                        end
+%                         else
+%                             % Stop movement
+%                             stop(i) = 1;
+%                             break
+%                         end
                     end
 
                     % v = v_max (const) -> linear q
@@ -170,39 +167,60 @@ classdef LTPlanner < handle
                             t_rel(i,2) = (-v_0(i) - a_0(i)*t_rel(i,1) - 1/2*obj.j_max(i)*t_rel(i,1)^2 + 1/2*obj.j_max(i)*t_rel(i,3)^2 + 1/2*obj.j_max(i)*t_rel(i,7)^2 - 1/2*obj.j_max(i)*t_rel(i,5)^2)/obj.a_max(i) - t_rel(i,3) + t_rel(i,6) + t_rel(i,5);
                             t_rel(i,4) = 0;
                         else
-                            % Stop movement
-                            stop(i) = 1;
-                            break
+                            % Approximate v_max
+                            v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
+                            v_max_reduced(i) = v_max_reduced(i) * (1 + (1/2)^v_max_reduction_loop_no);
+%                             % Stop movement
+%                             stop(i) = 1;
+%                             break
                         end
                         % Check if max velocity and max acceleration cannot be reached
                         if(t_rel(i,6) < 0 || t_rel(i,2) < 0) 
-                            % Equations not solvable, reduce v_max until solution is found
-                            reduce_v_max = 1;
-                            v_max_reduced(i) = v_max_reduced(i) * v_max_reduction;
-                            % Stop if v_max is reduced too far
-                            if(v_max_reduced(i) < abs(v_0(i)))
-                                % Stop movement
-                                stop(i) = 1;
-                                break
+                            % Equations not solvable, approximate v_max
+                            v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
+                            v_max_reduced(i) = v_max_reduced(i) * (1 - (1/2)^v_max_reduction_loop_no);
+%                             % Stop if v_max is reduced too far %TODO
+%                             if(v_max_reduced(i) < abs(v_0(i)))
+%                                 % Stop movement
+%                                 stop(i) = 1;
+%                                 break
+%                             end
+                        else
+                            if v_max_reduction_loop_no == 0
+                                % Analytic solution found
+                                break;
+                            else
+                                % Approximate v_max
+                                v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
+                                v_max_reduced(i) = v_max_reduced(i) * (1 + (1/2)^v_max_reduction_loop_no);
                             end
                         end
-                    end
-
-                    % Add time to reset a_0 to first time
-                    t_rel(i,1) = t_rel(i,1) + t_rel_reset_a_0(i);
-
-                    % Stop if any time is negative
-                    for j=1:7
-                        if(t_rel(i,j) < 0)
-                            stop(i) = 1;
-                            break
+                    else
+                        if v_max_reduction_loop_no == 0
+                            % Analytic solution found
+                            break;
+                        else
+                            % Approximate v_max
+                            v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
+                            v_max_reduced(i) = v_max_reduced(i) * (1 + (1/2)^v_max_reduction_loop_no);
                         end
                     end
-
-                    % Calculate absolute times for jerk switches
-                    t(i,:) = cumsum(t_rel(i,:));
                 end
             end
+
+            % Add time to reset a_0 to first time
+            t_rel(i,1) = t_rel(i,1) + t_rel_reset_a_0(i);
+
+            % Stop if any time is negative
+            for j=1:7
+                if(t_rel(i,j) < 0)
+                    stop(i) = 1;
+                    break
+                end
+            end
+
+            % Calculate absolute times for jerk switches
+            t(i,:) = cumsum(t_rel(i,:));
         end
     end
 end
