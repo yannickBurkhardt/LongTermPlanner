@@ -82,16 +82,16 @@ classdef LTPlanner < handle
                 end
 
                 % Calculate direction of movement
-                dir(i) = sign(q_goal(i) - q(i));
+                dir(i) = sign(q_goal(i) - getStopPos(obj, v_0, a_0, i));
 
-                % If current a_0 is opposite to goal direction, first adust a_0 to zero
-                if((q_goal(i) - q(i))*a_0(i) < 0)
-                    t_rel_reset_a_0(i) = abs(a_0(i))/obj.j_max(i);
-                    v_0_ = v_0(i) + a_0(i) * t_rel_reset_a_0(i) + dir(i)*1/2*obj.j_max(i)*t_rel_reset_a_0(i)^2; % do not overwrite yet
-                    q(i) = q(i) + v_0(i)*t_rel_reset_a_0(i) + 1/2*a_0(i)*t_rel_reset_a_0(i)^2 + dir(i)*1/6*obj.j_max(i)*t_rel_reset_a_0(i)^3;
-                    v_0(i) = v_0_;
-                    a_0(i) = 0;
-                end
+%                 % If current a_0 is opposite to goal direction, first adust a_0 to zero
+%                 if((q_goal(i) - q(i))*a_0(i) < 0)
+%                     t_rel_reset_a_0(i) = abs(a_0(i))/obj.j_max(i);
+%                     v_0_ = v_0(i) + a_0(i) * t_rel_reset_a_0(i) + dir(i)*1/2*obj.j_max(i)*t_rel_reset_a_0(i)^2; % do not overwrite yet
+%                     q(i) = q(i) + v_0(i)*t_rel_reset_a_0(i) + 1/2*a_0(i)*t_rel_reset_a_0(i)^2 + dir(i)*1/6*obj.j_max(i)*t_rel_reset_a_0(i)^3;
+%                     v_0(i) = v_0_;
+%                     a_0(i) = 0;
+%                 end
 
                 % If goal is in negative direction, change v_0 and a_0
                 if(dir(i) < 0)
@@ -222,6 +222,79 @@ classdef LTPlanner < handle
             % Calculate absolute times for jerk switches
             t(i,:) = cumsum(t_rel(i,:));
         end
+        
+%         function [q, a, t_v_to_0] = resetVel(obj, q_0, v_0, a_0, i)            
+%             % Map v and a into pos. direction
+%             dir = sign(v_0);
+%             a_0 = a_0 * dir;
+%             v_0 = abs(v_0);
+%             
+%             % Calculate time required to reset v
+%             t_v_to_0 = a_0 / obj.j_max(i) + sqrt((a_0 / obj.j_max(i))^2 + 2*v_0/obj.j_max(i));
+%             a = a_0 - obj.j_max(i)*t_v_to_0 * -dir;
+% 
+%             % Check if max. acceleration is exceeded
+%             if a < -obj.a_max(i)
+%                 t_v_to_0 = (obj.a_max(i) + a_0) / obj.j_max(i);
+%                 t_v_to_0 = t_v_to_0 + (- 1/2 * obj.j_max(i) * t_v_to_0^2 + a_0 * t_v_to_0 + v_0) / obj.a_max(i);
+%                 a = obs.a_max * -dir;
+%                 q = 0;
+%             else
+%                 % Calculate new q if max. acceleration was not reached
+%                 q = 
+%             end
+%         end
+        
+        % ToDo: Function to calculate trajectory if resetting of v_0 would
+        % lead to overshooting the goal again
+        
+        function q = getStopPos(obj, v_0, a_0, i)
+            % GETSTOPPOS % Calculate how far a joints moves until it can be
+            % stopped
+            
+            % Set direction opposite to maximal velocity to be reached
+            dir(i) = -sign(v_0(i) + 1/2*a_0(i)*abs(a_0(i))/obj.j_max(i));
+
+            % If current a_0 and d are in the same direction, first bring a_0
+            % to zero
+%             t_rel_reset_a_0(i) = 0;
+%             if(v_0(i)*a_0(i) > 0)
+%                 t_rel_reset_a_0(i) = abs(a_0(i))/obj.j_max(i);
+%                 v_0(i) = v_0(i) + a_0(i) * t_rel_reset_a_0(i) - sign(v_0(i))*1/2*obj.j_max(i)*t_rel_reset_a_0(i)^2;
+%                 a_0(i) = 0;
+%             end
+
+            % If v_0 is in positive, change v_0 and a_0
+            if(dir(i) < 0)
+                a_0(i) = -a_0(i);
+                v_0(i) = -v_0(i);
+            end
+
+            % Stop joint asap
+            t_rel(i,1) = (obj.a_max(i) - a_0(i))/obj.j_max(i);
+            t_rel(i,3) = obj.a_max(i)/obj.j_max(i);
+            t_rel(i,2) = (- v_0(i) - 1/2*t_rel(i,1)*a_0(i))/obj.a_max(i) - 1/2*(t_rel(i,1) + t_rel(i,3));
+            if(t_rel(i,2) < 0)
+                % Check if root is positive, otherwise switch times
+                root = obj.j_max(i)*v_0(i) - 1/2*a_0(i)*abs(a_0(i));
+                if(root > 0)
+                    t_rel(i,1) = sqrt(root)/obj.j_max(i);
+                    t_rel(i,3) = t_rel(i,1) - a_0(i)/obj.j_max(i);
+                else
+                    t_rel(i,3) = sqrt(-root)/obj.j_max(i);
+                    t_rel(i,1) = t_rel(i,3) - a_0(i)/obj.j_max(i);
+                end
+                t_rel(i,2) = 0;
+            end
+            
+%             % Add reset factor to t1
+%             t_rel(i,1) = t_rel(i,1) + t_rel_reset_a_0(i);
+            
+            % Calculate q
+            q = v_0(i)*(t_rel(i,1) + t_rel(i,2) + t_rel(i,3)) + a_0(i)*(1/2*t_rel(i,1)^2 + t_rel(i,1)*(t_rel(i,2) + t_rel(i,3)) + 1/2*t_rel(i,3)^2) + obj.j_max(i)*(1/6*t_rel(i,1)^3 + 1/2*t_rel(i,1)^2*(t_rel(i,2) + t_rel(i,3)) - 1/6*t_rel(i,3)^3 + 1/2*t_rel(i,1)*t_rel(i,3)^2) + obj.a_max(i)*(1/2*t_rel(i,2)^2 + t_rel(i,2)*t_rel(i,3));
+
+            % Correct direction
+            q = dir(i) * q;
+        end
     end
 end
-
