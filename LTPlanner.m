@@ -58,12 +58,13 @@ classdef LTPlanner < handle
 
             % Set number of iteration cycles for numerc approximation
             % (only in case v_max is not reach)
-            v_max_reduction_cycles = 10;
+            v_max_reduction_cycles = 14;
             v_max_reduced = obj.v_max*ones(obj.DoF);
             
             % Parameters for calculation
             dir = zeros(obj.DoF,1); % Direction of the goal (only +1 or -1)
             t_rel = zeros(obj.DoF,7); % Time that is required for one jerk phase
+            t_rel_prev = zeros(1,7);
             t = zeros(obj.DoF,7); % Absolute time that is required to reach the end of current jerk phase
             stop = zeros(obj.DoF,1); % Exception if a goal cannot be reached -> Stop this joint asap (boolean)
             slowest_i = 0; % Number of slowest joint
@@ -178,7 +179,11 @@ classdef LTPlanner < handle
                         if(t_rel(i,6) < 0 || t_rel(i,2) < 0) 
                             % Equations not solvable, approximate v_max
                             v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
-                            v_max_reduced(i) = v_max_reduced(i) * (1 - (1/2)^v_max_reduction_loop_no);
+                            v_max_reduced(i) = v_max_reduced(i) - obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+                            
+                            % Assign t_rel from last valid loop
+                            t_rel(i,:) = t_rel_prev;
+                            
 %                             % Stop if v_max is reduced too far %TODO
 %                             if(v_max_reduced(i) < abs(v_0(i)))
 %                                 % Stop movement
@@ -192,7 +197,8 @@ classdef LTPlanner < handle
                             else
                                 % Approximate v_max
                                 v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
-                                v_max_reduced(i) = v_max_reduced(i) * (1 + (1/2)^v_max_reduction_loop_no);
+                                v_max_reduced(i) = v_max_reduced(i) + obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+                                t_rel_prev = t_rel(i,:);
                             end
                         end
                     else
@@ -202,7 +208,8 @@ classdef LTPlanner < handle
                         else
                             % Approximate v_max
                             v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
-                            v_max_reduced(i) = v_max_reduced(i) * (1 + (1/2)^v_max_reduction_loop_no);
+                            v_max_reduced(i) = v_max_reduced(i) + obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+                            t_rel_prev = t_rel(i,:);
                         end
                     end
                 end
