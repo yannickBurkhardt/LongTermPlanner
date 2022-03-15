@@ -53,7 +53,7 @@ classdef LTPlanner < handle
             end
         end
         
-        function t = optSwitchTimes(obj,q_goal, q_0, v_0, a_0)
+        function t = optSwitchTimes(obj, q_goal, q_0, v_0, a_0)
             %OPTSWITCHTIMES Calculate time-optimal jerk swtiches
 
             % Set number of iteration cycles for numerc approximation
@@ -66,8 +66,6 @@ classdef LTPlanner < handle
             t_rel = zeros(obj.DoF,7); % Time that is required for one jerk phase
             t_rel_prev = zeros(1,7);
             t = zeros(obj.DoF,7); % Absolute time that is required to reach the end of current jerk phase
-            stop = zeros(obj.DoF,1); % Exception if a goal cannot be reached -> Stop this joint asap (boolean)
-            slowest_i = 0; % Number of slowest joint
 
             %% Analyse input data
             % Check if inputs are in limits
@@ -75,12 +73,6 @@ classdef LTPlanner < handle
             
             for i=1:obj.DoF
                 
-                % Stop joint for position equal to goal
-                if(q_goal(i) == q_0(i))
-                    stop(i) = 1;
-                    continue
-                end
-
                 % Calculate direction of movement
                 dir(i) = sign(q_goal(i) - (q_0(i) + getStopPos(obj, v_0, a_0, i)));
 
@@ -93,12 +85,6 @@ classdef LTPlanner < handle
             
             %% Calculate min. time required per joint to reach goal state
             for i=1:obj.DoF
-
-                % Skip this joint if current joint has to be stopped or is the
-                % slowest joint
-                if(stop(i) || i == slowest_i)
-                    continue
-                end
 
                 % Reduction loop of v_max (if necessary)
                 v_max_reduction_loop_no = 0;
@@ -253,6 +239,46 @@ classdef LTPlanner < handle
 
             % Correct direction
             q = dir(i) * q;
-        end 
+        end
+        
+        function [q_traj, v_traj, a_traj] = getTrajectories(obj, t, dir, q_0, v_0, a_0)
+            %GETTRAJECTORIES % Calculate trajectory based on jerk switch
+            % times
+            
+            % Length of trajectory in samples
+            traj_len = zeros(obj.DoF,1);
+            for i=1:obj.DoF
+                traj_len(i) = ceil(t(i,7)/obj.Tsample) + 1;
+            end
+
+            for i=1:obj.DoF
+                % Calculate jerks, accelerations, velocities and positions
+                j_traj = zeros(1,traj_len(i));
+
+                % Calculate jerks
+                sampled_t = ones(1,7); % Jerk switch times in samples
+                for j=1:7
+                    sampled_t(j) = floor(t(i,j)/obj.Tsample) + 1; %TODO: Fine-tuning
+                end
+
+                % Calculate jerk trajectory
+                j_traj(1:sampled_t(1)) = dir(i) * obj.j_max(i);
+                j_traj(sampled_t(1):sampled_t(2)) = 0;
+                j_traj((sampled_t(2)+1):sampled_t(3)) = -dir(i) * obj.j_max(i);
+                j_traj(sampled_t(3):sampled_t(4)) = 0;
+                j_traj((sampled_t(4)+1):sampled_t(5)) = -dir(i) * obj.j_max(i);
+                j_traj(sampled_t(5):sampled_t(6)) = 0;
+                j_traj((sampled_t(6)+1):sampled_t(7)) = dir(i) * obj.j_max(i);
+
+                % Calculate accelerations
+                a_traj = obj.Tsample * cumsum(j_traj) + a_0(i);
+
+                % Calculate velocities
+                v_traj = obj.Tsample * cumsum(a_traj) + v_0(i);
+
+                % Calculate positions
+                q_traj = obj.Tsample * cumsum(v_traj) + q_0(i);
+            end
+        end
     end
 end
