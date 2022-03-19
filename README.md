@@ -17,15 +17,15 @@ A trajectory is calculated in a two-step procedure. This is outlined in the foll
 
 ## Time optimality
 
-A general, time optimal profile of one joint consists of seven phases:
-![alt text](images/profile.svg?raw=true)
+A general, time optimal trajectory profile of one joint consists of seven phases:
+![Time-optimal trajectory](images/profile.svg?raw=true)
 
 When calculating a trajectory, it must be checked if the limits are reached.
-For most cases, analytic equations are used to calculate the switching times.
+In most cases, analytic equations are used to calculate the switching times.
 However, for cases in which the maximal velocity is not reached, the solution is approximated numerically.
 
 ## Time scaling
 
 To achieve that all joints reach the goal at the same time, every joint's movement must be scaled to require as much time as the slowest joint.
 This is archived by a numeric search for the maximal velocities per joint which fulfil this criterion.
-After that, the jerk switching times are re-calculated using this velocity.
+After that, the jerk switching times are re-calculated using these velocities.
