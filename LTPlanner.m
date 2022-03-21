@@ -74,9 +74,10 @@ classdef LTPlanner < handle
             for i=1:obj.DoF
                 
                 % Calculate direction of movement
-                dir(i) = sign(q_goal(i) - (q_0(i) + getStopPos(obj, v_0, a_0, i)));
+                [q_stop, t_rel_prev(i, 5:7)] = getStopPos(obj, v_0, a_0, i);
+                dir(i) = sign(q_goal(i) - (q_0(i) + q_stop));
 
-                % If goal is in negative direction, change v_0 and a_0
+                % If goal is in negative direction, map to pos. direction
                 if(dir(i) < 0)
                     v_0(i) = -v_0(i);
                     a_0(i) = -a_0(i);
@@ -102,13 +103,27 @@ classdef LTPlanner < handle
                     t_rel(i,6) = v_max_reduced(i)/obj.a_max(i) - 1/2*(t_rel(i,5) + t_rel(i,7));
 
                     % Check if max acceleration cannot be reached
-                    if(t_rel(i,2) < 0)
+                    if(t_rel(i,2) < -obj.Tsample)
                         % Check if root is positive
                         root = obj.j_max(i)*(v_max_reduced(i) - v_0(i)) + 1/2*a_0(i)^2;
                         if(root > 0)
                             t_rel(i,3) = sqrt(root)/obj.j_max(i);
                             t_rel(i,1) = t_rel(i,3) - a_0(i)/obj.j_max(i);
                             t_rel(i,2) = 0;
+                            
+                            if (t_rel(i,1) < -obj.Tsample)
+                                if v_max_reduction_loop_no == 0
+                                    error("t_rel(" + i + ",1) is negative: " + t_rel(i,1))
+                                else
+                                    % Approximate v_max (increase)
+                                    v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
+                                    v_max_reduced(i) = v_max_reduced(i) + obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+                                    
+                                    % Assign t_rel from last valid loop
+                                    t_rel(i,:) = t_rel_prev;
+                                    continue;
+                                end
+                            end
                         else
                             if v_max_reduction_loop_no == 0
                                 error("Negative root in t_rel(" + i + ",2): " + root)
@@ -116,11 +131,15 @@ classdef LTPlanner < handle
                                 % Approximate v_max (increase)
                                 v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
                                 v_max_reduced(i) = v_max_reduced(i) + obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+                                
+                                % Assign t_rel from last valid loop
+                                t_rel(i,:) = t_rel_prev;
                                 continue;
                             end
                         end
                     end
-                    if(t_rel(i,6)<0)
+                    
+                    if(t_rel(i,6) < -obj.Tsample)
                         % Check if root is positive
                         root = v_max_reduced(i)/obj.j_max(i);
                         if(root > 0)
@@ -134,6 +153,9 @@ classdef LTPlanner < handle
                                 % Approximate v_max (increase)
                                 v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
                                 v_max_reduced(i) = v_max_reduced(i) + obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+                                
+                                % Assign t_rel from last valid loop
+                                t_rel(i,:) = t_rel_prev;
                                 continue;
                             end
                         end
@@ -145,7 +167,7 @@ classdef LTPlanner < handle
                     t_rel(i,4) = (abs(q_goal(i) - q_0(i)) - q_part1 - q_part2)/v_max_reduced(i);
 
                     % Check if max velocity cannot be reached
-                    if(t_rel(i,4) < 0)
+                    if(t_rel(i,4) < -obj.Tsample)
                         % Formula calculated with matlab
                         % Check if root is positive
                         root = (obj.j_max(i)^2*t_rel(i,1)^4)/2 - (obj.j_max(i)^2*t_rel(i,3)^4)/4 + (obj.j_max(i)^2*t_rel(i,3)^2*t_rel(i,5)^2)/2 - (obj.j_max(i)^2*t_rel(i,5)^4)/4 + (obj.j_max(i)^2*t_rel(i,7)^4)/2 + 2*obj.j_max(i)*a_0(i)*t_rel(i,1)^3 - (2*obj.j_max(i)*obj.a_max(i)*t_rel(i,1)^3)/3 - 2*obj.j_max(i)*obj.a_max(i)*t_rel(i,1)*t_rel(i,3)^2 + (2*obj.j_max(i)*obj.a_max(i)*t_rel(i,3)^3)/3 + (2*obj.j_max(i)*obj.a_max(i)*t_rel(i,5)^3)/3 - 2*obj.j_max(i)*obj.a_max(i)*t_rel(i,5)^2*t_rel(i,7) - (2*obj.j_max(i)*obj.a_max(i)*t_rel(i,7)^3)/3 + 2*obj.j_max(i)*v_0(i)*t_rel(i,1)^2 + 2*a_0(i)^2*t_rel(i,1)^2 - 2*a_0(i)*obj.a_max(i)*t_rel(i,1)^2 - 2*a_0(i)*obj.a_max(i)*t_rel(i,3)^2 + 4*a_0(i)*v_0(i)*t_rel(i,1) + 2*obj.a_max(i)^2*t_rel(i,3)^2 + 2*obj.a_max(i)^2*t_rel(i,5)^2 - 4*obj.a_max(i)*v_0(i)*t_rel(i,1) + 4*abs(q_0(i) - q_goal(i))*obj.a_max(i) + 2*v_0(i)^2;
@@ -157,6 +179,10 @@ classdef LTPlanner < handle
                             % Approximate v_max (increase)
                             v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
                             v_max_reduced(i) = v_max_reduced(i) + obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+                            
+                            % Assign t_rel from last valid loop
+                            t_rel(i,:) = t_rel_prev;
+                            continue;
                         end
                         
                         % Check if max velocity and max acceleration cannot be reached
@@ -195,8 +221,12 @@ classdef LTPlanner < handle
             % Stop if any time is negative
             for j=1:7
                 if(t_rel(i,j) < 0)
-                    error("t_rel(" + i + "," + j + ") is negative: " + t_rel(i,j))
-                    break
+                    if(t_rel(i,j) < -obj.Tsample)
+                        % No numeric inaccuracy
+                        t_rel
+                        error("t_rel(" + i + "," + j + ") is negative: " + t_rel(i,j))
+                    end
+                    t_rel(i,j) = 0;
                 end
             end
 
@@ -204,33 +234,37 @@ classdef LTPlanner < handle
             t(i,:) = cumsum(t_rel(i,:));
         end
         
-        function q = getStopPos(obj, v_0, a_0, i)
+        function [q, t_rel] = getStopPos(obj, v_0, a_0, i)
             % GETSTOPPOS % Calculate how far a joints moves until it can be
             % stopped
             
             % Set direction opposite to maximal velocity to be reached
-            dir(i) = -sign(v_0(i) + 1/2*a_0(i)*abs(a_0(i))/obj.j_max(i));
+            if v_0*a_0 > 0
+                % v and a in same direction
+                dir = -sign(v_0);
+            else
+                if abs(v_0) > 1/2*a_0^2/obj.j_max(i)
+                    dir = -sign(v_0);
+                else
+                    dir = -sign(a_0);
+                end
+            end
 
-            % If v_0 is in positive, change v_0 and a_0
-            if(dir(i) < 0)
-                a_0(i) = -a_0(i);
-                v_0(i) = -v_0(i);
+            % If v_0 is negative, map v_0 and a_0 to pos. direction
+            if(dir < 0)
+                a_0 = -a_0;
+                v_0 = -v_0;
             end
 
             % Stop joint asap
             t_rel(i,1) = (obj.a_max(i) - a_0(i))/obj.j_max(i);
             t_rel(i,3) = obj.a_max(i)/obj.j_max(i);
-            t_rel(i,2) = (- v_0(i) - 1/2*t_rel(i,1)*a_0(i))/obj.a_max(i) - 1/2*(t_rel(i,1) + t_rel(i,3));
-            if(t_rel(i,2) < 0)
-                % Check if root is positive, otherwise switch times
-                root = obj.j_max(i)*v_0(i) - 1/2*a_0(i)*abs(a_0(i));
-                if(root > 0)
-                    t_rel(i,1) = sqrt(root)/obj.j_max(i);
-                    t_rel(i,3) = t_rel(i,1) - a_0(i)/obj.j_max(i);
-                else
-                    t_rel(i,3) = sqrt(-root)/obj.j_max(i);
-                    t_rel(i,1) = t_rel(i,3) - a_0(i)/obj.j_max(i);
-                end
+            t_rel(i,2) = (- v_0 - 1/2*t_rel(i,1)*a_0(i))/obj.a_max(i) - 1/2*(t_rel(i,1) + t_rel(i,3));
+            
+            % Check if max acceleration is reached
+            if(t_rel(i,2) < -obj.Tsample)
+                t_rel(i,1) = abs(-a_0/obj.j_max(i) + sqrt(a_0^2/(2*obj.j_max(i)^2) - v_0/obj.j_max(i)));
+                t_rel(i,3) = t_rel(i,1) + a_0/obj.j_max(i);
                 t_rel(i,2) = 0;
             end
             

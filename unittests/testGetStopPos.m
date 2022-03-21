@@ -1,5 +1,5 @@
 % Define test values
-eps = 0.001;
+eps = 0.01;
 num_scenarios = 6;
 v_max  = 10;
 a_max  = [  2       2       2       4       4       4       ];
@@ -8,7 +8,7 @@ v_0    = [  0      -1.875  -1.875  -0.875  -0.875   0.5     ];
 a_0    = [  0       1      -1       1      -1       -2      ];
 
 % Define pre-calculated results
-q_goal = [  0      -1.0104 -1.9896 -0.7396 -0.2604 -0.4167  ];
+q_goal = [  0      -1.0104 -1.9896 -0.2604 -0.7396 -0.4167  ];
 t_rel  = [  0       0.25    0.75    0.25    0.75    1.5     ;
             0       0.5     0.5     0       0       0       ;
             0       0.5     0.5     0.5     0.5     0.5     ]';
@@ -50,7 +50,7 @@ for i=1:num_scenarios
         t_rel(i,:)
         t_ltp
         q_ltp
-        q_goal(i)
+        -q_goal(i)
         fail = fail + 1;
     end
 end
