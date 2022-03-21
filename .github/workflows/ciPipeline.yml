@@ -1,16 +1,21 @@
 name: Unittests
 on: [push]
 jobs:
-  testOptSwitchTimes:
-    name: testOptSwitchTimes
+  Unittests:
+    name: Unittests
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v1
-      - name: Run script
+      - name: testOptSwitchTimes
         uses: matlab-actions/run-command@v1
         with:
           command: addpath("unittests");
                    testOptSwitchTimes
+      - name: testGetStopPos
+        uses: matlab-actions/run-command@v1
+        with:
+          command: addpath("unittests");
+                   testGetStopPos
