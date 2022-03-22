@@ -89,10 +89,8 @@ classdef LTPlanner < handle
                     v_0(i) = -v_0(i);
                     a_0(i) = -a_0(i);
                 end
-            end
-            
-            %% Calculate min. time required per joint to reach goal state
-            for i=1:obj.DoF
+
+                %% Calculate min. time required per joint to reach goal state
 
                 % Reduction loop of v_max (if necessary)
                 v_max_reduction_loop_no = 0;
