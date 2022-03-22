@@ -7,10 +7,11 @@ failure = [];
 dq_max = 3;
 ddq_max = 3;
 dddq_max = 3;
+Tsample = 0.001;
 
 
 % Initialize Planner
-ltp = LTPlanner(1, 0.001, dq_max, ddq_max, dddq_max);
+ltp = LTPlanner(1, Tsample, dq_max, ddq_max, dddq_max);
 
 % Set goal and joint angle
 for q_goal = -6:step:7
@@ -34,11 +35,15 @@ for q_goal = -6:step:7
             % Plan trajectory
             t = ltp.optSwitchTimes(q_goal, q, dq, ddq);
             [q_stop, ~] = ltp.getStopPos(dq, ddq, 1);
-            dir = sign(q_goal - (q + q_stop));
+            q_diff = q_goal - (q + q_stop);
+            if q_diff < eps
+                dir = -1;
+            else
+                dir = 1;
+            end
             [q_traj, dq_traj, ~] = ltp.getTrajectories(t, dir, q, dq, ddq);
 
             % Check if goal was reached
-            %disp(q_traj(end))
             if abs(q_traj(end) - q_goal) < tol
                 success = success + 1;
             else
