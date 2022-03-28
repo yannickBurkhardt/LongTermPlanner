@@ -1,5 +1,5 @@
 eps = 1e-6;
-tol = 0.1;
+tol = 0.04;
 step = 0.25;
 success = 0;
 not_finished = [];
@@ -36,11 +36,7 @@ for q_goal = -6:step:7
             t = ltp.optSwitchTimes(q_goal, q, dq, ddq);
             [q_stop, ~] = ltp.getStopPos(dq, ddq, 1);
             q_diff = q_goal - (q + q_stop);
-            if q_diff < eps
-                dir = -1;
-            else
-                dir = 1;
-            end
+            dir = sign(q_diff);
             [q_traj, dq_traj, ~] = ltp.getTrajectories(t, dir, q, dq, ddq);
 
             % Check if goal was reached
