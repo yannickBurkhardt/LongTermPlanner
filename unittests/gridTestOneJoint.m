@@ -1,13 +1,13 @@
 % Initialize Parameters
 eps = 1e-6;
-tol = 0.04;
-step = 0.25;
+tol = 0.35;
+step = 0.1;
 success = 0;
 not_finished = [];
 failure = [];
-v_max = 3;
-a_max = 3;
-j_max = 3;
+v_max = 1;
+a_max = 2;
+j_max = 10;
 Tsample = 0.001;
 
 % Initialize Planner
@@ -37,13 +37,13 @@ for q_goal = -6:step:7
             [q_stop, ~] = ltp.getStopPos(v_0, a_0, 1);
             q_diff = q_goal - (q_0 + q_stop);
             dir = sign(q_diff);
-            [q_traj, dq_traj, ~] = ltp.getTrajectories(t, dir, q_0, v_0, a_0);
+            [q_traj, v_traj, a_traj] = ltp.getTrajectories(t, dir, q_0, v_0, a_0);
 
             % Check if goal was reached
             if abs(q_traj(end) - q_goal) < tol
                 success = success + 1;
             else
-                if abs(dq_traj(end)) > tol || abs(ddq_traj(end)) > tol
+                if abs(v_traj(end)) > tol || abs(a_traj(end)) > tol
                     not_finished = [not_finished, [q_goal, q_0, v_0, a_0]'];
                 else
                     failure = [failure, [q_goal, q_0, v_0, a_0]'];
