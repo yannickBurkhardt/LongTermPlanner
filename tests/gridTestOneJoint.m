@@ -57,3 +57,8 @@ disp("Success: " + success)
 disp("Not finished: " + size(not_finished, 2))
 disp("Failure: " + size(failure, 2))
 
+% Throw error if at least one test failed
+if size(not_finished, 2) > 0 || size(failure, 2) > 0
+    error("Some scenarios were not solved correctly.")
+end
+
