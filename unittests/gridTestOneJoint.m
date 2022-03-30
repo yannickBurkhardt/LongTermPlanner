@@ -1,52 +1,52 @@
+% Initialize Parameters
 eps = 1e-6;
 tol = 0.04;
 step = 0.25;
 success = 0;
 not_finished = [];
 failure = [];
-dq_max = 3;
-ddq_max = 3;
-dddq_max = 3;
+v_max = 3;
+a_max = 3;
+j_max = 3;
 Tsample = 0.001;
 
-
 % Initialize Planner
-ltp = LTPlanner(1, Tsample, dq_max, ddq_max, dddq_max);
+ltp = LTPlanner(1, Tsample, v_max, a_max, j_max);
 
 % Set goal and joint angle
 for q_goal = -6:step:7
-    q = 0.5;
+    q_0 = 0.5;
 
     % Velocity in Limits
-    for dq = -(dq_max-eps):step:(dq_max-eps)
+    for v_0 = -(v_max-eps):step:(v_max-eps)
 
         % Calculate maximal Acceleration to not violate velocity limit
-        if dq >= 0
-            ddq_lb = -(ddq_max-eps);
-            ddq_ub = min(ddq_max-eps, sqrt(2*dddq_max*(dq_max - dq)));
+        if v_0 >= 0
+            a_lb = -(a_max-eps);
+            a_ub = min(a_max-eps, sqrt(2*j_max*(v_max - v_0)));
         else
-            ddq_lb = max(-(ddq_max-eps), -sqrt(2*dddq_max*(dq_max - abs(dq))));
-            ddq_ub = ddq_max;
+            a_lb = max(-(a_max-eps), -sqrt(2*j_max*(v_max - abs(v_0))));
+            a_ub = a_max;
         end
 
         % Acceleration in limits
-        for ddq = ddq_lb:step:ddq_ub
+        for a_0 = a_lb:step:a_ub
 
             % Plan trajectory
-            t = ltp.optSwitchTimes(q_goal, q, dq, ddq);
-            [q_stop, ~] = ltp.getStopPos(dq, ddq, 1);
-            q_diff = q_goal - (q + q_stop);
+            t = ltp.optSwitchTimes(q_goal, q_0, v_0, a_0);
+            [q_stop, ~] = ltp.getStopPos(v_0, a_0, 1);
+            q_diff = q_goal - (q_0 + q_stop);
             dir = sign(q_diff);
-            [q_traj, dq_traj, ~] = ltp.getTrajectories(t, dir, q, dq, ddq);
+            [q_traj, dq_traj, ~] = ltp.getTrajectories(t, dir, q_0, v_0, a_0);
 
             % Check if goal was reached
             if abs(q_traj(end) - q_goal) < tol
                 success = success + 1;
             else
-                if abs(dq_traj(end)) > tol
-                    not_finished = [not_finished, [q_goal, q, dq, ddq]'];
+                if abs(dq_traj(end)) > tol || abs(ddq_traj(end)) > tol
+                    not_finished = [not_finished, [q_goal, q_0, v_0, a_0]'];
                 else
-                    failure = [failure, [q_goal, q, dq, ddq]'];
+                    failure = [failure, [q_goal, q_0, v_0, a_0]'];
                 end
             end
         end
