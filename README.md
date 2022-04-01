@@ -21,8 +21,7 @@ A general, time optimal trajectory profile of one joint consists of seven phases
 ![Time-optimal trajectory](images/profile.svg?raw=true)
 
 When calculating a trajectory, it must be checked if the limits are reached.
-In most cases, analytic equations are used to calculate the switching times.
-However, for cases in which the maximal velocity is not reached, the solution is approximated numerically.
+For all cases, analytic equations to calculate the switching times could be found.
 
 ## Time scaling
 
