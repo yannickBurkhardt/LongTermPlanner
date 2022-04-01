@@ -1,8 +1,8 @@
 name: IntegrationTests
 on: [push]
 jobs:
-  GridTestOneJoint:
-    name: GridTestOneJoint
+  gridTestOneJoint:
+    name: gridTestOneJoint
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
