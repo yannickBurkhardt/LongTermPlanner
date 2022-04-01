@@ -1,8 +1,22 @@
 name: Unittests
 on: [push]
 jobs:
-  Unittests:
-    name: Unittests
+  testGetStopPos:
+    name: testGetStopPos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v1
+      - name: testGetStopPos
+        uses: matlab-actions/run-command@v1
+        with:
+          command: addpath("tests/unittests");
+                   testGetStopPos
+
+  testOptSwitchTimes:
+    name: testOptSwitchTimes
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -14,14 +28,12 @@ jobs:
         with:
           command: addpath("tests/unittests");
                    testOptSwitchTimes
-      - name: testGetStopPos
-        uses: matlab-actions/run-command@v1
-        with:
-          command: addpath("tests/unittests");
-                   testGetStopPos
 
-  GridTest:
-    name: GridTest
+name: IntegrationTests
+on: [push]
+jobs:
+  GridTestOneJoint:
+    name: GridTestOneJoint
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
