@@ -201,6 +201,123 @@ classdef LTPlanner < handle
             t(i,:) = cumsum(t_rel(i,:));
         end
         
+        function t = timeScaling(obj, q_goal, q_0, v_0, a_0, t_required)
+            % TIMESCALING % Calculate switching times to fulfil a given
+            % time by adjusting the maximally reached velocity
+            
+            % Set number of iteration cycles for numerc approximation
+            % (only in case v_max is not reach)
+            v_max_reduction_cycles = 14;
+            v_max_reduced = obj.v_max*ones(obj.DoF);
+            
+            % Parameters for calculation
+            dir = zeros(obj.DoF,1); % Direction of the goal (only +1 or -1)
+            t_rel = zeros(obj.DoF,7); % Time that is required for one jerk phase
+            t_rel_prev = zeros(1,7);
+            t = zeros(obj.DoF,7); % Absolute time that is required to reach the end of current jerk phase
+            eps = 1e-4;
+
+            %% Analyse input data
+            % Check if inputs are in limits
+            % checkInputs(obj, v_0, a_0); %TODO
+            
+            for i=1:obj.DoF
+                
+                % Calculate direction of movement
+                [q_stop, t_rel(i, 1:3)] = getStopPos(obj, v_0, a_0, i);
+                q_diff = q_goal(i) - (q_0(i) + q_stop);
+                if (abs(q_diff) < eps)
+                    % Skip rest if that fulfils scenario
+                    continue;
+                end
+                dir(i) = sign(q_diff);
+
+                % If goal is in negative direction, map to pos. direction
+                if(dir(i) < 0)
+                    v_0(i) = -v_0(i);
+                    a_0(i) = -a_0(i);
+                end
+
+                %% Calculate min. time required per joint to reach goal state
+                
+                % Reduction loop of v_max (if necessary)
+                v_max_reduction_loop_no = 0;
+                while(v_max_reduction_loop_no < v_max_reduction_cycles)
+
+                    % j = +- j_max (const) -> linear a
+                    t_rel(i,1) = (obj.a_max(i) - a_0(i))/obj.j_max(i);
+                    t_rel(i,3) = obj.a_max(i)/obj.j_max(i);
+                    t_rel(i,5) = t_rel(i,3);
+                    t_rel(i,7) = t_rel(i,3);
+
+                    % a = +- a_max (const) -> linear v
+                    % works but only if all times > 0
+                    t_rel(i,2) = (v_max_reduced(i) - v_0(i) - 1/2*t_rel(i,1)*a_0(i))/obj.a_max(i) - 1/2*(t_rel(i,1) + t_rel(i,3));
+                    t_rel(i,6) = v_max_reduced(i)/obj.a_max(i) - 1/2*(t_rel(i,5) + t_rel(i,7));
+
+                    % Check if max acceleration cannot be reached
+                    if(t_rel(i,2) < -eps)
+                        % Check if root is positive
+                        root = obj.j_max(i)*(v_max_reduced(i) - v_0(i)) + 1/2*a_0(i)^2;
+                        if(root > 0)
+                            t_rel(i,3) = sqrt(root)/obj.j_max(i);
+                            t_rel(i,1) = t_rel(i,3) - a_0(i)/obj.j_max(i);
+                            t_rel(i,2) = 0;
+                        else
+                            %error("Negative root in t_rel(" + i + ",2): " + root)
+                            % Increase v_max_reduced
+                            v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
+                            v_max_reduced(i) = v_max_reduced(i) + obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+                            
+                            t(i,:) = t_rel_prev;
+                        end
+                    end
+
+                    if(t_rel(i,6) < -eps)
+                        % Check if root is positive
+                        root = v_max_reduced(i)/obj.j_max(i);
+                        if(root > 0)
+                            t_rel(i,5) = sqrt(root);
+                            t_rel(i,7) = t_rel(i,5);
+                            t_rel(i,6) = 0;
+                        else
+                            error("Negative root in t_rel(" + i + ",6): " + root)
+                        end
+                    end
+
+                    % v = v_max (const) -> linear q
+                    q_part1 = v_0(i)*(t_rel(i,1) + t_rel(i,2) + t_rel(i,3)) + a_0(i)*(1/2*t_rel(i,1)^2 + t_rel(i,1)*(t_rel(i,2) + t_rel(i,3)) + 1/2*t_rel(i,3)^2) + obj.j_max(i)*(1/6*t_rel(i,1)^3 + 1/2*t_rel(i,1)^2*(t_rel(i,2) + t_rel(i,3)) - 1/6*t_rel(i,3)^3 + 1/2*t_rel(i,1)*t_rel(i,3)^2) + obj.a_max(i)*(1/2*t_rel(i,2)^2 + t_rel(i,2)*t_rel(i,3));
+                    q_part2 = obj.j_max(i)*(1/6*t_rel(i,7)^3 + 1/2*t_rel(i,7)^2*(t_rel(i,6) + t_rel(i,5)) - 1/6*t_rel(i,5)^3 + 1/2*t_rel(i,7)*t_rel(i,5)^2) + obj.a_max(i)*(1/2*t_rel(i,6)^2 + t_rel(i,6)*t_rel(i,5));
+                    t_rel(i,4) = ((q_goal(i) - q_0(i))*dir - q_part1 - q_part2)/v_max_reduced(i);
+
+                    % v_max_reduced has to be reached
+                    if t_rel(i,4) < -eps
+                        % Decrease v_max_reduced
+                        v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
+                        v_max_reduced(i) = v_max_reduced(i) - obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+
+                        t(i,:) = t_rel_prev;
+                        continue;
+                    end
+
+                    t(i,:) = cumsum(t_rel(i,:));
+                    t_rel_prev = t(i,:);
+
+                    % Check if calculated absolute time is bigger or smaller
+                    % than reference
+                    if t(i,7) > t_required
+                        % Increase v_max_reduced
+                        v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
+                        v_max_reduced(i) = v_max_reduced(i) + obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+                    else
+                        % Decrease v_max_reduced
+                        v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
+                        v_max_reduced(i) = v_max_reduced(i) - obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+                    end
+                end
+            end
+        end
+        
         function [q, t_rel] = getStopPos(obj, v_0, a_0, i)
             % GETSTOPPOS % Calculate how far a joints moves until it can be
             % stopped
