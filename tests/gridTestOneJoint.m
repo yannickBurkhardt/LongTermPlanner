@@ -1,13 +1,13 @@
 % Initialize Parameters
 eps = 1e-6;
-tol = 0.35;
+tol = 0.01;
 step = 0.1;
 success = 0;
 not_finished = [];
 failure = [];
 v_max = 1;
 a_max = 2;
-j_max = 10;
+j_max = 15;
 Tsample = 0.001;
 
 % Initialize Planner
