@@ -15,7 +15,7 @@ jobs:
           command: addpath("tests");
                    gridTestOneJoint
 
-gridTestTimeScaling:
+  gridTestTimeScaling:
     name: gridTestTimeScaling
     runs-on: ubuntu-latest
     steps:
