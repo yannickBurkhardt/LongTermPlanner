@@ -56,7 +56,7 @@ for i=1:num_scenarios
 end
 
 % Print test results
-disp("TestOptSwitchTimes results:")
+disp("TestGetStopPos results:")
 disp("Sucessful: " + sucess + " out of " + (2 * num_scenarios - 1))
 
 % Throw error if at least one test failed

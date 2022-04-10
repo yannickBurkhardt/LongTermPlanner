@@ -207,8 +207,8 @@ classdef LTPlanner < handle
             
             % Set number of iteration cycles for numerc approximation
             % (only in case v_max is not reach)
-            v_max_reduction_cycles = 14;
-            v_max_reduced = obj.v_max*ones(obj.DoF);
+            v_drive_approx_loops = 30;
+            v_drive = obj.v_max*ones(obj.DoF);
             
             % Parameters for calculation
             dir = zeros(obj.DoF,1); % Direction of the goal (only +1 or -1)
@@ -241,8 +241,8 @@ classdef LTPlanner < handle
                 %% Calculate min. time required per joint to reach goal state
                 
                 % Reduction loop of v_max (if necessary)
-                v_max_reduction_loop_no = 0;
-                while(v_max_reduction_loop_no < v_max_reduction_cycles)
+                v_drive_approx_loop_no = 0;
+                while(v_drive_approx_loop_no < v_drive_approx_loops)
 
                     % j = +- j_max (const) -> linear a
                     t_rel(i,1) = (obj.a_max(i) - a_0(i))/obj.j_max(i);
@@ -252,30 +252,33 @@ classdef LTPlanner < handle
 
                     % a = +- a_max (const) -> linear v
                     % works but only if all times > 0
-                    t_rel(i,2) = (v_max_reduced(i) - v_0(i) - 1/2*t_rel(i,1)*a_0(i))/obj.a_max(i) - 1/2*(t_rel(i,1) + t_rel(i,3));
-                    t_rel(i,6) = v_max_reduced(i)/obj.a_max(i) - 1/2*(t_rel(i,5) + t_rel(i,7));
+                    t_rel(i,2) = (v_drive(i) - v_0(i) - 1/2*t_rel(i,1)*a_0(i))/obj.a_max(i) - 1/2*(t_rel(i,1) + t_rel(i,3));
+                    t_rel(i,6) = v_drive(i)/obj.a_max(i) - 1/2*(t_rel(i,5) + t_rel(i,7));
 
+                    q_break = 0;
                     % Check if max acceleration cannot be reached
                     if(t_rel(i,2) < -eps)
                         % Check if root is positive
-                        root = obj.j_max(i)*(v_max_reduced(i) - v_0(i)) + 1/2*a_0(i)^2;
-                        if(root > 0)
+                        root = obj.j_max(i)*(v_drive(i) - v_0(i)) + 1/2*a_0(i)^2;
+                        if(root >= 0)
                             t_rel(i,3) = sqrt(root)/obj.j_max(i);
                             t_rel(i,1) = t_rel(i,3) - a_0(i)/obj.j_max(i);
                             t_rel(i,2) = 0;
-                        else
+                        end
+                        if(root < 0 || t_rel(i,1) < 0)
+                            [q_break, t_rel(i,1:3)] = getStopPos(obj, v_0(i) - v_drive(i), a_0, i);
                             %error("Negative root in t_rel(" + i + ",2): " + root)
                             % Increase v_max_reduced
-                            v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
-                            v_max_reduced(i) = v_max_reduced(i) + obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+                            %v_drive_approx_loop_no = v_drive_approx_loop_no + 1;
+                            %v_drive(i) = v_drive(i) + obj.v_max(i) * (1/2)^v_drive_approx_loop_no;
                             
-                            t(i,:) = t_rel_prev;
+                            %t(i,:) = t_rel_prev;
                         end
                     end
 
                     if(t_rel(i,6) < -eps)
                         % Check if root is positive
-                        root = v_max_reduced(i)/obj.j_max(i);
+                        root = v_drive(i)/obj.j_max(i);
                         if(root > 0)
                             t_rel(i,5) = sqrt(root);
                             t_rel(i,7) = t_rel(i,5);
@@ -286,15 +289,19 @@ classdef LTPlanner < handle
                     end
 
                     % v = v_max (const) -> linear q
-                    q_part1 = v_0(i)*(t_rel(i,1) + t_rel(i,2) + t_rel(i,3)) + a_0(i)*(1/2*t_rel(i,1)^2 + t_rel(i,1)*(t_rel(i,2) + t_rel(i,3)) + 1/2*t_rel(i,3)^2) + obj.j_max(i)*(1/6*t_rel(i,1)^3 + 1/2*t_rel(i,1)^2*(t_rel(i,2) + t_rel(i,3)) - 1/6*t_rel(i,3)^3 + 1/2*t_rel(i,1)*t_rel(i,3)^2) + obj.a_max(i)*(1/2*t_rel(i,2)^2 + t_rel(i,2)*t_rel(i,3));
+                    if(q_break)
+                        q_part1 = q_break + v_drive(i)*(t_rel(i,1) + t_rel(i,2) + t_rel(i,3));
+                    else
+                        q_part1 = v_0(i)*(t_rel(i,1) + t_rel(i,2) + t_rel(i,3)) + a_0(i)*(1/2*t_rel(i,1)^2 + t_rel(i,1)*(t_rel(i,2) + t_rel(i,3)) + 1/2*t_rel(i,3)^2) + obj.j_max(i)*(1/6*t_rel(i,1)^3 + 1/2*t_rel(i,1)^2*(t_rel(i,2) + t_rel(i,3)) - 1/6*t_rel(i,3)^3 + 1/2*t_rel(i,1)*t_rel(i,3)^2) + obj.a_max(i)*(1/2*t_rel(i,2)^2 + t_rel(i,2)*t_rel(i,3));
+                    end
                     q_part2 = obj.j_max(i)*(1/6*t_rel(i,7)^3 + 1/2*t_rel(i,7)^2*(t_rel(i,6) + t_rel(i,5)) - 1/6*t_rel(i,5)^3 + 1/2*t_rel(i,7)*t_rel(i,5)^2) + obj.a_max(i)*(1/2*t_rel(i,6)^2 + t_rel(i,6)*t_rel(i,5));
-                    t_rel(i,4) = ((q_goal(i) - q_0(i))*dir - q_part1 - q_part2)/v_max_reduced(i);
+                    t_rel(i,4) = ((q_goal(i) - q_0(i))*dir - q_part1 - q_part2)/v_drive(i);
 
                     % v_max_reduced has to be reached
                     if t_rel(i,4) < -eps
                         % Decrease v_max_reduced
-                        v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
-                        v_max_reduced(i) = v_max_reduced(i) - obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+                        v_drive_approx_loop_no = v_drive_approx_loop_no + 1;
+                        v_drive(i) = v_drive(i) - obj.v_max(i) * (1/2)^v_drive_approx_loop_no;
 
                         t(i,:) = t_rel_prev;
                         continue;
@@ -307,12 +314,12 @@ classdef LTPlanner < handle
                     % than reference
                     if t(i,7) > t_required
                         % Increase v_max_reduced
-                        v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
-                        v_max_reduced(i) = v_max_reduced(i) + obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+                        v_drive_approx_loop_no = v_drive_approx_loop_no + 1;
+                        v_drive(i) = v_drive(i) + obj.v_max(i) * (1/2)^v_drive_approx_loop_no;
                     else
                         % Decrease v_max_reduced
-                        v_max_reduction_loop_no = v_max_reduction_loop_no + 1;
-                        v_max_reduced(i) = v_max_reduced(i) - obj.v_max(i) * (1/2)^v_max_reduction_loop_no;
+                        v_drive_approx_loop_no = v_drive_approx_loop_no + 1;
+                        v_drive(i) = v_drive(i) - obj.v_max(i) * (1/2)^v_drive_approx_loop_no;
                     end
                 end
             end
@@ -359,14 +366,14 @@ classdef LTPlanner < handle
             q = dir(i) * q;
         end
         
-        function [q_traj, v_traj, a_traj] = getTrajectories(obj, t, dir, q_0, v_0, a_0)
+        function [q_traj, v_traj, a_traj] = getTrajectories(obj, t, dir, mod_jerk_profile, q_0, v_0, a_0)
             %GETTRAJECTORIES % Calculate trajectory based on jerk switch
             % times
             
             % Length of trajectory in samples
             traj_len = zeros(obj.DoF,1);
             for i=1:obj.DoF
-                traj_len(i) = ceil(t(i,7)/obj.Tsample);
+                traj_len(i) = ceil(t(i,7)/obj.Tsample) + 1;
             end
 
             for i=1:obj.DoF
@@ -376,7 +383,17 @@ classdef LTPlanner < handle
                 % Calculate jerks
                 sampled_t = zeros(1,7); % Jerk switch times in samples
                 sampled_t_trans = zeros(1,7); % Sample fractions for each phase
-                jerk_profile = dir(i) * obj.j_max(i) * [1 0 -1 0 -1 0 1];
+                
+                % For first phase: check if breaking or accelerating
+                if mod_jerk_profile == true
+                    % Only used for time scaling
+                    jerk_profile = dir(i) * obj.j_max(i) * [-1 0 1 0 -1 0 1];
+                else
+                    % Standard case
+                    jerk_profile = dir(i) * obj.j_max(i) * [1 0 -1 0 -1 0 1];
+                end
+                
+                % Calculate inaccuraties when sampling times
                 for j = 1:7
                     sampled_t_trans(j) = mod(t(i,j),obj.Tsample);
                 end             
