@@ -1,5 +1,5 @@
 % Define test values
-eps = 0.001;
+eps = 0.002;
 num_scenarios = 10;
 
 % v_max increased compared to testOptSwitchTimes
