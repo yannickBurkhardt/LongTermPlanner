@@ -201,7 +201,7 @@ classdef LTPlanner < handle
             t(i,:) = cumsum(t_rel(i,:));
         end
         
-        function t = timeScaling(obj, q_goal, q_0, v_0, a_0, t_required)
+        function [t, mod_jerk_profile] = timeScaling(obj, q_goal, q_0, v_0, a_0, t_required)
             % TIMESCALING % Calculate switching times to fulfil a given
             % time by adjusting the maximally reached velocity
             
@@ -215,6 +215,7 @@ classdef LTPlanner < handle
             t_rel = zeros(obj.DoF,7); % Time that is required for one jerk phase
             t_rel_prev = zeros(1,7);
             t = zeros(obj.DoF,7); % Absolute time that is required to reach the end of current jerk phase
+            mod_jerk_profile = false;
             eps = 1e-4;
 
             %% Analyse input data
@@ -228,6 +229,7 @@ classdef LTPlanner < handle
                 q_diff = q_goal(i) - (q_0(i) + q_stop);
                 if (abs(q_diff) < eps)
                     % Skip rest if that fulfils scenario
+                    t(i,:) = cumsum(t_rel(i,:));
                     continue;
                 end
                 dir(i) = sign(q_diff);
@@ -256,6 +258,7 @@ classdef LTPlanner < handle
                     t_rel(i,6) = v_drive(i)/obj.a_max(i) - 1/2*(t_rel(i,5) + t_rel(i,7));
 
                     q_break = 0;
+                    mod_jerk_profile = false;
                     % Check if max acceleration cannot be reached
                     if(t_rel(i,2) < -eps)
                         % Check if root is positive
@@ -266,7 +269,9 @@ classdef LTPlanner < handle
                             t_rel(i,2) = 0;
                         end
                         if(root < 0 || t_rel(i,1) < 0)
+                            % Use adjusted jerk profile
                             [q_break, t_rel(i,1:3)] = getStopPos(obj, v_0(i) - v_drive(i), a_0, i);
+                            mod_jerk_profile = true;
                             %error("Negative root in t_rel(" + i + ",2): " + root)
                             % Increase v_max_reduced
                             %v_drive_approx_loop_no = v_drive_approx_loop_no + 1;
@@ -419,11 +424,14 @@ classdef LTPlanner < handle
                 end
                 
                 % Add jerk of fractioned samples
-                j_traj(sampled_t(1) + 1) = j_traj(sampled_t(1) + 1) + sampled_t_trans(1)/obj.Tsample * jerk_profile(1);
-                if(sampled_t(2) > 0)
-                    j_traj(sampled_t(2)) = j_traj(sampled_t(2)) + (1 - sampled_t_trans(2)/obj.Tsample) * jerk_profile(3);
+                % (only if acceleration phase exists)
+                if(sampled_t(3) > 0)
+                    j_traj(sampled_t(1) + 1) = j_traj(sampled_t(1) + 1) + sampled_t_trans(1)/obj.Tsample * jerk_profile(1);
+                    if(sampled_t(2) > 0)
+                        j_traj(sampled_t(2)) = j_traj(sampled_t(2)) + (1 - sampled_t_trans(2)/obj.Tsample) * jerk_profile(3);
+                    end
+                    j_traj(sampled_t(3) + 1) = j_traj(sampled_t(3) + 1) + sampled_t_trans(3)/obj.Tsample * jerk_profile(3);
                 end
-                j_traj(sampled_t(3) + 1) = j_traj(sampled_t(3) + 1) + sampled_t_trans(3)/obj.Tsample * jerk_profile(3);
                 if(sampled_t(4) > 0)
                     j_traj(sampled_t(4)) = j_traj(sampled_t(4)) + (1 - sampled_t_trans(4)/obj.Tsample) * jerk_profile(5);
                 end
