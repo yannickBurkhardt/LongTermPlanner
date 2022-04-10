@@ -207,7 +207,7 @@ classdef LTPlanner < handle
             
             % Set number of iteration cycles for numerc approximation
             % (only in case v_max is not reach)
-            v_drive_approx_loops = 30;
+            v_drive_approx_loops = 20;
             v_drive = obj.v_max*ones(obj.DoF);
             
             % Parameters for calculation
@@ -217,6 +217,7 @@ classdef LTPlanner < handle
             t = zeros(obj.DoF,7); % Absolute time that is required to reach the end of current jerk phase
             mod_jerk_profile = false;
             eps = 1e-4;
+            tol = 0.001;
 
             %% Analyse input data
             % Check if inputs are in limits
@@ -306,6 +307,7 @@ classdef LTPlanner < handle
                         v_drive_approx_loop_no = v_drive_approx_loop_no + 1;
                         v_drive(i) = v_drive(i) - obj.v_max(i) * (1/2)^v_drive_approx_loop_no;
 
+                        % Reset time to last underestimation
                         t(i,:) = t_rel_prev;
                         continue;
                     end
@@ -330,6 +332,11 @@ classdef LTPlanner < handle
                         % Save modified jerk profile if it must be used
                         if (q_break)
                             mod_jerk_profile = true;
+                        end
+                        
+                        % Break loop if good approximation was found
+                        if abs(t(i,7) - t_required) < tol
+                            break;
                         end
                     end
                 end
