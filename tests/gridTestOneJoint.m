@@ -33,7 +33,7 @@ for q_goal = -6:step:7
         for a_0 = a_lb:step:a_ub
 
             % Plan trajectory
-            t = ltp.optSwitchTimes(q_goal, q_0, v_0, a_0);
+            [t, ~] = ltp.optSwitchTimes(q_goal, q_0, v_0, a_0);
             [q_stop, ~] = ltp.getStopPos(v_0, a_0, 1);
             q_diff = q_goal - (q_0 + q_stop);
             dir = sign(q_diff);

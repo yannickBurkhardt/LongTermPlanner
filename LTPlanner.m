@@ -72,6 +72,7 @@ classdef LTPlanner < handle
             dir = zeros(obj.DoF,1); % Direction of the goal (only +1 or -1)
             t_rel = zeros(obj.DoF,7); % Time that is required for one jerk phase
             t = zeros(obj.DoF,7); % Absolute time that is required to reach the end of current jerk phase
+            mod_jerk_profile = false; % Use the standard jerk profile if not changed during calculations
             eps = 1e-4;
             
             % Check if inputs are in limits
@@ -95,7 +96,6 @@ classdef LTPlanner < handle
                 end
 
                 %% Check if slowing down is necessary to satisfy v_max
-                mod_jerk_profile = false;
                 if(v_0(i) + 1/2*a_0(i)*abs(a_0(i))/obj.j_max(i) > v_drive)
                     mod_jerk_profile = true;
                 end
