@@ -282,7 +282,7 @@ classdef LTPlanner < handle
                 end
 
                 %% Calculate required v_drive to reach goal at given time
-                % Standard profile: Phases 2 and 6 exist
+                % Standard jerk profile: Phases 2 and 6 exist
                 v_drive = (96*a_0(i)*obj.a_max(i) + 24*a_0(i)*obj.j_max(i) + 96*obj.j_max(i)*v_0(i) - 3^(1/2)*(48*a_0(i)*obj.j_max(i)^3 - 3072*a_0(i)*obj.a_max(i)^3 + 1536*a_0(i)^3*obj.j_max(i) + 32*obj.a_max(i)*obj.j_max(i)^3 + 1536*obj.a_max(i)^3*obj.j_max(i) - 192*obj.j_max(i)^3*v_0(i) + 1536*a_0(i)^4 - 1280*obj.a_max(i)^4 + 3*obj.j_max(i)^4 + 3072*a_0(i)^2*obj.a_max(i)^2 + 384*a_0(i)^2*obj.j_max(i)^2 - 288*obj.a_max(i)^2*obj.j_max(i)^2 - 3072*obj.j_max(i)^2*v_0(i)^2 - 1536*a_0(i)*obj.j_max(i)^2*v_0(i) + 3072*obj.a_max(i)*obj.j_max(i)^2*v_0(i) - 9216*obj.a_max(i)^2*obj.j_max(i)*v_0(i) + 3072*obj.a_max(i)^2*obj.j_max(i)^2*t_required^2 + 576*a_0(i)*obj.a_max(i)*obj.j_max(i)^2 - 2304*a_0(i)*obj.a_max(i)^2*obj.j_max(i) + 1536*a_0(i)^2*obj.a_max(i)*obj.j_max(i) + 192*obj.a_max(i)*obj.j_max(i)^3*t_required - 9216*obj.a_max(i)^3*obj.j_max(i)*t_required + 6144*a_0(i)*obj.a_max(i)*obj.j_max(i)*v_0(i) + 1536*a_0(i)*obj.a_max(i)*obj.j_max(i)^2*t_required + 6144*a_0(i)*obj.a_max(i)^2*obj.j_max(i)*t_required + 12288*obj.a_max(i)*dir(i)*obj.j_max(i)^2*q_0(i) - 12288*obj.a_max(i)*dir(i)*obj.j_max(i)^2*q_goal + 6144*obj.a_max(i)*obj.j_max(i)^2*t_required*v_0(i))^(1/2) - 144*obj.a_max(i)^2 + 3*obj.j_max(i)^2 + 96*obj.a_max(i)*obj.j_max(i)*t_required)/(192*obj.j_max(i));
                 
                 if ~imag(v_drive)
@@ -294,7 +294,7 @@ classdef LTPlanner < handle
                     end
                 end
                 
-                % Standard profile: Phase 2 does not exist
+                % Standard jerk profile: Phase 2 does not exist
                 root=roots([3, 12*obj.a_max(i), (-24*obj.a_max(i)*obj.j_max(i)*t_required - 12*a_0(i)^2 - 24*a_0(i)*obj.a_max(i) + 12*obj.a_max(i)^2 + 24*obj.j_max(i)*v_0(i)), 0, 48*a_0(i)^2*obj.a_max(i)*obj.j_max(i)*t_required - 96*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_0(i) + 96*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_goal(i) - 96*obj.a_max(i)*obj.j_max(i)^2*v_0(i)*t_required + 12*a_0(i)^4 + 16*a_0(i)^3*obj.a_max(i) - 24*a_0(i)^2*obj.a_max(i)^2 - 48*a_0(i)^2*obj.j_max(i)*v_0(i) + 48*obj.a_max(i)^2*obj.j_max(i)*v_0(i) + 48*obj.j_max(i)^2*v_0(i)^2]);
                 v_drive = (-2*a_0(i)^2 + 4*obj.j_max(i)*v_0(i) + root(3)^2)/(4*obj.j_max(i));
                 if ~imag(v_drive)
@@ -306,7 +306,7 @@ classdef LTPlanner < handle
                     end
                 end
                 
-                % Standard profile: Phase 6 does not exist
+                % Standard jerk profile: Phase 6 does not exist
                 root = roots([12, 24*obj.a_max(i), (-24*obj.a_max(i)*obj.j_max(i)*t_required + 24*a_0(i)^2 - 48*a_0(i)*obj.a_max(i) + 24*obj.a_max(i)^2 - 24*obj.j_max(i)*v_0(i) + 12*a_0(i) - 12*obj.a_max(i)), 0, -24*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_0(i) + 24*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_goal(i) + 9*a_0(i)^4 - 12*a_0(i)^3*obj.a_max(i) - 24*a_0(i)^2*obj.j_max(i)*v_0(i) + 48*a_0(i)*obj.a_max(i)*obj.j_max(i)*v_0(i) + 4*obj.a_max(i)^4 - 24*obj.a_max(i)^2*obj.j_max(i)*v_0(i) + 12*obj.j_max(i)^2*v_0(i)^2 + 6*a_0(i)^3 + 6*a_0(i)^2*obj.a_max(i) - 12*a_0(i)*obj.a_max(i)^2 - 12*a_0(i)*obj.j_max(i)*v_0(i) + 12*obj.a_max(i)*obj.j_max(i)*v_0(i) + 4*a_0(i)*obj.a_max(i) - 4*obj.a_max(i)^2]);
                 v_drive = root(3)^2/obj.j_max(i);
                 if ~imag(v_drive)
@@ -318,7 +318,7 @@ classdef LTPlanner < handle
                     end
                 end
                 
-                % Standard profile: Phases 2 and 6 do not exist
+                % Standard jerk profile: Phases 2 and 6 do not exist
                 root = roots([(144*obj.j_max(i)*t_required + 144*a_0(i)), (-72*obj.j_max(i)^2*t_required^2 - 144*a_0(i)*obj.j_max(i)*t_required + 36*a_0(i)^2 - 216*obj.j_max(i)*v_0(i)), (144*dir(i)*obj.j_max(i)^2*q_0(i) - 144*dir(i)*obj.j_max(i)^2*q_goal(i) + 48*a_0(i)^3 - 144*a_0(i)*obj.j_max(i)*v_0(i)), (-144*dir(i)*obj.j_max(i)^3*q_0(i)*t_required + 144*dir(i)*obj.j_max(i)^3*q_goal(i)*t_required - 48*a_0(i)^3*obj.j_max(i)*t_required - 144*a_0(i)*dir(i)*obj.j_max(i)^2*q_0(i) + 144*a_0(i)*dir(i)*obj.j_max(i)^2*q_goal(i) + 144*a_0(i)*obj.j_max(i)^2*v_0(i)*t_required + 6*a_0(i)^4 - 72*a_0(i)^2*obj.j_max(i)*v_0(i) + 216*obj.j_max(i)^2*v_0(i)^2), 0, -72*dir(i)^2*obj.j_max(i)^4*q_0(i)^2 + 144*dir(i)^2*obj.j_max(i)^4*q_0(i)*q_goal(i) - 72*dir(i)^2*obj.j_max(i)^4*q_goal(i)^2 - 48*a_0(i)^3*dir(i)*obj.j_max(i)^2*q_0(i) + 48*a_0(i)^3*dir(i)*obj.j_max(i)^2*q_goal(i) + 144*a_0(i)*dir(i)*obj.j_max(i)^3*q_0(i)*v_0(i) - 144*a_0(i)*dir(i)*obj.j_max(i)^3*q_goal(i)*v_0(i) + a_0(i)^6 - 6*a_0(i)^4*obj.j_max(i)*v_0(i) + 36*a_0(i)^2*obj.j_max(i)^2*v_0(i)^2 - 72*obj.j_max(i)^3*v_0(i)^3]);
                 v_drive = root(2)^2/obj.j_max(i);
                 if ~imag(v_drive)
@@ -340,6 +340,12 @@ classdef LTPlanner < handle
                         continue;
                     end
                 end
+                
+                % Modified profile: Phase 2 does not exist
+                
+                % Modified profile: Phase 6 does not exist
+                
+                % Modified profile: Phases 2 and 6 do not exist
                 
                 return
                 
