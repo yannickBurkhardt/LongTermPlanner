@@ -146,7 +146,9 @@ classdef LTPlanner < handle
                         t_rel(i,7) = t_rel(i,5);
                         t_rel(i,6) = 0;
                     else
-                        error("Negative root in t_rel(" + i + ",6): " + root)
+                        %error("Negative root in t_rel(" + i + ",6): " + root)
+                        t = zeros(obj.DoF,7);
+                        continue;
                     end
                 end
 
@@ -164,7 +166,9 @@ classdef LTPlanner < handle
                     
                     if(mod_jerk_profile)
                         % This case is not valid
-                        error("Input velocity exceeds limits.")
+                        %error("Input velocity exceeds limits.")
+                        t = zeros(obj.DoF,7);
+                        continue;
                     end
                     
                     % Formula calculated with matlab
@@ -175,7 +179,9 @@ classdef LTPlanner < handle
                         t_rel(i,2) = (-v_0(i) - a_0(i)*t_rel(i,1) - 1/2*obj.j_max(i)*t_rel(i,1)^2 + 1/2*obj.j_max(i)*t_rel(i,3)^2 + 1/2*obj.j_max(i)*t_rel(i,7)^2 - 1/2*obj.j_max(i)*t_rel(i,5)^2)/obj.a_max(i) - t_rel(i,3) + t_rel(i,6) + t_rel(i,5);
                         t_rel(i,4) = 0;
                     else
-                        error("Negative root in t_rel(" + i + ",4): " + root)
+                        %error("Negative root in t_rel(" + i + ",4): " + root)
+                        t = zeros(obj.DoF,7);
+                        continue;
                     end
 
                     % Check if max velocity and max acceleration cannot be reached
@@ -230,14 +236,16 @@ classdef LTPlanner < handle
                 if(t_rel(i,j) < 0)
                     if(t_rel(i,j) < -eps)
                         % No numeric inaccuracy
-                        error("t_rel(" + i + "," + j + ") is negative: " + t_rel(i,j))
+                        t = zeros(obj.DoF,7);
+                        %error("t_rel(" + i + "," + j + ") is negative: " + t_rel(i,j))
                     end
                     t_rel(i,j) = 0;
                 end
                 if any(abs(imag(t_rel(i,j))) > 0)
                     if any(abs(imag(t_rel(i,j))) > eps)
                         % No numeric inaccuracy
-                        error("t_rel(" + i + "," + j + ") is complex: " + t_rel(i,j))
+                        t = zeros(obj.DoF,7);
+                        %error("t_rel(" + i + "," + j + ") is complex: " + t_rel(i,j))
                     end
                     t_rel(i,j) = real(t_rel(i,j));
                 end
@@ -289,7 +297,7 @@ classdef LTPlanner < handle
                     t = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
                     
                     % Check time constraint was fulfilled
-                    if (t_required - t(end)) < tol
+                    if abs(t_required - t(end)) < tol
                         continue;
                     end
                 end
@@ -301,7 +309,7 @@ classdef LTPlanner < handle
                     t = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
                     
                     % Check time constraint was fulfilled
-                    if (t_required - t(end)) < tol
+                    if abs(t_required - t(end)) < tol
                         continue;
                     end
                 end
@@ -313,7 +321,7 @@ classdef LTPlanner < handle
                     t = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
                     
                     % Check time constraint was fulfilled
-                    if (t_required - t(end)) < tol
+                    if abs(t_required - t(end)) < tol
                         continue;
                     end
                 end
@@ -325,7 +333,7 @@ classdef LTPlanner < handle
                     t = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
                     % Check time constraint was fulfilled
-                    if (t_required - t(end)) < tol
+                    if abs(t_required - t(end)) < tol
                         continue;
                     end
                 end
@@ -336,114 +344,44 @@ classdef LTPlanner < handle
                     t = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
                     % Check time constraint was fulfilled
-                    if (t_required - t(end)) < tol
+                    if abs(t_required - t(end)) < tol
                         continue;
                     end
                 end
                 
                 % Modified profile: Phase 2 does not exist
-                
-                % Modified profile: Phase 6 does not exist
-                
-                % Modified profile: Phases 2 and 6 do not exist
-                
-                return
-                
-                % Reduction loop of v_max (if necessary)
-                v_drive_approx_loop_no = 0;
-                while(v_drive_approx_loop_no < v_drive_approx_loops)
+                root = roots([3, - 6*sqrt(2)*obj.a_max(i), (12*obj.a_max(i)*obj.j_max(i)*t_required - 6*a_0(i)^2 - 12*a_0(i)*obj.a_max(i) - 6*obj.a_max(i)^2 - 12*obj.j_max(i)*v_0(i)), 0, -12*a_0(i)^2*obj.a_max(i)*obj.j_max(i)*t_required - 24*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_0(i) + 24*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_goal(i) - 24*obj.a_max(i)*obj.j_max(i)^2*v_0(i)*t_required + 3*a_0(i)^4 + 4*a_0(i)^3*obj.a_max(i) + 6*a_0(i)^2*obj.a_max(i)^2 + 12*a_0(i)^2*obj.j_max(i)*v_0(i) + 12*obj.a_max(i)^2*obj.j_max(i)*v_0(i) + 12*obj.j_max(i)^2*v_0(i)^2]);
+                v_drive = -(root(3)^2 - a_0(i)^2 - 2*obj.j_max(i)*v_0(i))/(2*obj.j_max(i));
+                if ~imag(v_drive)
+                    t = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
-                    % j = +- j_max (const) -> linear a
-                    t_rel(i,1) = (obj.a_max(i) - a_0(i))/obj.j_max(i);
-                    t_rel(i,3) = obj.a_max(i)/obj.j_max(i);
-                    t_rel(i,5) = t_rel(i,3);
-                    t_rel(i,7) = t_rel(i,3);
-
-                    % a = +- a_max (const) -> linear v
-                    % works but only if all times > 0
-                    t_rel(i,2) = (v_drive(i) - v_0(i) - 1/2*t_rel(i,1)*a_0(i))/obj.a_max(i) - 1/2*(t_rel(i,1) + t_rel(i,3));
-                    t_rel(i,6) = v_drive(i)/obj.a_max(i) - 1/2*(t_rel(i,5) + t_rel(i,7));
-
-                    q_break = 0;
-                    % Check if max acceleration cannot be reached
-                    if(t_rel(i,2) < -eps)
-                        % Check if root is positive
-                        root = obj.j_max(i)*(v_drive(i) - v_0(i)) + 1/2*a_0(i)^2;
-                        if(root >= 0)
-                            t_rel(i,3) = sqrt(root)/obj.j_max(i);
-                            t_rel(i,1) = t_rel(i,3) - a_0(i)/obj.j_max(i);
-                            t_rel(i,2) = 0;
-                        end
-                        if(root < 0 || t_rel(i,1) < 0)
-                            % Use adjusted jerk profile
-                            [q_break, t_rel(i,1:3)] = getStopPos(obj, v_0(i) - v_drive(i), a_0, i);
-                            %error("Negative root in t_rel(" + i + ",2): " + root)
-                            % Increase v_max_reduced
-                            %v_drive_approx_loop_no = v_drive_approx_loop_no + 1;
-                            %v_drive(i) = v_drive(i) + obj.v_max(i) * (1/2)^v_drive_approx_loop_no;
-                            
-                            %t(i,:) = t_rel_prev;
-                        end
-                    end
-
-                    if(t_rel(i,6) < -eps)
-                        % Check if root is positive
-                        root = v_drive(i)/obj.j_max(i);
-                        if(root > 0)
-                            t_rel(i,5) = sqrt(root);
-                            t_rel(i,7) = t_rel(i,5);
-                            t_rel(i,6) = 0;
-                        else
-                            error("Negative root in t_rel(" + i + ",6): " + root)
-                        end
-                    end
-
-                    % v = v_max (const) -> linear q
-                    if(q_break)
-                        q_part1 = q_break + v_drive(i)*(t_rel(i,1) + t_rel(i,2) + t_rel(i,3));
-                    else
-                        q_part1 = v_0(i)*(t_rel(i,1) + t_rel(i,2) + t_rel(i,3)) + a_0(i)*(1/2*t_rel(i,1)^2 + t_rel(i,1)*(t_rel(i,2) + t_rel(i,3)) + 1/2*t_rel(i,3)^2) + obj.j_max(i)*(1/6*t_rel(i,1)^3 + 1/2*t_rel(i,1)^2*(t_rel(i,2) + t_rel(i,3)) - 1/6*t_rel(i,3)^3 + 1/2*t_rel(i,1)*t_rel(i,3)^2) + obj.a_max(i)*(1/2*t_rel(i,2)^2 + t_rel(i,2)*t_rel(i,3));
-                    end
-                    q_part2 = obj.j_max(i)*(1/6*t_rel(i,7)^3 + 1/2*t_rel(i,7)^2*(t_rel(i,6) + t_rel(i,5)) - 1/6*t_rel(i,5)^3 + 1/2*t_rel(i,7)*t_rel(i,5)^2) + obj.a_max(i)*(1/2*t_rel(i,6)^2 + t_rel(i,6)*t_rel(i,5));
-                    t_rel(i,4) = ((q_goal(i) - q_0(i))*dir - q_part1 - q_part2)/v_drive(i);
-
-                    % v_max_reduced has to be reached
-                    if t_rel(i,4) < -eps
-                        % Decrease v_max_reduced
-                        v_drive_approx_loop_no = v_drive_approx_loop_no + 1;
-                        v_drive(i) = v_drive(i) - obj.v_max(i) * (1/2)^v_drive_approx_loop_no;
-
-                        % Reset time to last underestimation
-                        t(i,:) = t_rel_prev;
+                    % Check time constraint was fulfilled
+                    if abs(t_required - t(end)) < tol
                         continue;
                     end
+                end
+                
+                % Modified profile: Phase 6 does not exist
+                root = roots([12, - 24*obj.a_max(i), (24*obj.a_max(i)*obj.j_max(i)*t_required - 12*a_0(i)^2 - 24*a_0(i)*obj.a_max(i) - 12*obj.a_max(i)^2 - 24*obj.j_max(i)*v_0(i)), 0, 24*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_0(i) - 24*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_goal(i) + 3*a_0(i)^4 + 8*a_0(i)^3*obj.a_max(i) + 6*a_0(i)^2*obj.a_max(i)^2 + 12*a_0(i)^2*obj.j_max(i)*v_0(i) + 24*a_0(i)*obj.a_max(i)*obj.j_max(i)*v_0(i) + 12*obj.a_max(i)^2*obj.j_max(i)*v_0(i) + 12*obj.j_max(i)^2*v_0(i)^2]);
+                v_drive = root(3)^2/obj.j_max(i);
+                if ~imag(v_drive)
+                    t = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
-                    t(i,:) = cumsum(t_rel(i,:));
+                    % Check time constraint was fulfilled
+                    if abs(t_required - t(end)) < tol
+                        continue;
+                    end
+                end
+                
+                % Modified profile: Phases 2 and 6 do not exist
+                root = roots([144, (-144*obj.j_max(i)*t_required + 144*a_0(i)), (72*obj.j_max(i)^2*t_required^2 - 144*a_0(i)*obj.j_max(i)*t_required - 36*a_0(i)^2 - 216*obj.j_max(i)*v_0(i)), (-144*dir(i)*obj.j_max(i)^2*q_0(i) + 144*dir(i)*obj.j_max(i)^2*q_goal(i) - 48*a_0(i)^3 - 144*a_0(i)*obj.j_max(i)*v_0(i)), (144*dir(i)*obj.j_max(i)^3*q_0(i)*t_required - 144*dir(i)*obj.j_max(i)^3*q_goal(i)*t_required + 48*a_0(i)^3*obj.j_max(i)*t_required - 144*a_0(i)*dir(i)*obj.j_max(i)^2*q_0(i) + 144*a_0(i)*dir(i)*obj.j_max(i)^2*q_goal(i) + 144*a_0(i)*obj.j_max(i)^2*v_0(i)*t_required + 6*a_0(i)^4 + 72*a_0(i)^2*obj.j_max(i)*v_0(i) + 216*obj.j_max(i)^2*v_0(i)^2), 0, 72*dir(i)^2*obj.j_max(i)^4*q_0(i)^2 - 144*dir(i)^2*obj.j_max(i)^4*q_0(i)*q_goal(i) + 72*dir(i)^2*obj.j_max(i)^4*q_goal(i)^2 + 48*a_0(i)^3*dir(i)*obj.j_max(i)^2*q_0(i) - 48*a_0(i)^3*dir(i)*obj.j_max(i)^2*q_goal(i) + 144*a_0(i)*dir(i)*obj.j_max(i)^3*q_0(i)*v_0(i) - 144*a_0(i)*dir(i)*obj.j_max(i)^3*q_goal(i)*v_0(i) - a_0(i)^6 - 6*a_0(i)^4*obj.j_max(i)*v_0(i) - 36*a_0(i)^2*obj.j_max(i)^2*v_0(i)^2 - 72*obj.j_max(i)^3*v_0(i)^3]);
+                v_drive = root(4)^2/obj.j_max(i);
+                if ~imag(v_drive)
+                    t = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
-                    % Check if calculated absolute time is bigger or smaller
-                    % than reference
-                    if t(i,7) > t_required
-                        % Increase v_max_reduced
-                        v_drive_approx_loop_no = v_drive_approx_loop_no + 1;
-                        v_drive(i) = v_drive(i) + obj.v_max(i) * (1/2)^v_drive_approx_loop_no;
-                        
-                        t(i,:) = t_rel_prev;
-                    else
-                        % Decrease v_max_reduced
-                        v_drive_approx_loop_no = v_drive_approx_loop_no + 1;
-                        v_drive(i) = v_drive(i) - obj.v_max(i) * (1/2)^v_drive_approx_loop_no;
-                        
-                        t_rel_prev = t(i,:);
-                        
-                        % Save modified jerk profile if it must be used
-                        if (q_break)
-                            mod_jerk_profile = true;
-                        end
-                        
-                        % Break loop if good approximation was found
-                        if abs(t(i,7) - t_required) < tol
-                            break;
-                        end
+                    % Check time constraint was fulfilled
+                    if abs(t_required - t(end)) < tol
+                        continue;
                     end
                 end
             end
@@ -478,7 +416,7 @@ classdef LTPlanner < handle
             
             % Check if max acceleration is reached
             if(t_rel(i,2) < -obj.Tsample)
-                t_rel(i,1) = abs(-a_0/obj.j_max(i) + sqrt(a_0^2/(2*obj.j_max(i)^2) - v_0/obj.j_max(i)));
+                t_rel(i,1) = -a_0/obj.j_max(i) + sqrt(a_0^2/(2*obj.j_max(i)^2) - v_0/obj.j_max(i));
                 t_rel(i,3) = t_rel(i,1) + a_0/obj.j_max(i);
                 t_rel(i,2) = 0;
             end
