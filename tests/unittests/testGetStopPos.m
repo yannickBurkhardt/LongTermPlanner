@@ -57,7 +57,7 @@ end
 
 % Print test results
 disp("TestGetStopPos results:")
-disp("Sucessful: " + success + " out of " + (2 * num_scenarios - 1))
+disp("Successful: " + success + " out of " + (2 * num_scenarios - 1))
 
 % Throw error if at least one test failed
 if fail > 0
