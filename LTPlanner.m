@@ -167,7 +167,7 @@ classdef LTPlanner < handle
                     if(mod_jerk_profile)
                         % This case is not valid
                         %error("Input velocity exceeds limits.")
-                        t = zeros(obj.DoF,7);
+                        t_rel = zeros(obj.DoF,7);
                         continue;
                     end
                     
@@ -265,7 +265,7 @@ classdef LTPlanner < handle
             t = zeros(obj.DoF,7); % Absolute time that is required to reach the end of current jerk phase
             mod_jerk_profile = false;
             eps = 1e-4;
-            tol = 0.05;
+            tol = 0.1;
 
             %% Analyse input data
             % Check if inputs are in limits
@@ -293,7 +293,7 @@ classdef LTPlanner < handle
                 % Standard jerk profile: Phases 2 and 6 exist
                 v_drive = (obj.a_max(i)*obj.j_max(i)*t_required/2 - a_0(i)^2/4 + a_0(i)*obj.a_max(i)/2 - obj.a_max(i)^2/2 + v_0(i)*obj.j_max(i)/2 - sqrt(36*obj.a_max(i)^2*obj.j_max(i)^2*t_required^2 - 36*a_0(i)^2*obj.a_max(i)*obj.j_max(i)*t_required + 72*a_0(i)*obj.a_max(i)^2*obj.j_max(i)*t_required - 72*obj.a_max(i)^3*obj.j_max(i)*t_required + 144*obj.a_max(i)*dir(i)*obj.j_max(i)^2*q_0(i) - 144*obj.a_max(i)*dir(i)*obj.j_max(i)^2*q_goal(i) + 72*obj.a_max(i)*obj.j_max(i)^2*v_0(i)*t_required - 9*a_0(i)^4 + 12*a_0(i)^3*obj.a_max(i) + 36*a_0(i)^2*obj.a_max(i)^2 + 36*a_0(i)^2*obj.j_max(i)*v_0(i) - 72*a_0(i)*obj.a_max(i)^3 - 72*a_0(i)*obj.a_max(i)*obj.j_max(i)*v_0(i) + 36*obj.a_max(i)^4 - 36*obj.j_max(i)^2*v_0(i)^2)/12)/obj.j_max(i);
                 
-                if ~imag(v_drive)
+                if ~imag(v_drive) && v_drive > 0
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
                     
                     % Check time constraint was fulfilled
@@ -305,7 +305,7 @@ classdef LTPlanner < handle
                 % Standard jerk profile: Phase 2 does not exist
                 root=roots([3, 12*obj.a_max(i), (-24*obj.a_max(i)*obj.j_max(i)*t_required - 12*a_0(i)^2 - 24*a_0(i)*obj.a_max(i) + 12*obj.a_max(i)^2 + 24*obj.j_max(i)*v_0(i)), 0, 48*a_0(i)^2*obj.a_max(i)*obj.j_max(i)*t_required - 96*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_0(i) + 96*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_goal(i) - 96*obj.a_max(i)*obj.j_max(i)^2*v_0(i)*t_required + 12*a_0(i)^4 + 16*a_0(i)^3*obj.a_max(i) - 24*a_0(i)^2*obj.a_max(i)^2 - 48*a_0(i)^2*obj.j_max(i)*v_0(i) + 48*obj.a_max(i)^2*obj.j_max(i)*v_0(i) + 48*obj.j_max(i)^2*v_0(i)^2]);
                 v_drive = (-2*a_0(i)^2 + 4*obj.j_max(i)*v_0(i) + root(3)^2)/(4*obj.j_max(i));
-                if ~imag(v_drive)
+                if ~imag(v_drive) && v_drive > 0
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
                     
                     % Check time constraint was fulfilled
@@ -317,7 +317,7 @@ classdef LTPlanner < handle
                 % Standard jerk profile: Phase 6 does not exist
                 root = roots([12, 24*obj.a_max(i), (-24*obj.a_max(i)*obj.j_max(i)*t_required + 24*a_0(i)^2 - 48*a_0(i)*obj.a_max(i) + 24*obj.a_max(i)^2 - 24*obj.j_max(i)*v_0(i) + 12*a_0(i) - 12*obj.a_max(i)), 0, -24*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_0(i) + 24*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_goal(i) + 9*a_0(i)^4 - 12*a_0(i)^3*obj.a_max(i) - 24*a_0(i)^2*obj.j_max(i)*v_0(i) + 48*a_0(i)*obj.a_max(i)*obj.j_max(i)*v_0(i) + 4*obj.a_max(i)^4 - 24*obj.a_max(i)^2*obj.j_max(i)*v_0(i) + 12*obj.j_max(i)^2*v_0(i)^2 + 6*a_0(i)^3 + 6*a_0(i)^2*obj.a_max(i) - 12*a_0(i)*obj.a_max(i)^2 - 12*a_0(i)*obj.j_max(i)*v_0(i) + 12*obj.a_max(i)*obj.j_max(i)*v_0(i) + 4*a_0(i)*obj.a_max(i) - 4*obj.a_max(i)^2]);
                 v_drive = root(3)^2/obj.j_max(i);
-                if ~imag(v_drive)
+                if ~imag(v_drive) && v_drive > 0
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
                     
                     % Check time constraint was fulfilled
@@ -329,7 +329,7 @@ classdef LTPlanner < handle
                 % Standard jerk profile: Phases 2 and 6 do not exist
                 root = roots([(144*obj.j_max(i)*t_required + 144*a_0(i)), (-72*obj.j_max(i)^2*t_required^2 - 144*a_0(i)*obj.j_max(i)*t_required + 36*a_0(i)^2 - 216*obj.j_max(i)*v_0(i)), (144*dir(i)*obj.j_max(i)^2*q_0(i) - 144*dir(i)*obj.j_max(i)^2*q_goal(i) + 48*a_0(i)^3 - 144*a_0(i)*obj.j_max(i)*v_0(i)), (-144*dir(i)*obj.j_max(i)^3*q_0(i)*t_required + 144*dir(i)*obj.j_max(i)^3*q_goal(i)*t_required - 48*a_0(i)^3*obj.j_max(i)*t_required - 144*a_0(i)*dir(i)*obj.j_max(i)^2*q_0(i) + 144*a_0(i)*dir(i)*obj.j_max(i)^2*q_goal(i) + 144*a_0(i)*obj.j_max(i)^2*v_0(i)*t_required + 6*a_0(i)^4 - 72*a_0(i)^2*obj.j_max(i)*v_0(i) + 216*obj.j_max(i)^2*v_0(i)^2), 0, -72*dir(i)^2*obj.j_max(i)^4*q_0(i)^2 + 144*dir(i)^2*obj.j_max(i)^4*q_0(i)*q_goal(i) - 72*dir(i)^2*obj.j_max(i)^4*q_goal(i)^2 - 48*a_0(i)^3*dir(i)*obj.j_max(i)^2*q_0(i) + 48*a_0(i)^3*dir(i)*obj.j_max(i)^2*q_goal(i) + 144*a_0(i)*dir(i)*obj.j_max(i)^3*q_0(i)*v_0(i) - 144*a_0(i)*dir(i)*obj.j_max(i)^3*q_goal(i)*v_0(i) + a_0(i)^6 - 6*a_0(i)^4*obj.j_max(i)*v_0(i) + 36*a_0(i)^2*obj.j_max(i)^2*v_0(i)^2 - 72*obj.j_max(i)^3*v_0(i)^3]);
                 v_drive = root(2)^2/obj.j_max(i);
-                if ~imag(v_drive)
+                if ~imag(v_drive) && v_drive > 0
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
                     % Check time constraint was fulfilled
@@ -340,7 +340,7 @@ classdef LTPlanner < handle
                 
                 % Modified jerk profile: Phases 2 and 6 exist
                 v_drive = -(dir(i)*(q_0(i) - q_goal(i)) - obj.j_max(i)*((a_0(i) + obj.a_max(i))^3/(6*obj.j_max(i)^3) - obj.a_max(i)^3/(6*obj.j_max(i)^3) + (obj.a_max(i)^2*(a_0(i) + obj.a_max(i)))/(2*obj.j_max(i)^3) + ((a_0(i) + obj.a_max(i))^2*((v_0(i) + (a_0(i)*(a_0(i) - obj.a_max(i)))/(2*obj.j_max(i)))/obj.a_max(i) + obj.a_max(i)/(2*obj.j_max(i)) + (a_0(i) - obj.a_max(i))/(2*obj.j_max(i))))/(2*obj.j_max(i)^2)) + a_0(i)*((a_0(i) + obj.a_max(i))^2/(2*obj.j_max(i)^2) + obj.a_max(i)^2/(2*obj.j_max(i)^2) + ((a_0(i) + obj.a_max(i))*((v_0(i) + (a_0(i)*(a_0(i) - obj.a_max(i)))/(2*obj.j_max(i)))/obj.a_max(i) + obj.a_max(i)/(2*obj.j_max(i)) + (a_0(i) - obj.a_max(i))/(2*obj.j_max(i))))/obj.j_max(i)) - obj.a_max(i)*(((v_0(i) + (a_0(i)*(a_0(i) - obj.a_max(i)))/(2*obj.j_max(i)))/obj.a_max(i) - obj.a_max(i)/(2*obj.j_max(i)) + (a_0(i) - obj.a_max(i))/(2*obj.j_max(i)))^2/2 + (obj.a_max(i)*((v_0(i) + (a_0(i)*(a_0(i) - obj.a_max(i)))/(2*obj.j_max(i)))/obj.a_max(i) - obj.a_max(i)/(2*obj.j_max(i)) + (a_0(i) - obj.a_max(i))/(2*obj.j_max(i))))/obj.j_max(i)) + v_0(i)*((v_0(i) + (a_0(i)*(a_0(i) - obj.a_max(i)))/(2*obj.j_max(i)))/obj.a_max(i) + (a_0(i) + obj.a_max(i))/obj.j_max(i) + obj.a_max(i)/(2*obj.j_max(i)) + (a_0(i) - obj.a_max(i))/(2*obj.j_max(i))))/(obj.a_max(i)/(2*obj.j_max(i)) - v_0(i)/obj.a_max(i) + obj.a_max(i)*(((v_0(i) + (a_0(i)*(a_0(i) - obj.a_max(i)))/(2*obj.j_max(i)))/obj.a_max(i) - obj.a_max(i)/(2*obj.j_max(i)) + (a_0(i) - obj.a_max(i))/(2*obj.j_max(i)))/obj.a_max(i) + 1/obj.j_max(i)) - (a_0(i)^2 + 2*a_0(i)*obj.a_max(i) + 4*obj.a_max(i)^2 - 2*obj.j_max(i)*t_required*obj.a_max(i) + 2*obj.j_max(i)*v_0(i))/(2*obj.a_max(i)*obj.j_max(i)) + (a_0(i) + obj.a_max(i))^2/(2*obj.a_max(i)*obj.j_max(i)) - (a_0(i)*(a_0(i) + obj.a_max(i)))/(obj.a_max(i)*obj.j_max(i)));
-                if ~imag(v_drive)
+                if ~imag(v_drive) && v_drive > 0
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
                     % Check time constraint was fulfilled
@@ -352,7 +352,7 @@ classdef LTPlanner < handle
                 % Modified profile: Phase 2 does not exist
                 root = roots([3, - 6*sqrt(2)*obj.a_max(i), (12*obj.a_max(i)*obj.j_max(i)*t_required - 6*a_0(i)^2 - 12*a_0(i)*obj.a_max(i) - 6*obj.a_max(i)^2 - 12*obj.j_max(i)*v_0(i)), 0, -12*a_0(i)^2*obj.a_max(i)*obj.j_max(i)*t_required - 24*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_0(i) + 24*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_goal(i) - 24*obj.a_max(i)*obj.j_max(i)^2*v_0(i)*t_required + 3*a_0(i)^4 + 4*a_0(i)^3*obj.a_max(i) + 6*a_0(i)^2*obj.a_max(i)^2 + 12*a_0(i)^2*obj.j_max(i)*v_0(i) + 12*obj.a_max(i)^2*obj.j_max(i)*v_0(i) + 12*obj.j_max(i)^2*v_0(i)^2]);
                 v_drive = -(root(3)^2 - a_0(i)^2 - 2*obj.j_max(i)*v_0(i))/(2*obj.j_max(i));
-                if ~imag(v_drive)
+                if ~imag(v_drive) && v_drive > 0
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
                     % Check time constraint was fulfilled
@@ -364,7 +364,7 @@ classdef LTPlanner < handle
                 % Modified profile: Phase 6 does not exist
                 root = roots([12, - 24*obj.a_max(i), (24*obj.a_max(i)*obj.j_max(i)*t_required - 12*a_0(i)^2 - 24*a_0(i)*obj.a_max(i) - 12*obj.a_max(i)^2 - 24*obj.j_max(i)*v_0(i)), 0, 24*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_0(i) - 24*dir(i)*obj.j_max(i)^2*obj.a_max(i)*q_goal(i) + 3*a_0(i)^4 + 8*a_0(i)^3*obj.a_max(i) + 6*a_0(i)^2*obj.a_max(i)^2 + 12*a_0(i)^2*obj.j_max(i)*v_0(i) + 24*a_0(i)*obj.a_max(i)*obj.j_max(i)*v_0(i) + 12*obj.a_max(i)^2*obj.j_max(i)*v_0(i) + 12*obj.j_max(i)^2*v_0(i)^2]);
                 v_drive = root(3)^2/obj.j_max(i);
-                if ~imag(v_drive)
+                if ~imag(v_drive) && v_drive > 0
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
                     % Check time constraint was fulfilled
@@ -376,7 +376,7 @@ classdef LTPlanner < handle
                 % Modified profile: Phases 2 and 6 do not exist
                 root = roots([144, (-144*obj.j_max(i)*t_required + 144*a_0(i)), (72*obj.j_max(i)^2*t_required^2 - 144*a_0(i)*obj.j_max(i)*t_required - 36*a_0(i)^2 - 216*obj.j_max(i)*v_0(i)), (-144*dir(i)*obj.j_max(i)^2*q_0(i) + 144*dir(i)*obj.j_max(i)^2*q_goal(i) - 48*a_0(i)^3 - 144*a_0(i)*obj.j_max(i)*v_0(i)), (144*dir(i)*obj.j_max(i)^3*q_0(i)*t_required - 144*dir(i)*obj.j_max(i)^3*q_goal(i)*t_required + 48*a_0(i)^3*obj.j_max(i)*t_required - 144*a_0(i)*dir(i)*obj.j_max(i)^2*q_0(i) + 144*a_0(i)*dir(i)*obj.j_max(i)^2*q_goal(i) + 144*a_0(i)*obj.j_max(i)^2*v_0(i)*t_required + 6*a_0(i)^4 + 72*a_0(i)^2*obj.j_max(i)*v_0(i) + 216*obj.j_max(i)^2*v_0(i)^2), 0, 72*dir(i)^2*obj.j_max(i)^4*q_0(i)^2 - 144*dir(i)^2*obj.j_max(i)^4*q_0(i)*q_goal(i) + 72*dir(i)^2*obj.j_max(i)^4*q_goal(i)^2 + 48*a_0(i)^3*dir(i)*obj.j_max(i)^2*q_0(i) - 48*a_0(i)^3*dir(i)*obj.j_max(i)^2*q_goal(i) + 144*a_0(i)*dir(i)*obj.j_max(i)^3*q_0(i)*v_0(i) - 144*a_0(i)*dir(i)*obj.j_max(i)^3*q_goal(i)*v_0(i) - a_0(i)^6 - 6*a_0(i)^4*obj.j_max(i)*v_0(i) - 36*a_0(i)^2*obj.j_max(i)^2*v_0(i)^2 - 72*obj.j_max(i)^3*v_0(i)^3]);
                 v_drive = root(4)^2/obj.j_max(i);
-                if ~imag(v_drive)
+                if ~imag(v_drive) && v_drive > 0
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
                     % Check time constraint was fulfilled
