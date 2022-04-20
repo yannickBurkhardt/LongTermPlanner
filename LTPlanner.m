@@ -39,8 +39,52 @@ classdef LTPlanner < handle
         end
         
         function [q_traj, v_traj, a_traj] = trajectory(obj, q_goal, q_0, v_0, a_0)
-            [t, dir, ~] = optSwitchTimes(obj, q_goal, q_0, v_0, a_0);
-            q_traj = t + dir;
+            t_opt = zeros(obj.DoF, 7);     % Optimal jerk switching times
+            t_scaled = zeros(obj.DoF, 7);  % Scaled jerk switching times
+            dir = zeros(obj.DoF, 1);       % Direction of movement
+            mod_jerk_profile = false(1,7); % Boolean to choose jerk profile
+            
+            % Bring inputs into correct format
+            if size(q_goal, 2) > 1
+                q_goal = q_goal';
+            end
+            if size(q_0, 2) > 1
+                q_0 = q_0';
+            end
+            if size(v_0, 2) > 1
+                v_0 = v_0';
+            end
+            if size(a_0, 2) > 1
+                a_0 = a_0';
+            end
+            
+            %% Find slowest joint
+            % Calculate time-optimal profiles
+            for joint = 1:obj.DoF
+                [t_opt(joint,:), dir(joint), ~] = optSwitchTimes(obj, q_goal(joint), q_0(joint), v_0(joint), a_0(joint), joint);
+            end
+            
+            % Save minimum time and joint
+            [t_required, slowest_joint] = max(t_opt(:,end));
+            
+            
+            %% Scale other joints to require same time
+            for joint = 1:obj.DoF
+                if joint == slowest_joint
+                    continue;
+                end
+                [t_scaled(joint,:), mod_jerk_profile(joint)] = timeScaling(obj, q_goal(joint), q_0(joint), v_0(joint), a_0(joint), dir(joint), joint, t_required);
+            end
+            
+            % If no solution was found, use optimal time
+            for joint = 1:obj.DoF
+                if(~any(t_scaled(joint,:)))
+                    t_scaled(joint,:) = t_opt(joint,:);
+                end
+            end
+            
+            %% Calculate sampled trajectories
+            [q_traj, v_traj, a_traj] = getTrajectories(obj, t_scaled, dir, mod_jerk_profile, q_0, v_0, a_0);
         end
             
         
@@ -70,7 +114,7 @@ classdef LTPlanner < handle
             if nargin > 6
                 v_drive = varargin{7};
             else
-                v_drive = obj.v_max;
+                v_drive = obj.v_max(joint);
             end
             
             % Parameters for calculation
@@ -414,26 +458,24 @@ classdef LTPlanner < handle
             % times
             
             % Length of trajectory in samples
-            traj_len = zeros(obj.DoF,1);
-            for joint=1:obj.DoF
-                traj_len(joint) = ceil(t(joint,7)/obj.Tsample) + 1;
-            end
+            traj_len = max(ceil(t(:,7)/obj.Tsample)) + 1;
 
+            % Calculate jerks, accelerations, velocities and positions
+            j_traj = zeros(obj.DoF,traj_len);
+            
             for joint=1:obj.DoF
-                % Calculate jerks, accelerations, velocities and positions
-                j_traj = zeros(1,traj_len(joint));
 
                 % Calculate jerks
                 sampled_t = zeros(1,7); % Jerk switch times in samples
                 sampled_t_trans = zeros(1,7); % Sample fractions for each phase
                 
                 % For first phase: check if breaking or accelerating
-                if mod_jerk_profile
+                if mod_jerk_profile(joint)
                     % Only used for time scaling
-                    jerk_profile = dir * obj.j_max(joint) * [-1 0 1 0 -1 0 1];
+                    jerk_profile = dir(joint) * obj.j_max(joint) * [-1 0 1 0 -1 0 1];
                 else
                     % Standard case
-                    jerk_profile = dir * obj.j_max(joint) * [1 0 -1 0 -1 0 1];
+                    jerk_profile = dir(joint) * obj.j_max(joint) * [1 0 -1 0 -1 0 1];
                 end
                 
                 % Calculate inaccuraties when sampling times
@@ -452,42 +494,42 @@ classdef LTPlanner < handle
                 
                 % Calculate sampled jerk trajectory
                 if(sampled_t(1) > 0)
-                    j_traj(1:sampled_t(1)) = jerk_profile(1);
+                    j_traj(joint,1:sampled_t(1)) = jerk_profile(1);
                 end
                 
                 for j = 2:7
                     if(sampled_t(j) - sampled_t(j-1) > 0)
-                        j_traj(sampled_t(j-1)+1:sampled_t(j)) = jerk_profile(j);
+                        j_traj(joint,sampled_t(j-1)+1:sampled_t(j)) = jerk_profile(j);
                     end
                 end
                 
                 % Add jerk of fractioned samples
                 % (only if acceleration phases exist)
                 if(sampled_t(3) >= sampled_t(2))
-                    j_traj(sampled_t(1) + 1) = j_traj(sampled_t(1) + 1) + sampled_t_trans(1)/obj.Tsample * jerk_profile(1);
+                    j_traj(joint,sampled_t(1) + 1) = j_traj(joint,sampled_t(1) + 1) + sampled_t_trans(1)/obj.Tsample * jerk_profile(1);
                     if(sampled_t(2) > 0)
-                        j_traj(sampled_t(2)) = j_traj(sampled_t(2)) + (1 - sampled_t_trans(2)/obj.Tsample) * jerk_profile(3);
+                        j_traj(joint,sampled_t(2)) = j_traj(joint,sampled_t(2)) + (1 - sampled_t_trans(2)/obj.Tsample) * jerk_profile(3);
                     end
-                    j_traj(sampled_t(3) + 1) = j_traj(sampled_t(3) + 1) + sampled_t_trans(3)/obj.Tsample * jerk_profile(3);
+                    j_traj(joint,sampled_t(3) + 1) = j_traj(joint,sampled_t(3) + 1) + sampled_t_trans(3)/obj.Tsample * jerk_profile(3);
                 end
                 if(sampled_t(4) > 0)
-                    j_traj(sampled_t(4)) = j_traj(sampled_t(4)) + (1 - sampled_t_trans(4)/obj.Tsample) * jerk_profile(5);
+                    j_traj(joint,sampled_t(4)) = j_traj(joint,sampled_t(4)) + (1 - sampled_t_trans(4)/obj.Tsample) * jerk_profile(5);
                 end
-                j_traj(sampled_t(5) + 1) = j_traj(sampled_t(5) + 1) + sampled_t_trans(5)/obj.Tsample * jerk_profile(5);
+                j_traj(joint,sampled_t(5) + 1) = j_traj(joint,sampled_t(5) + 1) + sampled_t_trans(5)/obj.Tsample * jerk_profile(5);
                 if(sampled_t(6) > 0)
-                    j_traj(sampled_t(6)) = j_traj(sampled_t(6)) + (1 - sampled_t_trans(6)/obj.Tsample) * jerk_profile(7);
+                    j_traj(joint,sampled_t(6)) = j_traj(joint,sampled_t(6)) + (1 - sampled_t_trans(6)/obj.Tsample) * jerk_profile(7);
                 end
-                j_traj(sampled_t(7) + 1) = j_traj(sampled_t(7) + 1) + sampled_t_trans(7)/obj.Tsample * jerk_profile(7);
-
-                % Calculate accelerations
-                a_traj = obj.Tsample * cumsum(j_traj) + a_0;
-
-                % Calculate velocities
-                v_traj = obj.Tsample * cumsum(a_traj) + v_0;
-
-                % Calculate positions
-                q_traj = obj.Tsample * cumsum(v_traj) + q_0;
+                j_traj(joint,sampled_t(7) + 1) = j_traj(joint,sampled_t(7) + 1) + sampled_t_trans(7)/obj.Tsample * jerk_profile(7);
             end
+
+            % Calculate accelerations
+            a_traj = obj.Tsample * cumsum(j_traj,2) + a_0;
+
+            % Calculate velocities
+            v_traj = obj.Tsample * cumsum(a_traj,2) + v_0;
+
+            % Calculate positions
+            q_traj = obj.Tsample * cumsum(v_traj,2) + q_0;
         end
     end
 end
