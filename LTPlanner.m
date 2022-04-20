@@ -297,7 +297,7 @@ classdef LTPlanner < handle
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
                     
                     % Check time constraint was fulfilled
-                    if abs(t_required - t(end)) < tol
+                    if t_required - t(end) < tol && t_required - t(end) > -tol/10
                         continue;
                     end
                 end
@@ -309,7 +309,7 @@ classdef LTPlanner < handle
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
                     
                     % Check time constraint was fulfilled
-                    if abs(t_required - t(end)) < tol
+                    if t_required - t(end) < tol && t_required - t(end) > -tol/10
                         continue;
                     end
                 end
@@ -321,7 +321,7 @@ classdef LTPlanner < handle
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
                     
                     % Check time constraint was fulfilled
-                    if abs(t_required - t(end)) < tol
+                    if t_required - t(end) < tol && t_required - t(end) > -tol/10
                         continue;
                     end
                 end
@@ -333,7 +333,7 @@ classdef LTPlanner < handle
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
                     % Check time constraint was fulfilled
-                    if abs(t_required - t(end)) < tol
+                    if t_required - t(end) < tol && t_required - t(end) > -tol/10
                         continue;
                     end
                 end
@@ -344,7 +344,7 @@ classdef LTPlanner < handle
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
                     % Check time constraint was fulfilled
-                    if abs(t_required - t(end)) < tol
+                    if t_required - t(end) < tol && t_required - t(end) > -tol/10
                         continue;
                     end
                 end
@@ -356,7 +356,7 @@ classdef LTPlanner < handle
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
                     % Check time constraint was fulfilled
-                    if abs(t_required - t(end)) < tol
+                    if t_required - t(end) < tol && t_required - t(end) > -tol/10
                         continue;
                     end
                 end
@@ -368,7 +368,7 @@ classdef LTPlanner < handle
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
                     % Check time constraint was fulfilled
-                    if abs(t_required - t(end)) < tol
+                    if t_required - t(end) < tol && t_required - t(end) > -tol/10
                         continue;
                     end
                 end
@@ -380,7 +380,7 @@ classdef LTPlanner < handle
                     [t, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, v_drive);
 
                     % Check time constraint was fulfilled
-                    if abs(t_required - t(end)) < tol
+                    if t_required - t(end) < tol && t_required - t(end) > -tol/10
                         continue;
                     end
                 end
