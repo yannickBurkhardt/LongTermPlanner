@@ -36,7 +36,7 @@ for q_goal = -6:step:7
         for a_0 = a_lb:step:a_ub
 
             % Plan trajectory
-            t = ltp.optSwitchTimes(q_goal, q_0, v_0, a_0);
+            [t, dir, ~] = ltp.optSwitchTimes(q_goal, q_0, v_0, a_0, 1);
             
             % Scale up trajectory
             for i = 1:size(time_increments, 2)
@@ -46,17 +46,14 @@ for q_goal = -6:step:7
                 end
                 
                 % Calculate scaled times
-                [t_scaled, mod_jerk_profile] = ltp.timeScaling(q_goal, q_0, v_0, a_0, t(end) + time_increments(i));
+                [t_scaled, mod_jerk_profile] = ltp.timeScaling(q_goal, q_0, v_0, a_0, dir, 1, t(end) + time_increments(i));
                 
                 % If scaling failed, assign optimal times
                 if(~any(t_scaled))
                     t_scaled = t;
                 end
             
-                % Calculate direction and trajectories
-                [q_stop, ~] = ltp.getStopPos(v_0, a_0, 1);
-                q_diff = q_goal - (q_0 + q_stop);
-                dir = sign(q_diff);
+                % Calculate trajectories
                 [q_traj, v_traj, a_traj] = ltp.getTrajectories(t_scaled, dir, mod_jerk_profile, q_0, v_0, a_0);
 
                 % Check if goal was reached in time
