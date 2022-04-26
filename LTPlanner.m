@@ -266,7 +266,7 @@ classdef LTPlanner < handle
 
                         % Calculate other switch times
                         t_rel(5) = (a_0 + obj.a_max(joint))/obj.j_max(joint) + t_rel(1);
-                        t_rel(6) = (obj.j_max^2*t_rel(1)^2 + 2*obj.j_max(joint)^2*t_rel(1)*t_rel(5) - obj.j_max(joint)^2*t_rel(5)^2 + 2*a_0*obj.j_max(joint)*t_rel(1) + 2*a_0*obj.j_max(joint)*t_rel(5) - obj.a_max(joint)^2 + 2*obj.j_max(joint)*v_0)/(2*obj.j_max(joint)*obj.a_max(joint));
+                        t_rel(6) = (obj.j_max(joint)^2*t_rel(1)^2 + 2*obj.j_max(joint)^2*t_rel(1)*t_rel(5) - obj.j_max(joint)^2*t_rel(5)^2 + 2*a_0*obj.j_max(joint)*t_rel(1) + 2*a_0*obj.j_max(joint)*t_rel(5) - obj.a_max(joint)^2 + 2*obj.j_max(joint)*v_0)/(2*obj.j_max(joint)*obj.a_max(joint));
                         t_rel(2) = 0;
                     end
 
