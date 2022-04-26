@@ -277,21 +277,22 @@ classdef LTPlanner < handle
             end
 
             % Safety checks
-            if(t_rel(joint) < 0)
-                if(t_rel(joint) < -eps)
+            if any(t_rel < 0)
+                if any(t_rel < -eps)
                     % No numeric inaccuracy
                     t_rel = zeros(1,7);
                     %error("t_rel(" + i + "," + j + ") is negative: " + t_rel(j))
                 end
-                t_rel(joint) = 0;
+                t_rel = max(0, t_rel);
             end
-            if any(abs(imag(t_rel(joint))) > 0)
-                if any(abs(imag(t_rel(joint))) > eps)
+
+            if any(abs(imag(t_rel)) > 0)
+                if any(abs(imag(t_rel)) > eps)
                     % No numeric inaccuracy
                     t_rel = zeros(1,7);
                     %error("t_rel(" + i + "," + j + ") is complex: " + t_rel(j))
                 end
-                t_rel(joint) = real(t_rel(joint));
+                t_rel = real(t_rel);
             end
 
             % Calculate absolute times for jerk switches
