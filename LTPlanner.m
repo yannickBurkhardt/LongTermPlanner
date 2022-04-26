@@ -120,7 +120,7 @@ classdef LTPlanner < handle
             % Parameters for calculation
             t_rel = zeros(1,7); % Time that is required for one jerk phase
             mod_jerk_profile = false; % Use the standard jerk profile if not changed during calculations
-            eps = 1e-4;
+            eps = 1e-3;
             
             % Check if inputs are in limits
             checkInputs(obj, v_0, a_0, joint);
@@ -277,23 +277,18 @@ classdef LTPlanner < handle
             end
 
             % Safety checks
-            if any(t_rel < 0)
-                if any(t_rel < -eps)
-                    % No numeric inaccuracy
-                    t_rel = zeros(1,7);
-                    %error("t_rel(" + i + "," + j + ") is negative: " + t_rel(j))
-                end
-                t_rel = max(0, t_rel);
+            if any(t_rel < -eps)
+                % No numeric inaccuracy
+                t_rel = zeros(1,7);
+                %error("t_rel(" + i + "," + j + ") is negative: " + t_rel(j))
             end
 
-            if any(abs(imag(t_rel)) > 0)
-                if any(abs(imag(t_rel)) > eps)
-                    % No numeric inaccuracy
-                    t_rel = zeros(1,7);
-                    %error("t_rel(" + i + "," + j + ") is complex: " + t_rel(j))
-                end
-                t_rel = real(t_rel);
+            if any(abs(imag(t_rel)) > eps)
+                % No numeric inaccuracy
+                t_rel = zeros(1,7);
+                %error("t_rel(" + i + "," + j + ") is complex: " + t_rel(j))
             end
+            t_rel = max(0, real(t_rel));
 
             % Calculate absolute times for jerk switches
             t = cumsum(t_rel);
