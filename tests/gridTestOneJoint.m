@@ -1,6 +1,6 @@
 % Initialize Parameters
 eps = 1e-6;
-tol = 0.01;
+tol = 0.02;
 step = 0.1;
 success = 0;
 not_finished = [];
