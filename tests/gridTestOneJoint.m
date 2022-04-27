@@ -8,7 +8,7 @@ failure = [];
 v_max = 1;
 a_max = 2;
 j_max = 15;
-Tsample = 0.001;
+Tsample = 0.004;
 avg_error = 0;
 
 % Initialize Planner

@@ -10,7 +10,7 @@ time_error = [];
 v_max = 1;
 a_max = 2;
 j_max = 15;
-Tsample = 0.001;
+Tsample = 0.004;
 time_increments = [0.05, 0.1, 0.2, 0.5, 1.0, 2.0];
 
 % Initialize Planner
@@ -46,7 +46,7 @@ for q_goal = -6:step:7
                 end
                 
                 % Calculate scaled times
-                [t_scaled, mod_jerk_profile] = ltp.timeScaling(q_goal, q_0, v_0, a_0, dir, 1, t(end) + time_increments(i));
+                [t_scaled, v_drive, mod_jerk_profile] = ltp.timeScaling(q_goal, q_0, v_0, a_0, dir, 1, t(end) + time_increments(i));
                 
                 % If scaling failed, assign optimal times
                 if(~any(t_scaled))
@@ -54,7 +54,7 @@ for q_goal = -6:step:7
                 end
             
                 % Calculate trajectories
-                [q_traj, v_traj, a_traj] = ltp.getTrajectories(t_scaled, dir, mod_jerk_profile, q_0, v_0, a_0);
+                [q_traj, v_traj, a_traj] = ltp.getTrajectories(t_scaled, dir, mod_jerk_profile, q_0, v_0, a_0, v_drive);
 
                 % Check if goal was reached in time
                 if abs(q_traj(end) - q_goal) < tol_q && abs(t(end) + time_increments(i) - t_scaled(end)) < tol_t

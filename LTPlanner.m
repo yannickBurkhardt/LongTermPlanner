@@ -73,7 +73,7 @@ classdef LTPlanner < handle
                 if joint == slowest_joint
                     continue;
                 end
-                [t_scaled(joint,:), mod_jerk_profile(joint)] = timeScaling(obj, q_goal(joint), q_0(joint), v_0(joint), a_0(joint), dir(joint), joint, t_required);
+                [t_scaled(joint,:), v_drive, mod_jerk_profile(joint)] = timeScaling(obj, q_goal(joint), q_0(joint), v_0(joint), a_0(joint), dir(joint), joint, t_required);
             end
             
             % If no solution was found, use optimal time
@@ -84,7 +84,7 @@ classdef LTPlanner < handle
             end
             
             %% Calculate sampled trajectories
-            [q_traj, v_traj, a_traj] = getTrajectories(obj, t_scaled, dir, mod_jerk_profile, q_0, v_0, a_0);
+            [q_traj, v_traj, a_traj] = getTrajectories(obj, t_scaled, dir, mod_jerk_profile, q_0, v_0, a_0, v_drive);
         end
             
         
@@ -253,9 +253,10 @@ classdef LTPlanner < handle
                         t_rel(5) = t_rel(7) + obj.a_max(joint)/obj.j_max(joint);
                         t_rel(2) = -(-obj.j_max(joint)*t_rel(5)^2 - 2*obj.j_max(joint)*t_rel(5)*t_rel(7) + obj.j_max(joint)*t_rel(7)^2 + a_0*t_rel(1) + obj.a_max(joint)*t_rel(1) + 2*obj.a_max(joint)*t_rel(5) + 2*obj.a_max(joint)*t_rel(7) + 2*v_0)/(2*obj.a_max(joint));
                         t_rel(6) = 0;
+                    end
 
                     % Check if -a_max is exceeded
-                    elseif(t_rel(7)*obj.j_max(joint) > obj.a_max(joint))
+                    if(t_rel(7)*obj.j_max(joint) > obj.a_max(joint))
                         t_rel(7) = obj.a_max(joint)/obj.j_max(joint);
                         root = roots([12, - 24*obj.a_max(joint), (-12*a_0^2 + 12*obj.a_max(joint)^2 + 24*obj.j_max(joint)*v_0), 0, 24*dir*obj.j_max(joint)^2*q_0*obj.a_max(joint) - 24*dir*obj.j_max(joint)^2*q_goal*obj.a_max(joint) + 3*a_0^4 + 8*a_0^3*obj.a_max(joint) + 6*a_0^2*obj.a_max(joint)^2 - 12*a_0^2*obj.j_max(joint)*v_0 - 24*a_0*obj.j_max(joint)*v_0*obj.a_max(joint) - 12*obj.a_max(joint)^2*obj.j_max(joint)*v_0 + 12*obj.j_max(joint)^2*v_0^2]);
 
@@ -294,7 +295,7 @@ classdef LTPlanner < handle
             t = cumsum(t_rel);
         end
         
-        function [t, mod_jerk_profile] = timeScaling(obj, q_goal, q_0, v_0, a_0, dir, joint, t_required)
+        function [t, v_drive, mod_jerk_profile] = timeScaling(obj, q_goal, q_0, v_0, a_0, dir, joint, t_required)
             % TIMESCALING % Calculate switching times to fulfil a given
             % time by adjusting the maximally reached velocity
             
@@ -406,6 +407,7 @@ classdef LTPlanner < handle
             % No valid solution found
             mod_jerk_profile = false;
             t = zeros(1,7);
+            v_drive = obj.v_max(joint);
         end
         
         function [q, t_rel, dir] = getStopPos(obj, v_0, a_0, joint)
@@ -449,9 +451,23 @@ classdef LTPlanner < handle
             q = dir * q;
         end
         
-        function [q_traj, v_traj, a_traj] = getTrajectories(obj, t, dir, mod_jerk_profile, q_0, v_0, a_0)
+        function [q_traj, v_traj, a_traj] = getTrajectories(varargin)
             %GETTRAJECTORIES % Calculate trajectory based on jerk switch
             % times
+            
+            obj = varargin{1};
+            t = varargin{2};
+            dir = varargin{3};
+            mod_jerk_profile = varargin{4};
+            q_0 = varargin{5};
+            v_0 = varargin{6};
+            a_0  = varargin{7};
+            
+            if nargin > 7
+                v_drive = varargin{8};
+            else
+                v_drive = obj.v_max;
+            end
             
             % Length of trajectory in samples
             traj_len = max(ceil(t(:,7)/obj.Tsample)) + 1;
@@ -507,11 +523,21 @@ classdef LTPlanner < handle
                         j_traj(joint,sampled_t(2)) = j_traj(joint,sampled_t(2)) + (1 - sampled_t_trans(2)/obj.Tsample) * jerk_profile(3);
                     end
                     j_traj(joint,sampled_t(3) + 1) = j_traj(joint,sampled_t(3) + 1) + sampled_t_trans(3)/obj.Tsample * jerk_profile(3);
+                else
+                    if(sampled_t(2) > 0)
+                        j_traj(joint,sampled_t(2)) = j_traj(joint,sampled_t(2)) + sampled_t_trans(1)/obj.Tsample * jerk_profile(1) + sampled_t_trans(3)/obj.Tsample * jerk_profile(3);
+                    end
                 end
                 if(sampled_t(4) > 0)
                     j_traj(joint,sampled_t(4)) = j_traj(joint,sampled_t(4)) + (1 - sampled_t_trans(4)/obj.Tsample) * jerk_profile(5);
                 end
-                j_traj(joint,sampled_t(5) + 1) = j_traj(joint,sampled_t(5) + 1) + sampled_t_trans(5)/obj.Tsample * jerk_profile(5);
+                if(sampled_t(3) - sampled_t(1) > 0)
+                    j_traj(joint,sampled_t(5) + 1) = j_traj(joint,sampled_t(5) + 1) + sampled_t_trans(5)/obj.Tsample * jerk_profile(5);
+                else
+                    if(sampled_t(5) > 0)
+                        j_traj(joint,sampled_t(5)) = j_traj(joint,sampled_t(5)) + sampled_t_trans(5)/obj.Tsample * jerk_profile(5)  + sampled_t_trans(1)/obj.Tsample * jerk_profile(1) + (sampled_t_trans(3)-sampled_t_trans(1))/obj.Tsample * jerk_profile(3);
+                    end
+                end
                 if(sampled_t(6) > 0)
                     j_traj(joint,sampled_t(6)) = j_traj(joint,sampled_t(6)) + (1 - sampled_t_trans(6)/obj.Tsample) * jerk_profile(7);
                 end
@@ -520,9 +546,30 @@ classdef LTPlanner < handle
 
             % Calculate accelerations
             a_traj = obj.Tsample * cumsum(j_traj,2) + a_0;
-
+            
+            % Make sure to not exceed limits
+            a_traj = min(a_traj, obj.a_max);
+            a_traj = max(a_traj, -obj.a_max);
+                
             % Calculate velocities
-            v_traj = obj.Tsample * cumsum(a_traj,2) + v_0;
+            for joint=1:obj.DoF
+                v_traj = zeros(obj.DoF,traj_len);
+                if sampled_t(4) - sampled_t(3) > 2
+                    
+                    % Constant velocity phase does not have to be 
+                    % calculated via integration
+                    % (increases execution time and accuracy)
+                    v_traj(joint,1:sampled_t(3)) = obj.Tsample * cumsum(a_traj(joint,1:sampled_t(3)),2) + v_0;
+                    v_traj(joint,sampled_t(3)+1:sampled_t(4)-1) = v_drive(joint)*dir;
+                    v_traj(joint,sampled_t(4):end) = obj.Tsample * cumsum(a_traj(joint,sampled_t(4):end),2) + v_drive(joint)*dir;
+                else
+                    v_traj(joint,:) = obj.Tsample * cumsum(a_traj(joint,:)) + v_0;
+                end
+            end
+            
+            % Make sure to not exceed limits
+            v_traj = min(v_traj, obj.v_max);
+            v_traj = max(v_traj, -obj.v_max);
 
             % Calculate positions
             q_traj = obj.Tsample * cumsum(v_traj,2) + q_0;
