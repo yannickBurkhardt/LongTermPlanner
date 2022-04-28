@@ -69,11 +69,12 @@ classdef LTPlanner < handle
             
             
             %% Scale other joints to require same time
+            v_drive = obj.v_max;
             for joint = 1:obj.DoF
                 if joint == slowest_joint
                     continue;
                 end
-                [t_scaled(joint,:), v_drive, mod_jerk_profile(joint)] = timeScaling(obj, q_goal(joint), q_0(joint), v_0(joint), a_0(joint), dir(joint), joint, t_required);
+                [t_scaled(joint,:), v_drive(joint), mod_jerk_profile(joint)] = timeScaling(obj, q_goal(joint), q_0(joint), v_0(joint), a_0(joint), dir(joint), joint, t_required);
             end
             
             % If no solution was found, use optimal time
@@ -120,7 +121,7 @@ classdef LTPlanner < handle
             % Parameters for calculation
             t_rel = zeros(1,7); % Time that is required for one jerk phase
             mod_jerk_profile = false; % Use the standard jerk profile if not changed during calculations
-            eps = 1e-3;
+            eps = 4e-3;
             
             % Check if inputs are in limits
             checkInputs(obj, v_0, a_0, joint);
@@ -474,6 +475,8 @@ classdef LTPlanner < handle
 
             % Calculate jerks, accelerations, velocities and positions
             j_traj = zeros(obj.DoF,traj_len);
+            a_traj = zeros(obj.DoF,traj_len);
+            v_traj = zeros(obj.DoF,traj_len);
             
             for joint=1:obj.DoF
 
@@ -542,36 +545,33 @@ classdef LTPlanner < handle
                     j_traj(joint,sampled_t(6)) = j_traj(joint,sampled_t(6)) + (1 - sampled_t_trans(6)/obj.Tsample) * jerk_profile(7);
                 end
                 j_traj(joint,sampled_t(7) + 1) = j_traj(joint,sampled_t(7) + 1) + sampled_t_trans(7)/obj.Tsample * jerk_profile(7);
-            end
 
-            % Calculate accelerations
-            a_traj = obj.Tsample * cumsum(j_traj,2) + a_0;
-            
-            % Make sure to not exceed limits
-            a_traj = min(a_traj, obj.a_max);
-            a_traj = max(a_traj, -obj.a_max);
+                % Calculate accelerations
+                a_traj(joint,:) = obj.Tsample * cumsum(j_traj(joint,:),2) + a_0(joint);
+
+                % Make sure to not exceed limits
+                a_traj(joint,:) = min(a_traj(joint,:), obj.a_max(joint));
+                a_traj(joint,:) = max(a_traj(joint,:), -obj.a_max(joint));
                 
-            % Calculate velocities
-            for joint=1:obj.DoF
-                v_traj = zeros(obj.DoF,traj_len);
+                % Calculate velocities
                 if sampled_t(4) - sampled_t(3) > 2
                     
                     % Constant velocity phase does not have to be 
                     % calculated via integration
                     % (increases execution time and accuracy)
-                    v_traj(joint,1:sampled_t(3)) = obj.Tsample * cumsum(a_traj(joint,1:sampled_t(3)),2) + v_0;
-                    v_traj(joint,sampled_t(3)+1:sampled_t(4)-1) = v_drive(joint)*dir;
-                    v_traj(joint,sampled_t(4):end) = obj.Tsample * cumsum(a_traj(joint,sampled_t(4):end),2) + v_drive(joint)*dir;
+                    v_traj(joint,1:sampled_t(3)) = obj.Tsample * cumsum(a_traj(joint,1:sampled_t(3)),2) + v_0(joint);
+                    v_traj(joint,sampled_t(3)+1:sampled_t(4)-1) = v_drive(joint) * dir(joint);
+                    v_traj(joint,sampled_t(4):end) = obj.Tsample * cumsum(a_traj(joint,sampled_t(4):end),2) + v_drive(joint) * dir(joint);
                 else
-                    v_traj(joint,:) = obj.Tsample * cumsum(a_traj(joint,:)) + v_0;
+                    v_traj(joint,:) = obj.Tsample * cumsum(a_traj(joint,:)) + v_0(joint);
                 end
-            end
-            
-            % Make sure to not exceed limits
-            v_traj = min(v_traj, obj.v_max);
-            v_traj = max(v_traj, -obj.v_max);
 
-            % Calculate positions
+                % Make sure to not exceed limits
+                v_traj(joint,:) = min(v_traj(joint,:), obj.v_max(joint));
+                v_traj(joint,:) = max(v_traj(joint,:), -obj.v_max(joint));
+            end
+
+            % Calculate joint angles
             q_traj = obj.Tsample * cumsum(v_traj,2) + q_0;
         end
     end
