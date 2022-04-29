@@ -526,7 +526,7 @@ classdef LTPlanner < handle
                     j_traj(joint,sampled_t(joint,3) + 1) = j_traj(joint,sampled_t(joint,3) + 1) + sampled_t_trans(3)/obj.Tsample * jerk_profile(3);
                 else
                     if(sampled_t(joint,2) > 0)
-                        j_traj(joint,sampled_t(joint,2)) = j_traj(joint,sampled_t(joint,2)) + sampled_t_trans(1)/obj.Tsample * jerk_profile(1) + sampled_t_trans(3)/obj.Tsample * jerk_profile(3);
+                        j_traj(joint,sampled_t(joint,2)) = j_traj(joint,sampled_t(joint,2)) + sampled_t_trans(1)/obj.Tsample * jerk_profile(1) + (sampled_t_trans(3)-sampled_t_trans(1))/obj.Tsample * jerk_profile(3);
                     end
                 end
                 if(sampled_t(joint,4) > 0)
