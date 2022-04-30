@@ -1,4 +1,4 @@
-% Initialize Parameters
+% Initialize parameters
 eps = 1e-6;
 tol = 0.01;
 Tsample = 0.001;
@@ -7,17 +7,17 @@ v_max = 1*ones(1,DoF);
 a_max = 2*ones(1,DoF);
 j_max = 15*ones(1,DoF);
 
-% Initialize Planner
+% Initialize planner
 ltp = LTPlanner(DoF, Tsample, v_max, a_max, j_max);
 
 % Set goal and joint angle
 q_0 = 2*3.14*rand(1,DoF) - 3.14;
 q_goal = 2*3.14*rand(1,DoF) - 3.14;
 
-% Velocity in Limits
+% Velocity in limits
 v_0 = 2*(v_max-eps).*rand(1,DoF) - (v_max-eps);
 
-% Calculate maximal Acceleration to not violate velocity limit
+% Calculate maximal acceleration to not violate velocity limit
 a_lb = zeros(1,DoF);
 a_ub = zeros(1,DoF);
 for i=1:DoF
