@@ -30,7 +30,7 @@ for i=1:num_scenarios
     ltp.setLimits(v_max(i), a_max(i), j_max(i));
     
     % Compare times to pre-calculation
-    t_ltp = ltp.optSwitchTimes(q_goal(i), q_0(i), v_0(i), a_0(i));
+    t_ltp = ltp.optSwitchTimes(q_goal(i), q_0(i), v_0(i), a_0(i), 1);
     if(all(abs(t_ltp - t(i,:)) < eps))
         success = success + 1;
     else
@@ -46,7 +46,7 @@ for i=1:num_scenarios
     end
 
     % Execute same scenario in opposite direction
-    t_ltp = ltp.optSwitchTimes(-q_goal(i), -q_0(i), -v_0(i), -a_0(i));
+    t_ltp = ltp.optSwitchTimes(-q_goal(i), -q_0(i), -v_0(i), -a_0(i), 1);
     if(all(abs(t_ltp - t(i,:)) < eps))
         success = success + 1;
     else
@@ -59,7 +59,7 @@ end
 
 % Print test results
 disp("TestOptSwitchTimes results:")
-disp("Sucessful: " + success + " out of " + (2 * num_scenarios - 1))
+disp("Successful: " + success + " out of " + (2 * num_scenarios - 1))
 
 % Throw error if at least one test failed
 if fail > 0

@@ -24,7 +24,7 @@ for i=1:num_scenarios
     ltp.setLimits(v_max, a_max(i), j_max(i));
     
     % Compare times to pre-calculation
-    [q_ltp, t_ltp] = ltp.getStopPos(v_0(i), a_0(i), 1);
+    [q_ltp, t_ltp] = ltp.optBreaking(v_0(i), a_0(i), 1);
     if(all(abs(t_ltp - t_rel(i,:)) < eps) && (abs(q_ltp - q_goal(i)) < eps))
         success = success + 1;
     else
@@ -42,7 +42,7 @@ for i=1:num_scenarios
     end
 
     % Execute same scenario in opposite direction
-    [q_ltp, t_ltp] = ltp.getStopPos(-v_0(i), -a_0(i), 1);;
+    [q_ltp, t_ltp] = ltp.optBreaking(-v_0(i), -a_0(i), 1);;
     if(all(abs(t_ltp - t_rel(i,:)) < eps) && (abs(q_ltp + q_goal(i)) < eps))
         success = success + 1;
     else
@@ -56,8 +56,8 @@ for i=1:num_scenarios
 end
 
 % Print test results
-disp("TestGetStopPos results:")
-disp("Sucessful: " + success + " out of " + (2 * num_scenarios - 1))
+disp("TestOptBreaking results:")
+disp("Successful: " + success + " out of " + (2 * num_scenarios - 1))
 
 % Throw error if at least one test failed
 if fail > 0

@@ -1,5 +1,5 @@
 % Define test values
-eps = 0.002;
+eps = 0.1;
 num_scenarios = 12;
 
 % v_max increased compared to testOptSwitchTimes
@@ -10,6 +10,7 @@ q_goal = [ -1       2.927   2.8854  0.2396  0.6354 -7.0104 -8.9896 -3.896  -7.94
 q_0    = -ones(1,num_scenarios);
 v_0    = [  0       0.625   1.875  -0.875   0.875  -3.875  -3.875  -1.875  -1.875  -2.875  -2.875  -1.5     ];
 a_0    = [  0       1      -1       1      -1       1      -1       1      -2       1      -1      -2       ];
+dir    = [  1       1       1       1       1      -1      -1      -1      -1      -1      -1      -1       ];
 
 % Define pre-calculated results
 t_rel  = [  0       0.25    0.5     0.25    0.5     0.25    0.75    0.25    0.75    0.25    0.75    1.5     ;
@@ -36,7 +37,7 @@ for i=1:num_scenarios
     ltp.setLimits(v_max(i), a_max(i), j_max(i));
     
     % Compare times to pre-calculation
-    t_ltp = ltp.timeScaling(q_goal(i), q_0(i), v_0(i), a_0(i), t_required(i));
+    t_ltp = ltp.timeScaling(q_goal(i), q_0(i), v_0(i), a_0(i), dir(i), 1, t_required(i));
     if(all(abs(t_ltp - t(i,:)) < eps))
         success = success + 1;
     else
@@ -52,7 +53,7 @@ for i=1:num_scenarios
     end
 
     % Execute same scenario in opposite direction
-    t_ltp = ltp.timeScaling(q_goal(i), q_0(i), v_0(i), a_0(i), t_required(i));
+    t_ltp = ltp.timeScaling(-q_goal(i), -q_0(i), -v_0(i), -a_0(i), -dir(i), 1, t_required(i));
     if(all(abs(t_ltp - t(i,:)) < eps))
         success = success + 1;
     else
@@ -65,7 +66,7 @@ end
 
 % Print test results
 disp("TestTimeScaling results:")
-disp("Sucessful: " + success + " out of " + (2 * num_scenarios - 1))
+disp("Successful: " + success + " out of " + (2 * num_scenarios - 1))
 
 % Throw error if at least one test failed
 if fail > 0
