@@ -131,7 +131,7 @@ classdef LTPlanner < handle
             checkInputs(obj, v_0, a_0, joint);
             
             % Calculate direction of movement
-            [q_stop, t_rel(1:3), dir] = getStopPos(obj, v_0, a_0, joint);
+            [q_stop, t_rel(1:3), dir] = optBreaking(obj, v_0, a_0, joint);
             q_diff = q_goal - (q_0 + q_stop);
             if (abs(q_diff) < eps)
                 % Skip rest if that fulfils scenario
@@ -154,7 +154,7 @@ classdef LTPlanner < handle
                 mod_jerk_profile = true;
                 
                 % Get Joint Position after breaking and required times
-                [q_break, t_rel(1:3)] = getStopPos(obj, v_0 - v_drive, a_0, joint);
+                [q_break, t_rel(1:3)] = optBreaking(obj, v_0 - v_drive, a_0, joint);
             else
 
                 % Constant max/ min jerk (Phase 1, 3)
@@ -434,9 +434,16 @@ classdef LTPlanner < handle
             v_drive = obj.v_max(joint);
         end
         
-        function [q, t_rel, dir] = getStopPos(obj, v_0, a_0, joint)
-            % GETSTOPPOS % Calculate how far a joints moves until it can be
-            % stopped
+        function [q, t_rel, dir] = optBreaking(obj, v_0, a_0, joint)
+            % OPTBREAKING % Calculate time and joint angles required to
+            % bring velocity to zero
+            
+            % This function can be used to:
+            % - bring a joint to a full stop as fast as possible
+            % - calculate in which direction a joint has to be actuated to
+            %   reach a goal
+            % - slow a joint down to a desired velocity (v_0 must be set to
+            %   v_current - v_desired)
             
             % Set direction opposite to maximal velocity to be reached
             if v_0*a_0 > 0

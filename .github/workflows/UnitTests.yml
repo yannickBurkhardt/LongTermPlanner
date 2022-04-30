@@ -1,8 +1,8 @@
 name: UnitTests
 on: [push]
 jobs:
-  testGetStopPos:
-    name: testGetStopPos
+  testOptBreaking:
+    name: testOptBreaking
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -13,7 +13,7 @@ jobs:
         uses: matlab-actions/run-command@v1
         with:
           command: addpath("tests/unittests");
-                   testGetStopPos
+                   testOptBreaking
 
   testOptSwitchTimes:
     name: testOptSwitchTimes
