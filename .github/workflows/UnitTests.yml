@@ -1,19 +1,19 @@
 name: UnitTests
 on: [push]
 jobs:
-  testGetStopPos:
-    name: testGetStopPos
+  testOptBreaking:
+    name: testOptBreaking
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v1
-      - name: testGetStopPos
+      - name: testOptBreaking
         uses: matlab-actions/run-command@v1
         with:
           command: addpath("tests/unittests");
-                   testGetStopPos
+                   testOptBreaking
 
   testOptSwitchTimes:
     name: testOptSwitchTimes
@@ -28,3 +28,17 @@ jobs:
         with:
           command: addpath("tests/unittests");
                    testOptSwitchTimes
+
+  testTimeScaling:
+    name: testTimeScaling
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v1
+      - name: testTimeScaling
+        uses: matlab-actions/run-command@v1
+        with:
+          command: addpath("tests/unittests");
+                   testTimeScaling

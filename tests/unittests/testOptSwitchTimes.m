@@ -23,16 +23,16 @@ t = cumsum(t_rel,2);
 ltp = LTPlanner(1, 0.001);
 
 % Test all scenarios
-sucess = 0;
+success = 0;
 fail = 0;
 for i=1:num_scenarios
     % Set limtits
     ltp.setLimits(v_max(i), a_max(i), j_max(i));
     
     % Compare times to pre-calculation
-    t_ltp = ltp.optSwitchTimes(q_goal(i), q_0(i), v_0(i), a_0(i));
+    t_ltp = ltp.optSwitchTimes(q_goal(i), q_0(i), v_0(i), a_0(i), 1);
     if(all(abs(t_ltp - t(i,:)) < eps))
-        sucess = sucess + 1;
+        success = success + 1;
     else
         disp("Failure in test " + i + ".1.")
         t(i,:)
@@ -46,9 +46,9 @@ for i=1:num_scenarios
     end
 
     % Execute same scenario in opposite direction
-    t_ltp = ltp.optSwitchTimes(-q_goal(i), -q_0(i), -v_0(i), -a_0(i));
+    t_ltp = ltp.optSwitchTimes(-q_goal(i), -q_0(i), -v_0(i), -a_0(i), 1);
     if(all(abs(t_ltp - t(i,:)) < eps))
-        sucess = sucess + 1;
+        success = success + 1;
     else
         disp("Failure in test " + i + ".2.")
         t(i,:)
@@ -59,7 +59,7 @@ end
 
 % Print test results
 disp("TestOptSwitchTimes results:")
-disp("Sucessful: " + sucess + " out of " + (2 * num_scenarios - 1))
+disp("Successful: " + success + " out of " + (2 * num_scenarios - 1))
 
 % Throw error if at least one test failed
 if fail > 0
