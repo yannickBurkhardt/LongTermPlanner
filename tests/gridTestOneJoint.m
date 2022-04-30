@@ -10,6 +10,7 @@ a_max = 2;
 j_max = 15;
 Tsample = 0.004;
 avg_error = 0;
+max_error = 0;
 
 % Initialize planner
 ltp = LTPlanner(1, Tsample, v_max, a_max, j_max);
@@ -37,8 +38,11 @@ for q_goal = -6:step:7
             [t, dir, ~] = ltp.optSwitchTimes(q_goal, q_0, v_0, a_0, 1);
             [q_traj, v_traj, a_traj] = ltp.getTrajectories(t, dir, false, q_0, v_0, a_0);
 
-            % Calculate average absolute error
+            % Calculate average and max absolute error
             avg_error = avg_error + abs(q_traj(end) - q_goal);
+            if abs(q_traj(end) - q_goal) > max_error
+                max_error = abs(q_traj(end) - q_goal);
+            end
             
             % Check if goal was reached
             if abs(q_traj(end) - q_goal) < tol
@@ -62,6 +66,7 @@ disp("Success: " + success)
 disp("Not finished: " + size(not_finished, 2))
 disp("Failure: " + size(failure, 2))
 disp("Average error: " + avg_error/(success + size(not_finished, 2) + size(failure, 2)))
+disp("Maximal error: " + max_error)
 
 % Throw error if at least one test failed
 if size(not_finished, 2) > 0 || size(failure, 2) > 0
