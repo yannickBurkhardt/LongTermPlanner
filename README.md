@@ -28,12 +28,13 @@ However, since some formulas tend to get very long, the roots()-function is used
 
 To simlify computations and reduce runtime, only movements in the positive direction are considered.  
 All movements into the negative direction can be mapped into the positive direction to calculate the duration of the phases.  
-To find out in which direction the joint must move, the joint angle is calculated if it would stop as quickly as possible.
-The direction of the goal from this position is the desired direction of movement.
+To find out in which direction the joint must move, the joint angle 'q_stop' is calculated if it would stop as quickly as possible.
+The direction of the goal from 'q_stop' is the desired direction of movement.
 
 
 ## Time scaling
 
 To achieve that all joints reach the goal at the same time, every joint's movement must be scaled to require as much time as the slowest joint.
-This is archived by a numeric search for the maximal velocities per joint which fulfil this criterion.
+To scale the time required to reach the goal, the sum of time required for all phases must be equal to an externally given time (here: time of the slowest joint): &sum;<sub>i=1..7<\sub> t<sub>i<\sub> = t<sub>ext<\sub>
+This is archived by calculation of the velocity 'v_drive &le; v_max' which fulfils a given external time.
 After that, the jerk switching times are re-calculated using these velocities.
