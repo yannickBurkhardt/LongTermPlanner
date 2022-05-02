@@ -39,12 +39,12 @@ This is archived by calculation of the velocity `v_drive` &le; `v_max` which ful
 Since the overall time is only affected if v_drive is reached, only 4 of the previously described cases are valid (Phases 2 or 6 may not exist).
 
 However, since v_drive can be smaller than the initial `v_0`, 4 more cases can occur: To reach v_drive, a joint might have to be slowed down.  
-This results in phases 1 and 3 of the jerk profile being switched (`mod_jerk_profile`).  
+This results in phases 1 and 3 of the jerk profile being switched ("modified jerk profile").  
 Since we do not have any prior knowledge of how to choose `v_drive`, it is calculated for every case until the time t<sub>ext</sub> is reached with sufficient precision.  
 
 There are very rare scenarios in which reaching `v_drive` slows the overall time more down than desired.  
 These cases occur in very special combinations when the joint is already slowing down to reach a goal and the desired time is only a little increased compared to the optimal time.
-According to my experiments this is very rare (less than 1 in 1000 cases).  
+According to my experiments this is very rare (less than 1 out of 1000 cases).  
 Due to the infrequence and only little time offset, for these scenarios the optimal time phases can be used without major loss of performance.
 
 ## Performance
