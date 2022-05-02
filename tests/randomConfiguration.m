@@ -1,7 +1,7 @@
 % Initialize parameters
 eps = 1e-6;
 tol = 0.01;
-Tsample = 0.001;
+Tsample = 0.004;
 DoF = 6;
 v_max = 1*ones(1,DoF);
 a_max = 2*ones(1,DoF);

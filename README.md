@@ -66,12 +66,12 @@ The results can be reproduced using `tests/gridTestTimeScaling.m`
 ### Runtime
 
 For runtime analysis, trajectory planning for a 6 DoF-robot was simulated in MATLAB running on an Intel Core i5-6267U processor (2.9 GHz, 4MB L3 Cache).  
-For a full planning procedure, the following runtimes were obtained:  
-Average: 0.83 ms  
-Worst Case: 2.04 ms  
+For a full planning procedure with a sample time of 4 ms, the following runtimes were obtained:  
+Average: 0.48 ms  
+Worst Case: 2.29 ms  
 
 For this, `tests/randomConfiguration` was used looping the trajectory generation.  
-The worst case was calculated by forcing the planner to execute every calculation (no breaking if a valid solution was found).
+The worst case was simulated by forcing the planner to execute every possible calculation (no breaking if a valid solution was found).
 
 ## Examples
 
