@@ -39,12 +39,12 @@ This is archived by calculation of the velocity `v_drive` &le; `v_max` which ful
 Since the overall time is only affected if v_drive is reached, only 4 of the previously described cases are valid (Phases 2 or 6 may not exist).
 
 However, since v_drive can be smaller than the initial `v_0`, 4 more cases can occur: To reach v_drive, a joint might have to be slowed down.  
-This results in phases 1 and 3 of the jerk profile being switched (´mod_jerk_profile´).  
+This results in phases 1 and 3 of the jerk profile being switched ("modified jerk profile").  
 Since we do not have any prior knowledge of how to choose `v_drive`, it is calculated for every case until the time t<sub>ext</sub> is reached with sufficient precision.  
 
 There are very rare scenarios in which reaching `v_drive` slows the overall time more down than desired.  
 These cases occur in very special combinations when the joint is already slowing down to reach a goal and the desired time is only a little increased compared to the optimal time.
-According to my experiments this is very rare (less than 1 in 1000 cases).  
+According to my experiments this is very rare (less than 1 out of 1000 cases).  
 Due to the infrequence and only little time offset, for these scenarios the optimal time phases can be used without major loss of performance.
 
 ## Performance
@@ -53,10 +53,10 @@ In this section, accuracy and runtime are analysed.
 
 ### Accuracy
 
-The following results are obtained by simulating all realistic scenarios using a grid search with a fixed step size of 0.1.
-`j_max` = 15 rad/ s^3
-`a_max` = 2 rad/ s^2
-`v_max` = 1 rad/ s
+The following results are obtained by simulating all realistic scenarios using a grid search with a fixed step size of 0.1.  
+`j_max` = 15 rad/ s^3  
+`a_max` = 2 rad/ s^2  
+`v_max` = 1 rad/ s  
 
 With these limits, the average absolute error at the goal position was found to be 0.003 rad.  
 The worst-case error remains below 0.015 rad.
@@ -84,12 +84,16 @@ The slowest joint, Joint 1, reaches the maximal velocity of 1 rad/ s.
 `v_drive` for the other joints is calculated such that the goal is reached as the same time as for Joint 1.  
 Note that Joint 6 is slowed down to reach `v_drive`, so the modified jerk profile is used.
 
-## Usage
+## How to use
 
 Firstly, the LongTermPlanner must be initialized with the desired properties:  
-`ltp = LTPlanner(DoF, Tsample, v_max, a_max, j_max);`
+```
+ltp = LTPlanner(DoF, Tsample, v_max, a_max, j_max);
+```
 
 To generate a sampled trajectory, its `trajectory` function can be used.  
 As transfer parameters, it requires the joint's goal positions `q_goal` and their initial angles `q_0`, velocities `v_0` and accelerations `a_0`.
 It returns the sampled trajectory information of acceleration, velocity, and angle for all joints at every time step:  
-`[q_traj, v_traj, a_traj] = ltp.trajectory(q_goal, q_0, v_0, a_0);` 
+```
+[q_traj, v_traj, a_traj] = ltp.trajectory(q_goal, q_0, v_0, a_0);
+```
