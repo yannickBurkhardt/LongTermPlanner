@@ -24,13 +24,12 @@ When calculating the time phases of maximal, minimal or no jerk as displayed in 
 There exist a total of 8 cases in which phases 2, 4, and 6 could collapse to zero if the maximal acceleration or the maximal velocity are not reached.
 
 For all cases, analytic equations to calculate the switching times could be found.  
-However, since some formulas tend to get very long, the roots()-function is used to effiently calculate solutions for some cases.
+However, since some formulas tend to get very long, the roots()-function is used to efficiently calculate solutions for some cases.
 
-To simlify computations and reduce runtime, only movements in the positive direction are considered.  
+To simplify computations and reduce runtime, only movements in the positive direction are considered.  
 All movements into the negative direction can be mapped into the positive direction to calculate the duration of the phases.  
 To find out in which direction the joint must move, the joint angle `q_stop` is calculated if it would stop as quickly as possible.  
 The direction of the goal from `q_stop` is the desired direction of movement.
-
 
 ## Time scaling
 
@@ -47,3 +46,50 @@ There are very rare scenarios in which reaching `v_drive` slows the overall time
 These cases occur in very special combinations when the joint is already slowing down to reach a goal and the desired time is only a little increased compared to the optimal time.
 According to my experiments this is very rare (less than 1 in 1000 cases).  
 Due to the infrequence and only little time offset, for these scenarios the optimal time phases can be used without major loss of performance.
+
+## Performance
+
+In this section, accuracy and runtime are analysed.
+
+### Accuracy
+
+The following results are obtained by simulating all realistic scenarios using a grid search with a fixed step size of 0.1.
+`j_max` = 15 rad/ s^3
+`a_max` = 2 rad/ s^2
+`v_max` = 1 rad/ s
+
+With these limits, the average absolute error at the goal position was found to be 0.003 rad.  
+The worst-case error remains below 0.015 rad.
+
+The results can be reproduced using `tests/gridTestTimeScaling.m`
+
+### Runtime
+
+For runtime analysis, trajectory planning for a 6 DoF-robot was simulated in MATLAB running on an Intel Core i5-6267U processor (2.9 GHz, 4MB L3 Cache).  
+For a full planning procedure, the following runtimes were obtained:  
+Average: 0.83 ms  
+Worst Case: 2.04 ms  
+
+For this, `tests/randomConfiguration` was used looping the trajectory generation.  
+The worst case was calculated by forcing the planner to execute every calculation (no breaking if a valid solution was found).
+
+## Examples
+
+In the following plot, a trajectory for a 6-DoF robot calculated by the LongTermPlanner is displayed:  
+![Time-optimal trajectory](images/exampleTrajectory.svg?raw=true)
+
+A sampled trajectory contains information about the acceleration, velocity and joint angle for each joint and at each time step.  
+It can be seen that all joints reach the goal at the same time with velocity and acceleration reaching zero.  
+The slowest joint, Joint 1, reaches the maximal velocity of 1 rad/ s.  
+`v_drive` for the other joints is calculated such that the goal is reached as the same time as for Joint 1.  
+Note that Joint 6 is slowed down to reach `v_drive`, so the modified jerk profile is used.
+
+## Usage
+
+Firstly, the LongTermPlanner has to be initialized with the desired properties:  
+`ltp = LTPlanner(DoF, Tsample, v_max, a_max, j_max);`
+
+To generate a sampled trajectory, its `trajectory` function can be used.  
+As transfer parameters, it requires the joint's goal positions `q_goal` and their initial angles `q_0`, velocities `v_0` and accelerations `a_0`.
+It returns the sampled trajectory information of acceleration, velocity, and angle for all joints at every time step:  
+`[q_traj, v_traj, a_traj] = ltp.trajectory(q_goal, q_0, v_0, a_0);` 
