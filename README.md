@@ -20,8 +20,17 @@ A trajectory is calculated in a two-step procedure. This is outlined in the foll
 A general, time optimal trajectory profile of one joint consists of seven phases:
 ![Time-optimal trajectory](images/profile.svg?raw=true)
 
-When calculating a trajectory, it must be checked if the limits are reached.
+When calculating the time phases of maximal, minimal or no jerk as displayed in the image, it must be checked if the limits are reached.
+There exist a total of 8 cases in which phases 2, 4, and 6 could collapse to zero if the maximal acceleration or the maximal velocity are not reached.
+
 For all cases, analytic equations to calculate the switching times could be found.
+However, since some formulas tend to get very long, the roots()-function is used to effiently calculate solutions for some cases.
+
+To simlify computations and reduce runtime, only movements in the positive direction are considered.  
+All movements into the negative direction can be mapped into the positive direction to calculate the duration of the phases.  
+To find out in which direction the joint must move, the joint angle is calculated if it would stop as quickly as possible.
+The direction of the goal from this position is the desired direction of movement.
+
 
 ## Time scaling
 
