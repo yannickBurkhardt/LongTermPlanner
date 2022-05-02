@@ -86,7 +86,7 @@ Note that Joint 6 is slowed down to reach `v_drive`, so the modified jerk profil
 
 ## Usage
 
-Firstly, the LongTermPlanner has to be initialized with the desired properties:  
+Firstly, the LongTermPlanner must be initialized with the desired properties:  
 `ltp = LTPlanner(DoF, Tsample, v_max, a_max, j_max);`
 
 To generate a sampled trajectory, its `trajectory` function can be used.  
