@@ -58,6 +58,8 @@ Since the overall time is only affected if v_drive is reached, only 4 of the pre
 However, since v_drive can be smaller than the initial `v_0`, 4 more cases can occur: To reach v_drive, a joint might have to be slowed down.
 This results in phases 1 and 3 of the jerk profile being switched ("modified jerk profile").
 Since we do not have any prior knowledge of how to choose `v_drive`, it is calculated for every case until the time t<sub>ext</sub> is reached with sufficient precision.  
+A trajectory using the modified jerk profile to reach v_drive in phase 4 is displayed in the following image:
+![Modified Jerk Profile](images/modifiedJerkProfile.svg?raw=true)
 
 There are very rare scenarios in which reaching `v_drive` slows the overall time more down than desired.
 These cases occur in very special combinations when the joint is already slowing down to reach a goal and the desired time is only a little increased compared to the optimal time.
