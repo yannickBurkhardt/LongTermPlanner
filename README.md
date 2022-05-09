@@ -34,10 +34,10 @@ It returns the sampled trajectory information of acceleration, velocity, and ang
 
 ## Time optimality
 
-A general, time optimal trajectory profile of one joint consists of seven phases:
-![Time-optimal trajectory](images/profile.svg?raw=true)
+A general, time optimal trajectory profile of one joint consists of seven phases:  
+<img src="images/profile.svg?raw=true" alt="Time-optimal Trajectory" width="600"/>
 
-When calculating the time phases of maximal, minimal or no jerk as displayed in the image, it must be checked if the limits are reached.
+When calculating the time phases of maximal, minimal or no jerk (as displayed in the image), it must be checked if the limits are reached.
 There exist a total of 8 cases in which phases 2, 4, and 6 could collapse to zero if the maximal acceleration or the maximal velocity are not reached.
 
 For all cases, analytic equations to calculate the switching times could be found.
@@ -58,12 +58,12 @@ Since the overall time is only affected if v_drive is reached, only 4 of the pre
 However, since v_drive can be smaller than the initial `v_0`, 4 more cases can occur: To reach v_drive, a joint might have to be slowed down.
 This results in phases 1 and 3 of the jerk profile being switched ("modified jerk profile").
 Since we do not have any prior knowledge of how to choose `v_drive`, it is calculated for every case until the time t<sub>ext</sub> is reached with sufficient precision.  
-A trajectory using the modified jerk profile to reach v_drive in phase 4 is displayed in the following image:
-![Modified Jerk Profile](images/modifiedJerkProfile.svg?raw=true)
+A trajectory using the modified jerk profile to reach v_drive in phase 4 is displayed in the following image:  
+<img src="images/modifiedJerkProfile.svg?raw=true" alt="Modified Jerk Profile" width="600"/>
 
 There are very rare scenarios in which reaching `v_drive` slows the overall time more down than desired.
 These cases occur in very special combinations when the joint is already slowing down to reach a goal and the desired time is only a little increased compared to the optimal time.
-According to my experiments this is very rare (less than 1 out of 1000 cases).
+According to my experiments, this case appears very rarely (less than 1 out of 1000 cases).
 Due to the infrequence and only little time offset, for these scenarios the optimal time phases can be used without major loss of performance.
 
 ## Performance
@@ -84,7 +84,7 @@ The results can be reproduced using `tests/gridTestTimeScaling.m`
 
 ### Runtime
 
-For runtime analysis, trajectory planning for a 6 DoF-robot was simulated in MATLAB running on an Intel Core i5-6267U processor (2.9 GHz, 4MB L3 Cache).
+For runtime analysis, trajectory planning for a 6 DoF-robot was simulated in MATLAB 2020a running on an Intel Core i5-6267U processor (2.9 GHz, 4MB L3 Cache).
 For a full planning procedure with a sample time of 4 ms, the following runtimes were obtained:  
 Average: 0.48 ms  
 Worst Case: 2.29 ms  
