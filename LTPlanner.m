@@ -44,19 +44,19 @@ classdef LTPlanner < handle
             dir = zeros(obj.DoF, 1);       % Direction of movement
             mod_jerk_profile = false(1,7); % Boolean to choose jerk profile
             
-            % Bring inputs into correct format
-            if size(q_goal, 2) > 1
-                q_goal = q_goal';
-            end
-            if size(q_0, 2) > 1
-                q_0 = q_0';
-            end
-            if size(v_0, 2) > 1
-                v_0 = v_0';
-            end
-            if size(a_0, 2) > 1
-                a_0 = a_0';
-            end
+%             % Bring inputs into correct format
+%             if size(q_goal, 2) > 1
+%                 q_goal = q_goal';
+%             end
+%             if size(q_0, 2) > 1
+%                 q_0 = q_0';
+%             end
+%             if size(v_0, 2) > 1
+%                 v_0 = v_0';
+%             end
+%             if size(a_0, 2) > 1
+%                 a_0 = a_0';
+%             end
             
             %% Find slowest joint
             % Calculate time-optimal profiles
@@ -74,7 +74,8 @@ classdef LTPlanner < handle
                 if joint == slowest_joint
                     continue;
                 end
-                [t_scaled(joint,:), v_drive(joint), mod_jerk_profile(joint)] = timeScaling(obj, q_goal(joint), q_0(joint), v_0(joint), a_0(joint), dir(joint), joint, t_required);
+                [t_scaled(joint,:), potential_v_drive, mod_jerk_profile(joint)] = timeScaling(obj, q_goal(joint), q_0(joint), v_0(joint), a_0(joint), dir(joint), joint, t_required);
+                v_drive(joint) = real(potential_v_drive);
             end
             
             % If no solution was found, use optimal time
@@ -162,7 +163,7 @@ classdef LTPlanner < handle
                 t_rel(3) = obj.a_max(joint)/obj.j_max(joint);
 
                 % Constant acceleration (Phase 2)
-                t_rel(2) = (v_drive - v_0 - 1/2*t_rel(1)*a_0)/obj.a_max(joint) - 1/2*(t_rel(1) + t_rel(3));
+                t_rel(2) = real((v_drive - v_0 - 1/2*t_rel(1)*a_0)/obj.a_max(joint) - 1/2*(t_rel(1) + t_rel(3)));
 
                 % Check if phase 2 does not exist
                 % (max acceleration cannot be reached)
@@ -170,7 +171,7 @@ classdef LTPlanner < handle
                     % Check if root is positive
                     root = obj.j_max(joint)*(v_drive - v_0) + 1/2*a_0^2;
                     if(root > 0)
-                        t_rel(3) = sqrt(root)/obj.j_max(joint);
+                        t_rel(3) = real(sqrt(root)/obj.j_max(joint));
                         t_rel(1) = t_rel(3) - a_0/obj.j_max(joint);
                         t_rel(2) = 0;
                     else
@@ -186,7 +187,7 @@ classdef LTPlanner < handle
             t_rel(7) = t_rel(5);
 
             % Constant acceleration (Phase 6)
-            t_rel(6) = v_drive/obj.a_max(joint) - 1/2*(t_rel(5) + t_rel(7));
+            t_rel(6) = real(v_drive/obj.a_max(joint) - 1/2*(t_rel(5) + t_rel(7)));
 
             % Check if phase 6 does not exist
             % (max acceleration cannot be reached)
@@ -194,7 +195,7 @@ classdef LTPlanner < handle
                 % Check if root is positive
                 root = v_drive/obj.j_max(joint);
                 if(root > 0)
-                    t_rel(5) = sqrt(root);
+                    t_rel(5) = real(sqrt(root));
                     t_rel(7) = t_rel(5);
                     t_rel(6) = 0;
                 else
@@ -213,7 +214,7 @@ classdef LTPlanner < handle
                 q_part1 = v_0*(t_rel(1) + t_rel(2) + t_rel(3)) + a_0*(1/2*t_rel(1)^2 + t_rel(1)*(t_rel(2) + t_rel(3)) + 1/2*t_rel(3)^2) + obj.j_max(joint)*(1/6*t_rel(1)^3 + 1/2*t_rel(1)^2*(t_rel(2) + t_rel(3)) - 1/6*t_rel(3)^3 + 1/2*t_rel(1)*t_rel(3)^2) + obj.a_max(joint)*(1/2*t_rel(2)^2 + t_rel(2)*t_rel(3));
             end
             q_part2 = obj.j_max(joint)*(1/6*t_rel(7)^3 + 1/2*t_rel(7)^2*(t_rel(6) + t_rel(5)) - 1/6*t_rel(5)^3 + 1/2*t_rel(7)*t_rel(5)^2) + obj.a_max(joint)*(1/2*t_rel(6)^2 + t_rel(6)*t_rel(5));
-            t_rel(4) = ((q_goal - q_0)*dir - q_part1 - q_part2)/v_drive;
+            t_rel(4) = real(((q_goal - q_0)*dir - q_part1 - q_part2)/v_drive);
 
             % Check if phase 4 does not exist
             % (max velocity cannot be reached)
@@ -246,8 +247,7 @@ classdef LTPlanner < handle
                     % Choose non-complex, positive solution
                     root = root((abs(imag(root)) < eps));
                     root = root(root >= 0);
-                    t_rel(1) = (2*root(1)^2 - 4*a_0*root(1) + a_0^2 - 2*v_0*obj.j_max(joint))/(4*obj.j_max(joint)*root(1));
-                    t_rel = real(t_rel);
+                    t_rel(1) = real((2*root(1)^2 - 4*a_0*root(1) + a_0^2 - 2*v_0*obj.j_max(joint))/(4*obj.j_max(joint)*root(1)));
 
                     % Calculate other switch times
                     t_rel(7) = sqrt(4*obj.j_max(joint)^2*t_rel(1)^2 + 8*a_0*obj.j_max(joint)*t_rel(1) + 2*a_0^2 + 4*obj.j_max(joint)*v_0)/(2*obj.j_max(joint));
@@ -272,7 +272,7 @@ classdef LTPlanner < handle
                         % Choose non-complex, positive solution
                         root = root((abs(imag(root)) < eps));
                         root = root(root >= 0);
-                        t_rel(1) = (root - a_0 - obj.a_max(joint))/obj.j_max(joint);
+                        t_rel(1) = real((root - a_0 - obj.a_max(joint))/obj.j_max(joint));
 
                         % Calculate other switch times
                         t_rel(5) = (a_0 + obj.a_max(joint))/obj.j_max(joint) + t_rel(1);
@@ -319,111 +319,119 @@ classdef LTPlanner < handle
 
             %% Calculate required v_drive to reach goal at given time
             % Standard jerk profile: Phases 2 and 6 exist
-            v_drive = (obj.a_max(joint)*obj.j_max(joint)*t_required/2 - a_0^2/4 + a_0*obj.a_max(joint)/2 - obj.a_max(joint)^2/2 + v_0*obj.j_max(joint)/2 - sqrt(36*obj.a_max(joint)^2*obj.j_max(joint)^2*t_required^2 - 36*a_0^2*obj.a_max(joint)*obj.j_max(joint)*t_required + 72*a_0*obj.a_max(joint)^2*obj.j_max(joint)*t_required - 72*obj.a_max(joint)^3*obj.j_max(joint)*t_required + 144*obj.a_max(joint)*dir*obj.j_max(joint)^2*q_0 - 144*obj.a_max(joint)*dir*obj.j_max(joint)^2*q_goal + 72*obj.a_max(joint)*obj.j_max(joint)^2*v_0*t_required - 9*a_0^4 + 12*a_0^3*obj.a_max(joint) + 36*a_0^2*obj.a_max(joint)^2 + 36*a_0^2*obj.j_max(joint)*v_0 - 72*a_0*obj.a_max(joint)^3 - 72*a_0*obj.a_max(joint)*obj.j_max(joint)*v_0 + 36*obj.a_max(joint)^4 - 36*obj.j_max(joint)^2*v_0^2)/12)/obj.j_max(joint);
+            potential_v_drive = (obj.a_max(joint)*obj.j_max(joint)*t_required/2 - a_0^2/4 + a_0*obj.a_max(joint)/2 - obj.a_max(joint)^2/2 + v_0*obj.j_max(joint)/2 - sqrt(36*obj.a_max(joint)^2*obj.j_max(joint)^2*t_required^2 - 36*a_0^2*obj.a_max(joint)*obj.j_max(joint)*t_required + 72*a_0*obj.a_max(joint)^2*obj.j_max(joint)*t_required - 72*obj.a_max(joint)^3*obj.j_max(joint)*t_required + 144*obj.a_max(joint)*dir*obj.j_max(joint)^2*q_0 - 144*obj.a_max(joint)*dir*obj.j_max(joint)^2*q_goal + 72*obj.a_max(joint)*obj.j_max(joint)^2*v_0*t_required - 9*a_0^4 + 12*a_0^3*obj.a_max(joint) + 36*a_0^2*obj.a_max(joint)^2 + 36*a_0^2*obj.j_max(joint)*v_0 - 72*a_0*obj.a_max(joint)^3 - 72*a_0*obj.a_max(joint)*obj.j_max(joint)*v_0 + 36*obj.a_max(joint)^4 - 36*obj.j_max(joint)^2*v_0^2)/12)/obj.j_max(joint);
 
             % Check if v_drive is real and positive
-            if ~imag(v_drive) && v_drive > 0
-                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+            if ~imag(potential_v_drive) && potential_v_drive > 0
+                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, potential_v_drive);
 
                 % Check time constraint was fulfilled
                 if t_required - t(end) < tol && t_required - t(end) > -tol/10
+                    v_drive = potential_v_drive;
                     return;
                 end
             end
 
             % Modified jerk profile: Phases 2 and 6 exist
-            v_drive = -(dir*(q_0 - q_goal) - obj.j_max(joint)*((a_0 + obj.a_max(joint))^3/(6*obj.j_max(joint)^3) - obj.a_max(joint)^3/(6*obj.j_max(joint)^3) + (obj.a_max(joint)^2*(a_0 + obj.a_max(joint)))/(2*obj.j_max(joint)^3) + ((a_0 + obj.a_max(joint))^2*((v_0 + (a_0*(a_0 - obj.a_max(joint)))/(2*obj.j_max(joint)))/obj.a_max(joint) + obj.a_max(joint)/(2*obj.j_max(joint)) + (a_0 - obj.a_max(joint))/(2*obj.j_max(joint))))/(2*obj.j_max(joint)^2)) + a_0*((a_0 + obj.a_max(joint))^2/(2*obj.j_max(joint)^2) + obj.a_max(joint)^2/(2*obj.j_max(joint)^2) + ((a_0 + obj.a_max(joint))*((v_0 + (a_0*(a_0 - obj.a_max(joint)))/(2*obj.j_max(joint)))/obj.a_max(joint) + obj.a_max(joint)/(2*obj.j_max(joint)) + (a_0 - obj.a_max(joint))/(2*obj.j_max(joint))))/obj.j_max(joint)) - obj.a_max(joint)*(((v_0 + (a_0*(a_0 - obj.a_max(joint)))/(2*obj.j_max(joint)))/obj.a_max(joint) - obj.a_max(joint)/(2*obj.j_max(joint)) + (a_0 - obj.a_max(joint))/(2*obj.j_max(joint)))^2/2 + (obj.a_max(joint)*((v_0 + (a_0*(a_0 - obj.a_max(joint)))/(2*obj.j_max(joint)))/obj.a_max(joint) - obj.a_max(joint)/(2*obj.j_max(joint)) + (a_0 - obj.a_max(joint))/(2*obj.j_max(joint))))/obj.j_max(joint)) + v_0*((v_0 + (a_0*(a_0 - obj.a_max(joint)))/(2*obj.j_max(joint)))/obj.a_max(joint) + (a_0 + obj.a_max(joint))/obj.j_max(joint) + obj.a_max(joint)/(2*obj.j_max(joint)) + (a_0 - obj.a_max(joint))/(2*obj.j_max(joint))))/(obj.a_max(joint)/(2*obj.j_max(joint)) - v_0/obj.a_max(joint) + obj.a_max(joint)*(((v_0 + (a_0*(a_0 - obj.a_max(joint)))/(2*obj.j_max(joint)))/obj.a_max(joint) - obj.a_max(joint)/(2*obj.j_max(joint)) + (a_0 - obj.a_max(joint))/(2*obj.j_max(joint)))/obj.a_max(joint) + 1/obj.j_max(joint)) - (a_0^2 + 2*a_0*obj.a_max(joint) + 4*obj.a_max(joint)^2 - 2*obj.j_max(joint)*t_required*obj.a_max(joint) + 2*obj.j_max(joint)*v_0)/(2*obj.a_max(joint)*obj.j_max(joint)) + (a_0 + obj.a_max(joint))^2/(2*obj.a_max(joint)*obj.j_max(joint)) - (a_0*(a_0 + obj.a_max(joint)))/(obj.a_max(joint)*obj.j_max(joint)));
+            potential_v_drive = -(dir*(q_0 - q_goal) - obj.j_max(joint)*((a_0 + obj.a_max(joint))^3/(6*obj.j_max(joint)^3) - obj.a_max(joint)^3/(6*obj.j_max(joint)^3) + (obj.a_max(joint)^2*(a_0 + obj.a_max(joint)))/(2*obj.j_max(joint)^3) + ((a_0 + obj.a_max(joint))^2*((v_0 + (a_0*(a_0 - obj.a_max(joint)))/(2*obj.j_max(joint)))/obj.a_max(joint) + obj.a_max(joint)/(2*obj.j_max(joint)) + (a_0 - obj.a_max(joint))/(2*obj.j_max(joint))))/(2*obj.j_max(joint)^2)) + a_0*((a_0 + obj.a_max(joint))^2/(2*obj.j_max(joint)^2) + obj.a_max(joint)^2/(2*obj.j_max(joint)^2) + ((a_0 + obj.a_max(joint))*((v_0 + (a_0*(a_0 - obj.a_max(joint)))/(2*obj.j_max(joint)))/obj.a_max(joint) + obj.a_max(joint)/(2*obj.j_max(joint)) + (a_0 - obj.a_max(joint))/(2*obj.j_max(joint))))/obj.j_max(joint)) - obj.a_max(joint)*(((v_0 + (a_0*(a_0 - obj.a_max(joint)))/(2*obj.j_max(joint)))/obj.a_max(joint) - obj.a_max(joint)/(2*obj.j_max(joint)) + (a_0 - obj.a_max(joint))/(2*obj.j_max(joint)))^2/2 + (obj.a_max(joint)*((v_0 + (a_0*(a_0 - obj.a_max(joint)))/(2*obj.j_max(joint)))/obj.a_max(joint) - obj.a_max(joint)/(2*obj.j_max(joint)) + (a_0 - obj.a_max(joint))/(2*obj.j_max(joint))))/obj.j_max(joint)) + v_0*((v_0 + (a_0*(a_0 - obj.a_max(joint)))/(2*obj.j_max(joint)))/obj.a_max(joint) + (a_0 + obj.a_max(joint))/obj.j_max(joint) + obj.a_max(joint)/(2*obj.j_max(joint)) + (a_0 - obj.a_max(joint))/(2*obj.j_max(joint))))/(obj.a_max(joint)/(2*obj.j_max(joint)) - v_0/obj.a_max(joint) + obj.a_max(joint)*(((v_0 + (a_0*(a_0 - obj.a_max(joint)))/(2*obj.j_max(joint)))/obj.a_max(joint) - obj.a_max(joint)/(2*obj.j_max(joint)) + (a_0 - obj.a_max(joint))/(2*obj.j_max(joint)))/obj.a_max(joint) + 1/obj.j_max(joint)) - (a_0^2 + 2*a_0*obj.a_max(joint) + 4*obj.a_max(joint)^2 - 2*obj.j_max(joint)*t_required*obj.a_max(joint) + 2*obj.j_max(joint)*v_0)/(2*obj.a_max(joint)*obj.j_max(joint)) + (a_0 + obj.a_max(joint))^2/(2*obj.a_max(joint)*obj.j_max(joint)) - (a_0*(a_0 + obj.a_max(joint)))/(obj.a_max(joint)*obj.j_max(joint)));
             
-            % Check if v_drive is real and positive
-            if ~imag(v_drive) && v_drive > 0
-                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+            % Check if potential_v_drive is real and positive
+            if ~imag(potential_v_drive) && potential_v_drive > 0
+                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, potential_v_drive);
 
                 % Check time constraint was fulfilled
                 if t_required - t(end) < tol && t_required - t(end) > -tol/10
+                    v_drive = potential_v_drive;
                     return;
                 end
             end
 
             % Standard jerk profile: Phase 2 does not exist
             root=roots([3, 12*obj.a_max(joint), (-24*obj.a_max(joint)*obj.j_max(joint)*t_required - 12*a_0^2 - 24*a_0*obj.a_max(joint) + 12*obj.a_max(joint)^2 + 24*obj.j_max(joint)*v_0), 0, 48*a_0^2*obj.a_max(joint)*obj.j_max(joint)*t_required - 96*dir*obj.j_max(joint)^2*obj.a_max(joint)*q_0 + 96*dir*obj.j_max(joint)^2*obj.a_max(joint)*q_goal - 96*obj.a_max(joint)*obj.j_max(joint)^2*v_0*t_required + 12*a_0^4 + 16*a_0^3*obj.a_max(joint) - 24*a_0^2*obj.a_max(joint)^2 - 48*a_0^2*obj.j_max(joint)*v_0 + 48*obj.a_max(joint)^2*obj.j_max(joint)*v_0 + 48*obj.j_max(joint)^2*v_0^2]);
-            v_drive = (-2*a_0^2 + 4*obj.j_max(joint)*v_0 + root(3)^2)/(4*obj.j_max(joint));
+            potential_v_drive = (-2*a_0^2 + 4*obj.j_max(joint)*v_0 + root(3)^2)/(4*obj.j_max(joint));
             
-            % Check if v_drive is real and positive
-            if ~imag(v_drive) && v_drive > 0
-                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+            % Check if potential_v_drive is real and positive
+            if ~imag(potential_v_drive) && potential_v_drive > 0
+                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, potential_v_drive);
 
                 % Check time constraint was fulfilled
                 if t_required - t(end) < tol && t_required - t(end) > -tol/10
+                    v_drive = potential_v_drive;
                     return;
                 end
             end
 
             % Standard jerk profile: Phase 6 does not exist
             root = roots([12, 24*obj.a_max(joint), (-24*obj.a_max(joint)*obj.j_max(joint)*t_required + 24*a_0^2 - 48*a_0*obj.a_max(joint) + 24*obj.a_max(joint)^2 - 24*obj.j_max(joint)*v_0 + 12*a_0 - 12*obj.a_max(joint)), 0, -24*dir*obj.j_max(joint)^2*obj.a_max(joint)*q_0 + 24*dir*obj.j_max(joint)^2*obj.a_max(joint)*q_goal + 9*a_0^4 - 12*a_0^3*obj.a_max(joint) - 24*a_0^2*obj.j_max(joint)*v_0 + 48*a_0*obj.a_max(joint)*obj.j_max(joint)*v_0 + 4*obj.a_max(joint)^4 - 24*obj.a_max(joint)^2*obj.j_max(joint)*v_0 + 12*obj.j_max(joint)^2*v_0^2 + 6*a_0^3 + 6*a_0^2*obj.a_max(joint) - 12*a_0*obj.a_max(joint)^2 - 12*a_0*obj.j_max(joint)*v_0 + 12*obj.a_max(joint)*obj.j_max(joint)*v_0 + 4*a_0*obj.a_max(joint) - 4*obj.a_max(joint)^2]);
-            v_drive = root(3)^2/obj.j_max(joint);
+            potential_v_drive = root(3)^2/obj.j_max(joint);
             
-            % Check if v_drive is real and positive
-            if ~imag(v_drive) && v_drive > 0
-                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+            % Check if potential_v_drive is real and positive
+            if ~imag(potential_v_drive) && potential_v_drive > 0
+                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, potential_v_drive);
 
                 % Check time constraint was fulfilled
                 if t_required - t(end) < tol && t_required - t(end) > -tol/10
+                    v_drive = potential_v_drive;
                     return;
                 end
             end
 
             % Standard jerk profile: Phases 2 and 6 do not exist
             root = roots([(144*obj.j_max(joint)*t_required + 144*a_0), (-72*obj.j_max(joint)^2*t_required^2 - 144*a_0*obj.j_max(joint)*t_required + 36*a_0^2 - 216*obj.j_max(joint)*v_0), (144*dir*obj.j_max(joint)^2*q_0 - 144*dir*obj.j_max(joint)^2*q_goal + 48*a_0^3 - 144*a_0*obj.j_max(joint)*v_0), (-144*dir*obj.j_max(joint)^3*q_0*t_required + 144*dir*obj.j_max(joint)^3*q_goal*t_required - 48*a_0^3*obj.j_max(joint)*t_required - 144*a_0*dir*obj.j_max(joint)^2*q_0 + 144*a_0*dir*obj.j_max(joint)^2*q_goal + 144*a_0*obj.j_max(joint)^2*v_0*t_required + 6*a_0^4 - 72*a_0^2*obj.j_max(joint)*v_0 + 216*obj.j_max(joint)^2*v_0^2), 0, -72*dir^2*obj.j_max(joint)^4*q_0^2 + 144*dir^2*obj.j_max(joint)^4*q_0*q_goal - 72*dir^2*obj.j_max(joint)^4*q_goal^2 - 48*a_0^3*dir*obj.j_max(joint)^2*q_0 + 48*a_0^3*dir*obj.j_max(joint)^2*q_goal + 144*a_0*dir*obj.j_max(joint)^3*q_0*v_0 - 144*a_0*dir*obj.j_max(joint)^3*q_goal*v_0 + a_0^6 - 6*a_0^4*obj.j_max(joint)*v_0 + 36*a_0^2*obj.j_max(joint)^2*v_0^2 - 72*obj.j_max(joint)^3*v_0^3]);
-            v_drive = root(2)^2/obj.j_max(joint);
+            potential_v_drive = root(2)^2/obj.j_max(joint);
             
-            % Check if v_drive is real and positive
-            if ~imag(v_drive) && v_drive > 0
-                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+            % Check if potential_v_drive is real and positive
+            if ~imag(potential_v_drive) && potential_v_drive > 0
+                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, potential_v_drive);
 
                 % Check time constraint was fulfilled
                 if t_required - t(end) < tol && t_required - t(end) > -tol/10
+                    v_drive = potential_v_drive;
                     return;
                 end
             end
 
             % Modified profile: Phase 2 does not exist
             root = roots([3, - 6*sqrt(2)*obj.a_max(joint), (12*obj.a_max(joint)*obj.j_max(joint)*t_required - 6*a_0^2 - 12*a_0*obj.a_max(joint) - 6*obj.a_max(joint)^2 - 12*obj.j_max(joint)*v_0), 0, -12*a_0^2*obj.a_max(joint)*obj.j_max(joint)*t_required - 24*dir*obj.j_max(joint)^2*obj.a_max(joint)*q_0 + 24*dir*obj.j_max(joint)^2*obj.a_max(joint)*q_goal - 24*obj.a_max(joint)*obj.j_max(joint)^2*v_0*t_required + 3*a_0^4 + 4*a_0^3*obj.a_max(joint) + 6*a_0^2*obj.a_max(joint)^2 + 12*a_0^2*obj.j_max(joint)*v_0 + 12*obj.a_max(joint)^2*obj.j_max(joint)*v_0 + 12*obj.j_max(joint)^2*v_0^2]);
-            v_drive = -(root(3)^2 - a_0^2 - 2*obj.j_max(joint)*v_0)/(2*obj.j_max(joint));
+            potential_v_drive = -(root(3)^2 - a_0^2 - 2*obj.j_max(joint)*v_0)/(2*obj.j_max(joint));
             
-            % Check if v_drive is real and positive
-            if ~imag(v_drive) && v_drive > 0
-                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+            % Check if potential_v_drive is real and positive
+            if ~imag(potential_v_drive) && potential_v_drive > 0
+                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, potential_v_drive);
 
                 % Check time constraint was fulfilled
                 if t_required - t(end) < tol && t_required - t(end) > -tol/10
+                    v_drive = potential_v_drive;
                     return;
                 end
             end
 
             % Modified profile: Phase 6 does not exist
             root = roots([12, - 24*obj.a_max(joint), (24*obj.a_max(joint)*obj.j_max(joint)*t_required - 12*a_0^2 - 24*a_0*obj.a_max(joint) - 12*obj.a_max(joint)^2 - 24*obj.j_max(joint)*v_0), 0, 24*dir*obj.j_max(joint)^2*obj.a_max(joint)*q_0 - 24*dir*obj.j_max(joint)^2*obj.a_max(joint)*q_goal + 3*a_0^4 + 8*a_0^3*obj.a_max(joint) + 6*a_0^2*obj.a_max(joint)^2 + 12*a_0^2*obj.j_max(joint)*v_0 + 24*a_0*obj.a_max(joint)*obj.j_max(joint)*v_0 + 12*obj.a_max(joint)^2*obj.j_max(joint)*v_0 + 12*obj.j_max(joint)^2*v_0^2]);
-            v_drive = root(3)^2/obj.j_max(joint);
+            potential_v_drive = root(3)^2/obj.j_max(joint);
             
-            % Check if v_drive is real and positive
-            if ~imag(v_drive) && v_drive > 0
-                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+            % Check if potential_v_drive is real and positive
+            if ~imag(potential_v_drive) && potential_v_drive > 0
+                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, potential_v_drive);
 
                 % Check time constraint was fulfilled
                 if t_required - t(end) < tol && t_required - t(end) > -tol/10
+                    v_drive = potential_v_drive;
                     return;
                 end
             end
 
             % Modified profile: Phases 2 and 6 do not exist
             root = roots([144, (-144*obj.j_max(joint)*t_required + 144*a_0), (72*obj.j_max(joint)^2*t_required^2 - 144*a_0*obj.j_max(joint)*t_required - 36*a_0^2 - 216*obj.j_max(joint)*v_0), (-144*dir*obj.j_max(joint)^2*q_0 + 144*dir*obj.j_max(joint)^2*q_goal - 48*a_0^3 - 144*a_0*obj.j_max(joint)*v_0), (144*dir*obj.j_max(joint)^3*q_0*t_required - 144*dir*obj.j_max(joint)^3*q_goal*t_required + 48*a_0^3*obj.j_max(joint)*t_required - 144*a_0*dir*obj.j_max(joint)^2*q_0 + 144*a_0*dir*obj.j_max(joint)^2*q_goal + 144*a_0*obj.j_max(joint)^2*v_0*t_required + 6*a_0^4 + 72*a_0^2*obj.j_max(joint)*v_0 + 216*obj.j_max(joint)^2*v_0^2), 0, 72*dir^2*obj.j_max(joint)^4*q_0^2 - 144*dir^2*obj.j_max(joint)^4*q_0*q_goal + 72*dir^2*obj.j_max(joint)^4*q_goal^2 + 48*a_0^3*dir*obj.j_max(joint)^2*q_0 - 48*a_0^3*dir*obj.j_max(joint)^2*q_goal + 144*a_0*dir*obj.j_max(joint)^3*q_0*v_0 - 144*a_0*dir*obj.j_max(joint)^3*q_goal*v_0 - a_0^6 - 6*a_0^4*obj.j_max(joint)*v_0 - 36*a_0^2*obj.j_max(joint)^2*v_0^2 - 72*obj.j_max(joint)^3*v_0^3]);
-            v_drive = root(4)^2/obj.j_max(joint);
+            potential_v_drive = root(4)^2/obj.j_max(joint);
             
-            % Check if v_drive is real and positive
-            if ~imag(v_drive) && v_drive > 0
-                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+            % Check if potential_v_drive is real and positive
+            if ~imag(potential_v_drive) && potential_v_drive > 0
+                [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, potential_v_drive);
 
                 % Check time constraint was fulfilled
                 if t_required - t(end) < tol && t_required - t(end) > -tol/10
+                    v_drive = potential_v_drive;
                     return;
                 end
             end
@@ -444,6 +452,7 @@ classdef LTPlanner < handle
             %   reach a goal
             % - slow a joint down to a desired velocity (v_0 must be set to
             %   v_current - v_desired)
+            t_rel = zeros(1,3);
             
             % Set direction opposite to maximal velocity to be reached
             if v_0*a_0 > 0
@@ -469,12 +478,12 @@ classdef LTPlanner < handle
             % Bring velocity to zero
             t_rel(1) = (obj.a_max(joint) - a_0)/obj.j_max(joint);
             t_rel(3) = obj.a_max(joint)/obj.j_max(joint);
-            t_rel(2) = (- v_0 - 1/2*t_rel(1)*a_0)/obj.a_max(joint) - 1/2*(t_rel(1) + t_rel(3));
+            t_rel(2) = real((- v_0 - 1/2*t_rel(1)*a_0)/obj.a_max(joint) - 1/2*(t_rel(1) + t_rel(3)));
             
             % Check if phase 2 does not exist 
             % (max acceleration is not reached)
             if(t_rel(2) < -obj.Tsample)
-                t_rel(1) = -a_0/obj.j_max(joint) + sqrt(a_0^2/(2*obj.j_max(joint)^2) - v_0/obj.j_max(joint));
+                t_rel(1) = real(-a_0/obj.j_max(joint) + sqrt(a_0^2/(2*obj.j_max(joint)^2) - v_0/obj.j_max(joint)));
                 t_rel(3) = t_rel(1) + a_0/obj.j_max(joint);
                 t_rel(2) = 0;
             end
@@ -504,6 +513,8 @@ classdef LTPlanner < handle
             else
                 v_drive = obj.v_max;
             end
+            
+            const_v = false(obj.DoF,1);
             
             % Calculate length of trajectory in samples
             traj_len = max(ceil(t(:,7)/obj.Tsample)) + 1;
