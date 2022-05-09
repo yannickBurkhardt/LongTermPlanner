@@ -4,8 +4,8 @@ This is a computationally fast and time-optimal trajectory planner.
 A trajectory is calculated from an initial state with arbitrary position, velocity, and acceleration to a static goal state: Velocity and acceleration are zero.
 The maximal velocities, accelerations and jerks of every joint are limited. 
 
-The LongTermPlanner is written in MATLAB and optimized for usage with Simulink Real-Time.
-For future releases, also a C++-Version is planned.
+The LongTermPlanner is written in MATLAB and optimized for usage with Simulink Real-Time.  
+The code was also been compiled to a C++ library using the [MATLAB Coder](https://de.mathworks.com/help/releases/R2020a/coder/ug/generate-c-classes-from-matlab-classes.html#responsive_offcanvas). All relevant files can be found in the `codegen` folder.
 
 This planner is useful when a robot controller requires a dense trajectory while external targets are given sparsely (e.g., by a Reinforcement Learning Agent).
 It then plans trajectories between these sparse targets.
@@ -20,6 +20,8 @@ A trajectory is calculated in a two-step procedure. This is outlined in the foll
 
 ## How to use
 
+### MATLAB
+
 Firstly, the LongTermPlanner must be initialized with the desired properties:  
 ```
 ltp = LTPlanner(DoF, Tsample, v_max, a_max, j_max);
@@ -31,6 +33,10 @@ It returns the sampled trajectory information of acceleration, velocity, and ang
 ```
 [q_traj, v_traj, a_traj] = ltp.trajectory(q_goal, q_0, v_0, a_0);
 ```
+
+### C++
+
+An example of how to use the C++ library can be found in [`codegen/lib/ltpTrajectory/examples/main.cpp`](https://github.com/yannickBurkhardt/LongTermPlanner/blob/main/codegen/lib/ltpTrajectory/examples/main.cpp).
 
 ## Time optimality
 
