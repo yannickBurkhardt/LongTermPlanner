@@ -24,7 +24,7 @@ namespace long_term_planner {
 /**
  * @brief Trajectory structure.
  */
-struct {        
+struct Trajectory {        
   int dof;
   double t_sample;
   int length;
@@ -32,7 +32,7 @@ struct {
   std::vector<std::vector<double>> v;
   std::vector<std::vector<double>> a;
   std::vector<std::vector<double>> j;
-} trajectory;
+};
 
 /**
  * @brief Plans a trajectory for multiple joints.
@@ -110,6 +110,22 @@ class LongTermPlanner {
     std::vector<double> v_max,
     std::vector<double> a_max,
     std::vector<double> j_max) {};
+
+  /**
+   * @brief Plan a trajectory from the given start state to the goal position and zero velocity/acc.
+   * 
+   * @param q_goal Goal position.
+   * @param q_0 Start position.
+   * @param v_0 Start velocity
+   * @param a_0 Start acceleration.
+   * @return Trajectory 
+   */
+  Trajectory planTrajectory(
+    std::vector<double> q_goal,
+    std::vector<double> q_0,
+    std::vector<double> v_0,
+    std::vector<double> a_0
+  );
 };
 } // namespace long_term_planner
 
