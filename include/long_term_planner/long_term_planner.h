@@ -18,7 +18,8 @@
 #include <array>
 #include <algorithm>
 #include <numeric>
-#include <math.h> 
+#include <math.h>
+#include <cmath>
 
 #ifndef long_term_planner_H
 #define long_term_planner_H
@@ -197,7 +198,7 @@ class LongTermPlanner {
    * @param[in] t_required Required end time.
    * @param[out] scaled_t Scaled time points of jerk switches.
    * @param[out] v_drive Driving velocity.
-   * @param[out] scaled_mod_jerk_profile true if slowing down is necessary to satisfy v_drive, false otherwise.
+   * @param[out] mod_jerk_profile true if slowing down is necessary to satisfy v_drive, false otherwise.
    * @return true if successful. 
    * @return false if planning not possible.
    */
@@ -211,7 +212,7 @@ class LongTermPlanner {
     double t_required,
     std::array<double, 7>& scaled_t,
     double& v_drive,
-    char& scaled_mod_jerk_profile);
+    char& mod_jerk_profile);
 
   /**
    * @brief Calculate time and joint angles required to bring velocity to zero.
