@@ -612,6 +612,49 @@ bool LongTermPlanner::optBraking(
     double& q,
     std::array<double, 7>& t_rel,
     double& dir) {
+  // Set direction opposite to maximal velocity to be reached
+  if (v_0*a_0 > 0) {
+    // v and a in same direction
+    dir = -sign(v_0);
+  } else {
+    // If initial acceleration will cause the robot to
+    // eventually move into opposite direction of velocity, use 
+    // this direction
+    if (abs(v_0) > 1/2*pow(a_0,2)/j_max_[joint]) {
+      dir = -sign(v_0);
+    } else {
+      dir = -sign(a_0);
+    }
+  }
+
+  // If stopping dir. is negative, map scenario to pos. direction
+  if (dir < 0) {
+    a_0 = -a_0;
+    v_0 = -v_0;
+  }
+
+  // Bring velocity to zero
+  t_rel[1] = (a_max_[joint] - a_0)/j_max_[joint];
+  t_rel[3] = a_max_[joint]/j_max_[joint];
+  t_rel[2] = (- v_0 - 1/2*t_rel[1]*a_0)/a_max_[joint] - 1/2*(t_rel[1] + t_rel[3]);
+  
+  // Check if phase 2 does not exist 
+  // (max acceleration is not reached)
+  if (t_rel[2] < -t_sample_) {
+    t_rel[1] = -a_0/j_max_[joint] + sqrt(pow(a_0,2)/(2*pow(j_max_[joint],2)) - v_0/j_max_[joint]);
+    t_rel[3] = t_rel[1] + a_0/j_max_[joint];
+    t_rel[2] = 0;
+  }
+  
+  // Calculate position after breaking
+  q = v_0*(t_rel[1] + t_rel[2] + t_rel[3]) + 
+      a_0*(1/2*pow(t_rel[1],2) + t_rel[1]*(t_rel[2] + t_rel[3]) + 1/2*pow(t_rel[3],2)) + 
+      j_max_[joint]*(1/6*pow(t_rel[1],3) + 1/2*pow(t_rel[1],2)*(t_rel[2] + t_rel[3]) - 
+      1/6*pow(t_rel[3],3) + 1/2*t_rel[1]*pow(t_rel[3],2)) + 
+      a_max_[joint]*(1/2*pow(t_rel[2],2) + t_rel[2]*t_rel[3]);
+
+  // Correct direction
+  q = dir * q;
   return true;
 }
 
