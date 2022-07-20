@@ -10,6 +10,9 @@ bool LongTermPlanner::planTrajectory(
     const std::vector<double>& v_0,
     const std::vector<double>& a_0,
     Trajectory& traj) {
+  //// Check inputs
+  bool success = checkInputs(q_0, v_0, a_0);
+  if (!success) return false;
   //// Initialize values
   // Optimal jerk switching times
   std::vector<std::array<double, 7>> t_opt(dof_);
@@ -51,7 +54,7 @@ bool LongTermPlanner::planTrajectory(
     }
   }
 
-  // Calculate sampled trajectories
+  //// Calculate sampled trajectories
   traj = getTrajectory(t_scaled, dir, mod_jerk_profile, q_0, v_0, a_0);
   return true;
 }
@@ -63,6 +66,10 @@ bool LongTermPlanner::checkInputs(
     const std::vector<double>& q_0,
     const std::vector<double>& v_0,
     const std::vector<double>& a_0) {
+  for (int i=0; i<dof_; i++) {
+    if (q_0[i] < q_min_[i] || q_0[i] > q_max_[i] || abs(v_0[i]) > v_max_[i] || abs(a_0[i]) > a_max_[i]) return false;
+    if (abs(v_0[i] + 0.5*a_0[i]*abs(a_0[i])/j_max_[i]) > v_max_[i]) return false;
+  }
   return true;
 }
 
