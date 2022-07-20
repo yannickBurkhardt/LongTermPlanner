@@ -67,7 +67,36 @@ class LongTermPlanner {
    */
   std::vector<double> j_max_;
 
+ public:
+  
+  /**
+   * @brief Construct a new dummy Long Term Planner object.
+   */
+  LongTermPlanner() :
+    dof_(0),
+    t_sample_(0.001),
+    num_samples_(1) {};
 
+  /**
+   * @brief Construct a new Long Term Planner object
+   * 
+   * @param dof Degrees of freedom, i.e., number of joints.
+   * @param t_sample Time between two samples of the planned trajectories.
+   * @param num_samples Output length in samples.
+   * @param q_min Minimum joint positions.
+   * @param q_max Maximum joint positions.
+   * @param v_max Maximum allowed velocities per DoF.
+   * @param a_max Maximum allowed accelerations per DoF.
+   * @param j_max Maximum allowed jerk per DoF.
+   */
+  LongTermPlanner(int dof,
+    double t_sample,
+    int num_samples,
+    std::vector<double> q_min,
+    std::vector<double> q_max,
+    std::vector<double> v_max,
+    std::vector<double> a_max,
+    std::vector<double> j_max) {};
 };
 } // namespace long_term_planner
 
