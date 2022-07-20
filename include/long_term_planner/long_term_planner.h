@@ -149,12 +149,12 @@ class LongTermPlanner {
    * @brief Calculate time-optimal jerk swtiches.
    * 
    * @param[in] joint Joint id to access joint limit vectors.
-   * @param[in] q_goal goal position of the joint.
-   * @param[in] q_0 start position of the joint.
-   * @param[in] v_0 start velocity of the joint.
-   * @param[in] a_0 start acceleration of the joint.
-   * @param[out] t time points of jerk switches.
-   * @param[out] dir direction of the goal.
+   * @param[in] q_goal Goal position of the joint.
+   * @param[in] q_0 Start position of the joint.
+   * @param[in] v_0 Start velocity of the joint.
+   * @param[in] a_0 Start acceleration of the joint.
+   * @param[out] t Time points of jerk switches.
+   * @param[out] dir Direction of the goal.
    * @param[out] mod_jerk_profile true if slowing down is necessary to satisfy v_drive, false otherwise.
    * @return true if successful.
    * @return false if planning not possible.
@@ -167,6 +167,34 @@ class LongTermPlanner {
     std::vector<double>& t, 
     double& dir,
     bool& mod_jerk_profile);
+
+  /**
+   * @brief Calculate switching times to fulfil a given time by adjusting the maximally reached velocity.
+   * 
+   * @param[in] joint Joint id to access joint limit vectors.
+   * @param[in] q_goal Goal position of the joint.
+   * @param[in] q_0 Start position of the joint.
+   * @param[in] v_0 Start velocity of the joint.
+   * @param[in] a_0 Start acceleration of the joint.
+   * @param[in] dir Direction of the goal.
+   * @param[in] t_required Required end time.
+   * @param[out] scaled_t Scaled time points of jerk switches.
+   * @param[out] v_drive Driving velocity.
+   * @param[out] scaled_mod_jerk_profile true if slowing down is necessary to satisfy v_drive, false otherwise.
+   * @return true if successful. 
+   * @return false if planning not possible.
+   */
+  bool timeScaling(
+    int joint, 
+    double q_goal, 
+    double q_0, 
+    double v_0, 
+    double a_0, 
+    double dir,
+    double t_required,
+    std::vector<double>& scaled_t,
+    double& v_drive,
+    bool& scaled_mod_jerk_profile);
 };
 } // namespace long_term_planner
 
