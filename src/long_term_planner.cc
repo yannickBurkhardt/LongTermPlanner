@@ -69,7 +69,7 @@ bool LongTermPlanner::checkInputs(
     const std::vector<double>& a_0) {
   for (int i=0; i<dof_; i++) {
     if (q_0[i] < q_min_[i] || q_0[i] > q_max_[i] || abs(v_0[i]) > v_max_[i] || abs(a_0[i]) > a_max_[i]) return false;
-    if (abs(v_0[i] + 0.5*a_0[i] * abs(a_0[i])/j_max_[i]) > v_max_[i]) return false;
+    if (abs(v_0[i] + 0.5 * a_0[i] * abs(a_0[i])/j_max_[i]) > v_max_[i]) return false;
   }
   return true;
 }
@@ -114,7 +114,7 @@ bool LongTermPlanner::optSwitchTimes(int joint,
   // Check if slowing down is necessary to satisfy v_drive
   double q_brake = 0.0;
   double emp;
-  if (v_0 + 0.5*a_0*abs(a_0)/j_max_[joint] > v_drive) {
+  if (v_0 + 0.5 * a_0 * abs(a_0)/j_max_[joint] > v_drive) {
     mod_jerk_profile = 1;
     // Get Joint Position after braking and required times
     optBraking(joint, v_0 - v_drive, a_0, q_brake, t_rel, emp);
@@ -202,34 +202,34 @@ bool LongTermPlanner::optSwitchTimes(int joint,
                   (pow(j_max_[joint],2) * pow(t_rel[3],2) * pow(t_rel[5],2))/2 - 
                   (pow(j_max_[joint],2) * pow(t_rel[5],4))/4 + 
                   (pow(j_max_[joint],2) * pow(t_rel[7],4))/2 + 
-                  2*j_max_[joint] * a_0 * pow(t_rel[1],3) - 
-                  (2*j_max_[joint] * a_max_[joint] * pow(t_rel[1],3))/3 - 
-                  2*j_max_[joint] * a_max_[joint] * t_rel[1] * pow(t_rel[3],2) + 
-                  (2*j_max_[joint] * a_max_[joint] * pow(t_rel[3],3))/3 + 
-                  (2*j_max_[joint] * a_max_[joint] * pow(t_rel[5],3))/3 - 
-                  2*j_max_[joint] * a_max_[joint] * pow(t_rel[5],2) * t_rel[7] - 
-                  (2*j_max_[joint] * a_max_[joint] * pow(t_rel[7],3))/3 + 
-                  2*j_max_[joint] * v_0 * pow(t_rel[1],2) + 
+                  2 * j_max_[joint] * a_0 * pow(t_rel[1],3) - 
+                  (2 * j_max_[joint] * a_max_[joint] * pow(t_rel[1],3))/3 - 
+                  2 * j_max_[joint] * a_max_[joint] * t_rel[1] * pow(t_rel[3],2) + 
+                  (2 * j_max_[joint] * a_max_[joint] * pow(t_rel[3],3))/3 + 
+                  (2 * j_max_[joint] * a_max_[joint] * pow(t_rel[5],3))/3 - 
+                  2 * j_max_[joint] * a_max_[joint] * pow(t_rel[5],2) * t_rel[7] - 
+                  (2 * j_max_[joint] * a_max_[joint] * pow(t_rel[7],3))/3 + 
+                  2 * j_max_[joint] * v_0 * pow(t_rel[1],2) + 
                   2 * pow(a_0,2) * pow(t_rel[1],2) - 
-                  2*a_0*a_max_[joint] * pow(t_rel[1],2) - 
-                  2*a_0*a_max_[joint] * pow(t_rel[3],2) + 
-                  4*a_0*v_0 * t_rel[1] + 
+                  2 * a_0 * a_max_[joint] * pow(t_rel[1],2) - 
+                  2 * a_0 * a_max_[joint] * pow(t_rel[3],2) + 
+                  4 * a_0 * v_0 * t_rel[1] + 
                   2 * pow(a_max_[joint],2) * pow(t_rel[3],2) + 
                   2 * pow(a_max_[joint],2) * pow(t_rel[5],2) - 
-                  4*a_max_[joint] * v_0 * t_rel[1] + 
-                  4*dir * (q_goal - q_0) * a_max_[joint] + 
-                  2*pow(v_0,2);
+                  4 * a_max_[joint] * v_0 * t_rel[1] + 
+                  4 * dir * (q_goal - q_0) * a_max_[joint] + 
+                  2 * pow(v_0,2);
     if (root > 0) {
-      t_rel[6] = -(4*a_max_[joint] * t_rel[5] - 
-                   2*pow(root,(1.0/2)) + 
+      t_rel[6] = -(4 * a_max_[joint] * t_rel[5] - 
+                   2 * pow(root,(1.0/2)) + 
                    j_max_[joint] * pow(t_rel[3],2) - 
                    j_max_[joint] * pow(t_rel[5],2) + 
-                   2*j_max_[joint] * pow(t_rel[7],2))/(4*a_max_[joint]);
+                   2 * j_max_[joint] * pow(t_rel[7],2))/(4 * a_max_[joint]);
       t_rel[2] = (-v_0 - a_0 * t_rel[1] - 
-                  1.0/2*j_max_[joint] * pow(t_rel[1],2) + 
-                  1.0/2*j_max_[joint] * pow(t_rel[3],2) + 
-                  1.0/2*j_max_[joint] * pow(t_rel[7],2) - 
-                  1.0/2*j_max_[joint] * pow(t_rel[5],2))/a_max_[joint] 
+                  1.0/2 * j_max_[joint] * pow(t_rel[1],2) + 
+                  1.0/2 * j_max_[joint] * pow(t_rel[3],2) + 
+                  1.0/2 * j_max_[joint] * pow(t_rel[7],2) - 
+                  1.0/2 * j_max_[joint] * pow(t_rel[5],2))/a_max_[joint] 
                  - t_rel[3] + t_rel[6] + t_rel[5];
       t_rel[4] = 0;
     } else {
@@ -243,20 +243,20 @@ bool LongTermPlanner::optSwitchTimes(int joint,
     if (t_rel[6] < -eps || t_rel[2] < -eps) {
       double a_4 = 12;
       double a_3 = 0;
-      double a_2 = -24*pow(a_0,2) + 48*j_max_[joint] * v_0;
+      double a_2 = -24 * pow(a_0,2) + 48 * j_max_[joint] * v_0;
       double a_1 = 48 * dir * pow(j_max_[joint],2) * q_0 - 
-                   48*dir * pow(j_max_[joint],2) * q_goal + 
-                   16*pow(a_0,3) - 48*a_0*j_max_[joint] * v_0;
-      double a_0 = -3*pow(a_0,4) + 12*pow(a_0,2)*j_max_[joint] * v_0 - 12 * pow(j_max_[joint],2) * pow(v_0,2);
+                   48 * dir * pow(j_max_[joint],2) * q_goal + 
+                   16 * pow(a_0,3) - 48 * a_0 * j_max_[joint] * v_0;
+      double a_0 = -3 * pow(a_0,4) + 12 * pow(a_0,2) * j_max_[joint] * v_0 - 12 * pow(j_max_[joint],2) * pow(v_0,2);
       // This will be a non-complex, positive solution
       root = fourth_2deriv(a_4, a_3, a_2, a_1, a_0);
 
-      t_rel[1] = (2*pow(root,2) - 4*a_0*root + pow(a_0,2) - 2*v_0*j_max_[joint])/(4*j_max_[joint] * root);
+      t_rel[1] = (2 * pow(root,2) - 4 * a_0*root + pow(a_0,2) - 2 * v_0 * j_max_[joint])/(4 * j_max_[joint] * root);
       // Calculate other switch times
       t_rel[7] = sqrt(4 * pow(j_max_[joint],2) * pow(t_rel[1],2) + 
-                      8*a_0*j_max_[joint] * t_rel[1] + 
-                      2*pow(a_0,2) + 
-                      4*j_max_[joint] * v_0) / (2*j_max_[joint]);
+                      8 * a_0 * j_max_[joint] * t_rel[1] + 
+                      2 * pow(a_0,2) + 
+                      4 * j_max_[joint] * v_0) / (2 * j_max_[joint]);
       t_rel[5] = a_0/j_max_[joint] + t_rel[1] + t_rel[7];
       t_rel[2] = 0;
       t_rel[6] = 0;
@@ -266,24 +266,24 @@ bool LongTermPlanner::optSwitchTimes(int joint,
         t_rel[1] = (a_max_[joint] - a_0) / j_max_[joint];
         t_rel[7] = 1.0/j_max_[joint] * (a_max_[joint]/2 + sqrt(
                       9 * pow(a_max_[joint],2) + 6*sqrt(
-                        -12*a_max_[joint] * pow(j_max_[joint],3) * pow(t_rel[1],3) + 
-                        9*pow(a_0,2) * pow(j_max_[joint],2) * pow(t_rel[1],2) - 
-                        18*a_0*a_max_[joint] * pow(j_max_[joint],2) * pow(t_rel[1],2) + 
+                        -12 * a_max_[joint] * pow(j_max_[joint],3) * pow(t_rel[1],3) + 
+                        9 * pow(a_0,2) * pow(j_max_[joint],2) * pow(t_rel[1],2) - 
+                        18 * a_0 * a_max_[joint] * pow(j_max_[joint],2) * pow(t_rel[1],2) + 
                         9 * pow(a_max_[joint],2) * pow(j_max_[joint],2) * pow(t_rel[1],2) + 
-                        36*a_0 * pow(j_max_[joint],2) * t_rel[1] * v_0 - 
-                        72*a_max_[joint] * dir * pow(j_max_[joint],2) * q_0 + 
-                        72*a_max_[joint] * dir * pow(j_max_[joint],2) * q_goal - 
-                        36*a_max_[joint] * pow(j_max_[joint],2) * t_rel[1] * v_0 + 
+                        36 * a_0 * pow(j_max_[joint],2) * t_rel[1] * v_0 - 
+                        72 * a_max_[joint] * dir * pow(j_max_[joint],2) * q_0 + 
+                        72 * a_max_[joint] * dir * pow(j_max_[joint],2) * q_goal - 
+                        36 * a_max_[joint] * pow(j_max_[joint],2) * t_rel[1] * v_0 + 
                         3 * pow(a_max_[joint],4) + 
                         36 * pow(j_max_[joint],2) * pow(v_0,2)))/6 - a_max_[joint]);
         t_rel[5] = t_rel[7] + a_max_[joint]/j_max_[joint];
         t_rel[2] = -(-j_max_[joint] * pow(t_rel[5],2) - 
-                     2*j_max_[joint] * t_rel[5] * t_rel[7] + 
+                     2 * j_max_[joint] * t_rel[5] * t_rel[7] + 
                      j_max_[joint] * pow(t_rel[7],2) + a_0 * t_rel[1] + 
                      a_max_[joint] * t_rel[1] + 
-                     2*a_max_[joint] * t_rel[5] + 
-                     2*a_max_[joint] * t_rel[7] + 
-                     2*v_0)/(2*a_max_[joint]);
+                     2 * a_max_[joint] * t_rel[5] + 
+                     2 * a_max_[joint] * t_rel[7] + 
+                     2 * v_0)/(2 * a_max_[joint]);
         t_rel[6] = 0;
       }
 
@@ -291,15 +291,15 @@ bool LongTermPlanner::optSwitchTimes(int joint,
       if (t_rel[7] * j_max_[joint] > a_max_[joint]) {
         t_rel[7] = a_max_[joint]/j_max_[joint];
         double a_4 = 12;
-        double a_3 = - 24*a_max_[joint];
-        double a_2 = -12*pow(a_0,2) + 12 * pow(a_max_[joint],2) + 24*j_max_[joint] * v_0;
+        double a_3 = - 24 * a_max_[joint];
+        double a_2 = -12 * pow(a_0,2) + 12 * pow(a_max_[joint],2) + 24 * j_max_[joint] * v_0;
         double a_1 = 0;
-        double a_0 = 24 * dir * pow(j_max_[joint],2) * q_0*a_max_[joint] - 
-                     24*dir * pow(j_max_[joint],2) * q_goal*a_max_[joint] + 
-                     3*pow(a_0,4) + 8*pow(a_0,3)*a_max_[joint] + 
-                     6*pow(a_0,2) * pow(a_max_[joint],2) - 
-                     12*pow(a_0,2)*j_max_[joint] * v_0 - 
-                     24*a_0*j_max_[joint] * v_0*a_max_[joint] - 
+        double a_0 = 24 * dir * pow(j_max_[joint],2) * q_0 * a_max_[joint] - 
+                     24 * dir * pow(j_max_[joint],2) * q_goal * a_max_[joint] + 
+                     3 * pow(a_0,4) + 8 * pow(a_0,3) * a_max_[joint] + 
+                     6 * pow(a_0,2) * pow(a_max_[joint],2) - 
+                     12 * pow(a_0,2) * j_max_[joint] * v_0 - 
+                     24 * a_0 * j_max_[joint] * v_0 * a_max_[joint] - 
                      12 * pow(a_max_[joint],2) * j_max_[joint] * v_0 + 
                      12 * pow(j_max_[joint],2) * pow(v_0,2);
         // This will be a non-complex, positive solution
@@ -311,9 +311,9 @@ bool LongTermPlanner::optSwitchTimes(int joint,
         t_rel[6] = (pow(j_max_[joint],2) * pow(t_rel[1],2) + 
                     2 * pow(j_max_[joint],2) * t_rel[1] * t_rel[5] - 
                     pow(j_max_[joint],2) * pow(t_rel[5],2) + 
-                    2*a_0*j_max_[joint] * t_rel[1] + 2*a_0*j_max_[joint] * t_rel[5] - 
+                    2 * a_0 * j_max_[joint] * t_rel[1] + 2 * a_0 * j_max_[joint] * t_rel[5] - 
                     pow(a_max_[joint],2) + 
-                    2*j_max_[joint] * v_0)/(2*j_max_[joint] * a_max_[joint]);
+                    2 * j_max_[joint] * v_0)/(2 * j_max_[joint] * a_max_[joint]);
         t_rel[2] = 0;
       }
       // All other times are 0
@@ -360,28 +360,28 @@ bool LongTermPlanner::timeScaling(
   }
   //// Calculate required v_drive to reach goal at given time
   // Standard jerk profile: Phases 2 and 6 exist
-  v_drive = (a_max_[joint]*j_max_[joint]*t_required/2 - 
-             pow(a_0,2)/4 + a_0*a_max_[joint]/2 - 
+  v_drive = (a_max_[joint] * j_max_[joint] * t_required/2 - 
+             pow(a_0,2)/4 + a_0 * a_max_[joint]/2 - 
              pow(a_max_[joint],2)/2 + 
-             v_0*j_max_[joint]/2 - 
-             sqrt(36*pow(a_max_[joint],2)*pow(j_max_[joint],2)*pow(t_required,2) - 
-                  36*pow(a_0,2)*a_max_[joint]*j_max_[joint]*t_required + 
-                  72*a_0*pow(a_max_[joint],2)*j_max_[joint]*t_required - 
-                  72*pow(a_max_[joint],3)*j_max_[joint]*t_required + 
-                  144*a_max_[joint]*dir*pow(j_max_[joint],2)*q_0 - 
-                  144*a_max_[joint]*dir*pow(j_max_[joint],2)*q_goal + 
-                  72*a_max_[joint]*pow(j_max_[joint],2)*v_0*t_required 
-                  - 9*pow(a_0,4) 
-                  + 12*pow(a_0,3)*a_max_[joint] 
-                  + 36*pow(a_0,2)*pow(a_max_[joint],2) + 
-                  36*pow(a_0,2)*j_max_[joint]*v_0 - 
-                  72*a_0*pow(a_max_[joint],3) - 
-                  72*a_0*a_max_[joint]*j_max_[joint]*v_0 + 
-                  36*pow(a_max_[joint],4) - 
-                  36*pow(j_max_[joint],2)*v_0^2)/12)/j_max_[joint];
+             v_0 * j_max_[joint]/2 - 
+             sqrt(36 * pow(a_max_[joint],2) * pow(j_max_[joint],2) * pow(t_required,2) - 
+                  36 * pow(a_0,2) * a_max_[joint] * j_max_[joint] * t_required + 
+                  72 * a_0 * pow(a_max_[joint],2) * j_max_[joint] * t_required - 
+                  72 * pow(a_max_[joint],3) * j_max_[joint] * t_required + 
+                  144 * a_max_[joint] * dir * pow(j_max_[joint],2) * q_0 - 
+                  144 * a_max_[joint] * dir * pow(j_max_[joint],2) * q_goal + 
+                  72 * a_max_[joint] * pow(j_max_[joint],2) * v_0 * t_required 
+                  - 9 * pow(a_0,4) 
+                  + 12 * pow(a_0,3) * a_max_[joint] 
+                  + 36 * pow(a_0,2) * pow(a_max_[joint],2) + 
+                  36 * pow(a_0,2) * j_max_[joint] * v_0 - 
+                  72 * a_0 * pow(a_max_[joint],3) - 
+                  72 * a_0 * a_max_[joint] * j_max_[joint] * v_0 + 
+                  36 * pow(a_max_[joint],4) - 
+                  36 * pow(j_max_[joint],2) * pow(v_0,2))/12)/j_max_[joint];
   // Check if v_drive is real and positive
   if (v_drive > 0) {
-    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir * v_0, dir * a_0, joint, v_drive);
 
     // Check time constraint was fulfilled
     if (t_required - t(end) < tol && t_required - t(end) > -tol/10) {
@@ -390,11 +390,11 @@ bool LongTermPlanner::timeScaling(
   }
 
   // Modified jerk profile: Phases 2 and 6 exist
-  v_drive = -(dir*(q_0 - q_goal) - j_max_[joint]*((a_0 + a_max_[joint])^3/(6*pow(j_max_[joint],3)) - pow(a_max_[joint],3)/(6*pow(j_max_[joint],3)) + (pow(a_max_[joint],2)*(a_0 + a_max_[joint]))/(2*pow(j_max_[joint],3)) + ((a_0 + a_max_[joint])^2*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] + a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint])))/(2*pow(j_max_[joint],2))) + a_0*((a_0 + a_max_[joint])^2/(2*pow(j_max_[joint],2)) + pow(a_max_[joint],2)/(2*pow(j_max_[joint],2)) + ((a_0 + a_max_[joint])*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] + a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint])))/j_max_[joint]) - a_max_[joint]*(((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] - a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint]))^2/2 + (a_max_[joint]*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] - a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint])))/j_max_[joint]) + v_0*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] + (a_0 + a_max_[joint])/j_max_[joint] + a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint])))/(a_max_[joint]/(2*j_max_[joint]) - v_0/a_max_[joint] + a_max_[joint]*(((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] - a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint]))/a_max_[joint] + 1/j_max_[joint]) - (pow(a_0,2) + 2*a_0*a_max_[joint] + 4*pow(a_max_[joint],2) - 2*j_max_[joint]*t_required*a_max_[joint] + 2*j_max_[joint]*v_0)/(2*a_max_[joint]*j_max_[joint]) + (a_0 + a_max_[joint])^2/(2*a_max_[joint]*j_max_[joint]) - (a_0*(a_0 + a_max_[joint]))/(a_max_[joint]*j_max_[joint]));
+  v_drive = -(dir*(q_0 - q_goal) - j_max_[joint]*((a_0 + a_max_[joint])^3/(6 * pow(j_max_[joint],3)) - pow(a_max_[joint],3)/(6 * pow(j_max_[joint],3)) + (pow(a_max_[joint],2)*(a_0 + a_max_[joint]))/(2 * pow(j_max_[joint],3)) + ((a_0 + a_max_[joint])^2*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2 * j_max_[joint]))/a_max_[joint] + a_max_[joint]/(2 * j_max_[joint]) + (a_0 - a_max_[joint])/(2 * j_max_[joint])))/(2 * pow(j_max_[joint],2))) + a_0*((a_0 + a_max_[joint])^2/(2 * pow(j_max_[joint],2)) + pow(a_max_[joint],2)/(2 * pow(j_max_[joint],2)) + ((a_0 + a_max_[joint])*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2 * j_max_[joint]))/a_max_[joint] + a_max_[joint]/(2 * j_max_[joint]) + (a_0 - a_max_[joint])/(2 * j_max_[joint])))/j_max_[joint]) - a_max_[joint]*(((v_0 + (a_0*(a_0 - a_max_[joint]))/(2 * j_max_[joint]))/a_max_[joint] - a_max_[joint]/(2 * j_max_[joint]) + (a_0 - a_max_[joint])/(2 * j_max_[joint]))^2/2 + (a_max_[joint]*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2 * j_max_[joint]))/a_max_[joint] - a_max_[joint]/(2 * j_max_[joint]) + (a_0 - a_max_[joint])/(2 * j_max_[joint])))/j_max_[joint]) + v_0*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2 * j_max_[joint]))/a_max_[joint] + (a_0 + a_max_[joint])/j_max_[joint] + a_max_[joint]/(2 * j_max_[joint]) + (a_0 - a_max_[joint])/(2 * j_max_[joint])))/(a_max_[joint]/(2 * j_max_[joint]) - v_0/a_max_[joint] + a_max_[joint]*(((v_0 + (a_0*(a_0 - a_max_[joint]))/(2 * j_max_[joint]))/a_max_[joint] - a_max_[joint]/(2 * j_max_[joint]) + (a_0 - a_max_[joint])/(2 * j_max_[joint]))/a_max_[joint] + 1/j_max_[joint]) - (pow(a_0,2) + 2 * a_0 * a_max_[joint] + 4 * pow(a_max_[joint],2) - 2 * j_max_[joint] * t_required * a_max_[joint] + 2 * j_max_[joint] * v_0)/(2 * a_max_[joint] * j_max_[joint]) + (a_0 + a_max_[joint])^2/(2 * a_max_[joint] * j_max_[joint]) - (a_0*(a_0 + a_max_[joint]))/(a_max_[joint] * j_max_[joint]));
   
   // Check if v_drive is real and positive
   if (v_drive > 0) {
-    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir * v_0, dir * a_0, joint, v_drive);
 
     // Check time constraint was fulfilled
     if (t_required - t(end) < tol && t_required - t(end) > -tol/10) {
@@ -403,12 +403,12 @@ bool LongTermPlanner::timeScaling(
   }
 
   // Standard jerk profile: Phase 2 does not exist
-  root=roots([3, 12*a_max_[joint], (-24*a_max_[joint]*j_max_[joint]*t_required - 12*pow(a_0,2) - 24*a_0*a_max_[joint] + 12*pow(a_max_[joint],2) + 24*j_max_[joint]*v_0), 0, 48*pow(a_0,2)*a_max_[joint]*j_max_[joint]*t_required - 96*dir*pow(j_max_[joint],2)*a_max_[joint]*q_0 + 96*dir*pow(j_max_[joint],2)*a_max_[joint]*q_goal - 96*a_max_[joint]*pow(j_max_[joint],2)*v_0*t_required + 12*pow(a_0,4) + 16*pow(a_0,3)*a_max_[joint] - 24*pow(a_0,2)*pow(a_max_[joint],2) - 48*pow(a_0,2)*j_max_[joint]*v_0 + 48*pow(a_max_[joint],2)*j_max_[joint]*v_0 + 48*pow(j_max_[joint],2)*v_0^2]);
-  v_drive = (-2*pow(a_0,2) + 4*j_max_[joint]*v_0 + root(3)^2)/(4*j_max_[joint]);
+  root=roots([3, 12 * a_max_[joint], (-24 * a_max_[joint] * j_max_[joint] * t_required - 12 * pow(a_0,2) - 24 * a_0 * a_max_[joint] + 12 * pow(a_max_[joint],2) + 24 * j_max_[joint] * v_0), 0, 48 * pow(a_0,2) * a_max_[joint] * j_max_[joint] * t_required - 96 * dir * pow(j_max_[joint],2) * a_max_[joint] * q_0 + 96 * dir * pow(j_max_[joint],2) * a_max_[joint] * q_goal - 96 * a_max_[joint] * pow(j_max_[joint],2) * v_0 * t_required + 12 * pow(a_0,4) + 16 * pow(a_0,3) * a_max_[joint] - 24 * pow(a_0,2) * pow(a_max_[joint],2) - 48 * pow(a_0,2) * j_max_[joint] * v_0 + 48 * pow(a_max_[joint],2) * j_max_[joint] * v_0 + 48 * pow(j_max_[joint],2) * pow(v_0,2)]);
+  v_drive = (-2 * pow(a_0,2) + 4 * j_max_[joint] * v_0 + root(3)^2)/(4 * j_max_[joint]);
   
   // Check if v_drive is real and positive
   if (v_drive > 0) {
-    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir * v_0, dir * a_0, joint, v_drive);
 
     // Check time constraint was fulfilled
     if t_required - t(end) < tol && t_required - t(end) > -tol/10
@@ -417,12 +417,12 @@ bool LongTermPlanner::timeScaling(
   }
 
   // Standard jerk profile: Phase 6 does not exist
-  root = roots([12, 24*a_max_[joint], (-24*a_max_[joint]*j_max_[joint]*t_required + 24*pow(a_0,2) - 48*a_0*a_max_[joint] + 24*pow(a_max_[joint],2) - 24*j_max_[joint]*v_0 + 12*a_0 - 12*a_max_[joint]), 0, -24*dir*pow(j_max_[joint],2)*a_max_[joint]*q_0 + 24*dir*pow(j_max_[joint],2)*a_max_[joint]*q_goal + 9*pow(a_0,4) - 12*pow(a_0,3)*a_max_[joint] - 24*pow(a_0,2)*j_max_[joint]*v_0 + 48*a_0*a_max_[joint]*j_max_[joint]*v_0 + 4*pow(a_max_[joint],4) - 24*pow(a_max_[joint],2)*j_max_[joint]*v_0 + 12*pow(j_max_[joint],2)*v_0^2 + 6*pow(a_0,3) + 6*pow(a_0,2)*a_max_[joint] - 12*a_0*pow(a_max_[joint],2) - 12*a_0*j_max_[joint]*v_0 + 12*a_max_[joint]*j_max_[joint]*v_0 + 4*a_0*a_max_[joint] - 4*pow(a_max_[joint],2)]);
+  root = roots([12, 24 * a_max_[joint], (-24 * a_max_[joint] * j_max_[joint] * t_required + 24 * pow(a_0,2) - 48 * a_0 * a_max_[joint] + 24 * pow(a_max_[joint],2) - 24 * j_max_[joint] * v_0 + 12 * a_0 - 12 * a_max_[joint]), 0, -24 * dir * pow(j_max_[joint],2) * a_max_[joint] * q_0 + 24 * dir * pow(j_max_[joint],2) * a_max_[joint] * q_goal + 9 * pow(a_0,4) - 12 * pow(a_0,3) * a_max_[joint] - 24 * pow(a_0,2) * j_max_[joint] * v_0 + 48 * a_0 * a_max_[joint] * j_max_[joint] * v_0 + 4 * pow(a_max_[joint],4) - 24 * pow(a_max_[joint],2) * j_max_[joint] * v_0 + 12 * pow(j_max_[joint],2) * pow(v_0,2) + 6 * pow(a_0,3) + 6 * pow(a_0,2) * a_max_[joint] - 12 * a_0 * pow(a_max_[joint],2) - 12 * a_0 * j_max_[joint] * v_0 + 12 * a_max_[joint] * j_max_[joint] * v_0 + 4 * a_0 * a_max_[joint] - 4 * pow(a_max_[joint],2)]);
   v_drive = root(3)^2/j_max_[joint];
   
   // Check if v_drive is real and positive
   if (v_drive > 0) {
-    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir * v_0, dir * a_0, joint, v_drive);
 
     // Check time constraint was fulfilled
     if (t_required - t(end) < tol && t_required - t(end) > -tol/10) {
@@ -431,12 +431,12 @@ bool LongTermPlanner::timeScaling(
   }
 
   // Standard jerk profile: Phases 2 and 6 do not exist
-  root = roots([(144*j_max_[joint]*t_required + 144*a_0), (-72*pow(j_max_[joint],2)*pow(t_required,2) - 144*a_0*j_max_[joint]*t_required + 36*pow(a_0,2) - 216*j_max_[joint]*v_0), (144*dir*pow(j_max_[joint],2)*q_0 - 144*dir*pow(j_max_[joint],2)*q_goal + 48*pow(a_0,3) - 144*a_0*j_max_[joint]*v_0), (-144*dir*pow(j_max_[joint],3)*q_0*t_required + 144*dir*pow(j_max_[joint],3)*q_goal*t_required - 48*pow(a_0,3)*j_max_[joint]*t_required - 144*a_0*dir*pow(j_max_[joint],2)*q_0 + 144*a_0*dir*pow(j_max_[joint],2)*q_goal + 144*a_0*pow(j_max_[joint],2)*v_0*t_required + 6*pow(a_0,4) - 72*pow(a_0,2)*j_max_[joint]*v_0 + 216*pow(j_max_[joint],2)*v_0^2), 0, -72*dir^2*pow(j_max_[joint],4)*q_0^2 + 144*dir^2*pow(j_max_[joint],4)*q_0*q_goal - 72*dir^2*pow(j_max_[joint],4)*q_goal^2 - 48*pow(a_0,3)*dir*pow(j_max_[joint],2)*q_0 + 48*pow(a_0,3)*dir*pow(j_max_[joint],2)*q_goal + 144*a_0*dir*pow(j_max_[joint],3)*q_0*v_0 - 144*a_0*dir*pow(j_max_[joint],3)*q_goal*v_0 + pow(a_0,6) - 6*pow(a_0,4)*j_max_[joint]*v_0 + 36*pow(a_0,2)*pow(j_max_[joint],2)*v_0^2 - 72*pow(j_max_[joint],3)*v_0^3]);
+  root = roots([(144 * j_max_[joint] * t_required + 144 * a_0), (-72 * pow(j_max_[joint],2) * pow(t_required,2) - 144 * a_0 * j_max_[joint] * t_required + 36 * pow(a_0,2) - 216 * j_max_[joint] * v_0), (144 * dir * pow(j_max_[joint],2) * q_0 - 144 * dir * pow(j_max_[joint],2) * q_goal + 48 * pow(a_0,3) - 144 * a_0 * j_max_[joint] * v_0), (-144 * dir * pow(j_max_[joint],3) * q_0 * t_required + 144 * dir * pow(j_max_[joint],3) * q_goal * t_required - 48 * pow(a_0,3) * j_max_[joint] * t_required - 144 * a_0 * dir * pow(j_max_[joint],2) * q_0 + 144 * a_0 * dir * pow(j_max_[joint],2) * q_goal + 144 * a_0 * pow(j_max_[joint],2) * v_0 * t_required + 6 * pow(a_0,4) - 72 * pow(a_0,2) * j_max_[joint] * v_0 + 216 * pow(j_max_[joint],2) * pow(v_0,2)), 0, -72 * dir^2 * pow(j_max_[joint],4) * q_0^2 + 144 * dir^2 * pow(j_max_[joint],4) * q_0 * q_goal - 72 * dir^2 * pow(j_max_[joint],4) * q_goal^2 - 48 * pow(a_0,3) * dir * pow(j_max_[joint],2) * q_0 + 48 * pow(a_0,3) * dir * pow(j_max_[joint],2) * q_goal + 144 * a_0 * dir * pow(j_max_[joint],3) * q_0 * v_0 - 144 * a_0 * dir * pow(j_max_[joint],3) * q_goal * v_0 + pow(a_0,6) - 6 * pow(a_0,4) * j_max_[joint] * v_0 + 36 * pow(a_0,2) * pow(j_max_[joint],2) * pow(v_0,2) - 72 * pow(j_max_[joint],3) * pow(v_0,3)]);
   v_drive = root(2)^2/j_max_[joint];
   
   // Check if v_drive is real and positive
   if (v_drive > 0) {
-    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir * v_0, dir * a_0, joint, v_drive);
 
     // Check time constraint was fulfilled
     if (t_required - t(end) < tol && t_required - t(end) > -tol/10) {
@@ -445,12 +445,12 @@ bool LongTermPlanner::timeScaling(
   }
 
   // Modified profile: Phase 2 does not exist
-  root = roots([3, - 6*sqrt(2)*a_max_[joint], (12*a_max_[joint]*j_max_[joint]*t_required - 6*pow(a_0,2) - 12*a_0*a_max_[joint] - 6*pow(a_max_[joint],2) - 12*j_max_[joint]*v_0), 0, -12*pow(a_0,2)*a_max_[joint]*j_max_[joint]*t_required - 24*dir*pow(j_max_[joint],2)*a_max_[joint]*q_0 + 24*dir*pow(j_max_[joint],2)*a_max_[joint]*q_goal - 24*a_max_[joint]*pow(j_max_[joint],2)*v_0*t_required + 3*pow(a_0,4) + 4*pow(a_0,3)*a_max_[joint] + 6*pow(a_0,2)*pow(a_max_[joint],2) + 12*pow(a_0,2)*j_max_[joint]*v_0 + 12*pow(a_max_[joint],2)*j_max_[joint]*v_0 + 12*pow(j_max_[joint],2)*v_0^2]);
-  v_drive = -(root(3)^2 - pow(a_0,2) - 2*j_max_[joint]*v_0)/(2*j_max_[joint]);
+  root = roots([3, - 6*sqrt(2) * a_max_[joint], (12 * a_max_[joint] * j_max_[joint] * t_required - 6 * pow(a_0,2) - 12 * a_0 * a_max_[joint] - 6 * pow(a_max_[joint],2) - 12 * j_max_[joint] * v_0), 0, -12 * pow(a_0,2) * a_max_[joint] * j_max_[joint] * t_required - 24 * dir * pow(j_max_[joint],2) * a_max_[joint] * q_0 + 24 * dir * pow(j_max_[joint],2) * a_max_[joint] * q_goal - 24 * a_max_[joint] * pow(j_max_[joint],2) * v_0 * t_required + 3 * pow(a_0,4) + 4 * pow(a_0,3) * a_max_[joint] + 6 * pow(a_0,2) * pow(a_max_[joint],2) + 12 * pow(a_0,2) * j_max_[joint] * v_0 + 12 * pow(a_max_[joint],2) * j_max_[joint] * v_0 + 12 * pow(j_max_[joint],2) * pow(v_0,2)]);
+  v_drive = -(root(3)^2 - pow(a_0,2) - 2 * j_max_[joint] * v_0)/(2 * j_max_[joint]);
   
   // Check if v_drive is real and positive
   if (v_drive > 0) {
-    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir * v_0, dir * a_0, joint, v_drive);
 
     // Check time constraint was fulfilled
     if (t_required - t(end) < tol && t_required - t(end) > -tol/10) {
@@ -459,12 +459,12 @@ bool LongTermPlanner::timeScaling(
   }
 
   // Modified profile: Phase 6 does not exist
-  root = roots([12, - 24*a_max_[joint], (24*a_max_[joint]*j_max_[joint]*t_required - 12*pow(a_0,2) - 24*a_0*a_max_[joint] - 12*pow(a_max_[joint],2) - 24*j_max_[joint]*v_0), 0, 24*dir*pow(j_max_[joint],2)*a_max_[joint]*q_0 - 24*dir*pow(j_max_[joint],2)*a_max_[joint]*q_goal + 3*pow(a_0,4) + 8*pow(a_0,3)*a_max_[joint] + 6*pow(a_0,2)*pow(a_max_[joint],2) + 12*pow(a_0,2)*j_max_[joint]*v_0 + 24*a_0*a_max_[joint]*j_max_[joint]*v_0 + 12*pow(a_max_[joint],2)*j_max_[joint]*v_0 + 12*pow(j_max_[joint],2)*v_0^2]);
+  root = roots([12, - 24 * a_max_[joint], (24 * a_max_[joint] * j_max_[joint] * t_required - 12 * pow(a_0,2) - 24 * a_0 * a_max_[joint] - 12 * pow(a_max_[joint],2) - 24 * j_max_[joint] * v_0), 0, 24 * dir * pow(j_max_[joint],2) * a_max_[joint] * q_0 - 24 * dir * pow(j_max_[joint],2) * a_max_[joint] * q_goal + 3 * pow(a_0,4) + 8 * pow(a_0,3) * a_max_[joint] + 6 * pow(a_0,2) * pow(a_max_[joint],2) + 12 * pow(a_0,2) * j_max_[joint] * v_0 + 24 * a_0 * a_max_[joint] * j_max_[joint] * v_0 + 12 * pow(a_max_[joint],2) * j_max_[joint] * v_0 + 12 * pow(j_max_[joint],2) * pow(v_0,2)]);
   v_drive = root(3)^2/j_max_[joint];
   
   // Check if v_drive is real and positive
   if (v_drive > 0) {
-    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir * v_0, dir * a_0, joint, v_drive);
 
     // Check time constraint was fulfilled
     if (t_required - t(end) < tol && t_required - t(end) > -tol/10) {
@@ -473,12 +473,12 @@ bool LongTermPlanner::timeScaling(
   }
 
   // Modified profile: Phases 2 and 6 do not exist
-  root = roots([144, (-144*j_max_[joint]*t_required + 144*a_0), (72*pow(j_max_[joint],2)*pow(t_required,2) - 144*a_0*j_max_[joint]*t_required - 36*pow(a_0,2) - 216*j_max_[joint]*v_0), (-144*dir*pow(j_max_[joint],2)*q_0 + 144*dir*pow(j_max_[joint],2)*q_goal - 48*pow(a_0,3) - 144*a_0*j_max_[joint]*v_0), (144*dir*pow(j_max_[joint],3)*q_0*t_required - 144*dir*pow(j_max_[joint],3)*q_goal*t_required + 48*pow(a_0,3)*j_max_[joint]*t_required - 144*a_0*dir*pow(j_max_[joint],2)*q_0 + 144*a_0*dir*pow(j_max_[joint],2)*q_goal + 144*a_0*pow(j_max_[joint],2)*v_0*t_required + 6*pow(a_0,4) + 72*pow(a_0,2)*j_max_[joint]*v_0 + 216*pow(j_max_[joint],2)*v_0^2), 0, 72*dir^2*pow(j_max_[joint],4)*q_0^2 - 144*dir^2*pow(j_max_[joint],4)*q_0*q_goal + 72*dir^2*pow(j_max_[joint],4)*q_goal^2 + 48*pow(a_0,3)*dir*pow(j_max_[joint],2)*q_0 - 48*pow(a_0,3)*dir*pow(j_max_[joint],2)*q_goal + 144*a_0*dir*pow(j_max_[joint],3)*q_0*v_0 - 144*a_0*dir*pow(j_max_[joint],3)*q_goal*v_0 - pow(a_0,6) - 6*pow(a_0,4)*j_max_[joint]*v_0 - 36*pow(a_0,2)*pow(j_max_[joint],2)*v_0^2 - 72*pow(j_max_[joint],3)*v_0^3]);
+  root = roots([144, (-144 * j_max_[joint] * t_required + 144 * a_0), (72 * pow(j_max_[joint],2) * pow(t_required,2) - 144 * a_0 * j_max_[joint] * t_required - 36 * pow(a_0,2) - 216 * j_max_[joint] * v_0), (-144 * dir * pow(j_max_[joint],2) * q_0 + 144 * dir * pow(j_max_[joint],2) * q_goal - 48 * pow(a_0,3) - 144 * a_0 * j_max_[joint] * v_0), (144 * dir * pow(j_max_[joint],3) * q_0 * t_required - 144 * dir * pow(j_max_[joint],3) * q_goal * t_required + 48 * pow(a_0,3) * j_max_[joint] * t_required - 144 * a_0 * dir * pow(j_max_[joint],2) * q_0 + 144 * a_0 * dir * pow(j_max_[joint],2) * q_goal + 144 * a_0 * pow(j_max_[joint],2) * v_0 * t_required + 6 * pow(a_0,4) + 72 * pow(a_0,2) * j_max_[joint] * v_0 + 216 * pow(j_max_[joint],2) * pow(v_0,2)), 0, 72 * dir^2 * pow(j_max_[joint],4) * q_0^2 - 144 * dir^2 * pow(j_max_[joint],4) * q_0 * q_goal + 72 * dir^2 * pow(j_max_[joint],4) * q_goal^2 + 48 * pow(a_0,3) * dir * pow(j_max_[joint],2) * q_0 - 48 * pow(a_0,3) * dir * pow(j_max_[joint],2) * q_goal + 144 * a_0 * dir * pow(j_max_[joint],3) * q_0 * v_0 - 144 * a_0 * dir * pow(j_max_[joint],3) * q_goal * v_0 - pow(a_0,6) - 6 * pow(a_0,4) * j_max_[joint] * v_0 - 36 * pow(a_0,2) * pow(j_max_[joint],2) * pow(v_0,2) - 72 * pow(j_max_[joint],3) * pow(v_0,3)]);
   v_drive = root(4)^2/j_max_[joint];
   
   // Check if v_drive is real and positive
   if (v_drive > 0) {
-    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
+    [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir * v_0, dir * a_0, joint, v_drive);
 
     // Check time constraint was fulfilled
     if (t_required - t(end) < tol && t_required - t(end) > -tol/10) {
