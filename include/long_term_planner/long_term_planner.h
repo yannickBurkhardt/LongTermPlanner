@@ -113,10 +113,10 @@ class LongTermPlanner {
   /**
    * @brief Plan a trajectory from the given start state to the goal position and zero velocity/acc.
    * 
-   * @param[in] q_goal Goal position.
-   * @param[in] q_0 Start position.
-   * @param[in] v_0 Start velocity
-   * @param[in] a_0 Start acceleration.
+   * @param[in] q_goal Goal positions.
+   * @param[in] q_0 Start positions.
+   * @param[in] v_0 Start velocities.
+   * @param[in] a_0 Start accelerations.
    * @param[out] traj The trajectory structure to return.
    * @return true if successful.
    * @return false if planning not possible.
@@ -127,6 +127,21 @@ class LongTermPlanner {
     std::vector<double> v_0,
     std::vector<double> a_0,
     Trajectory& traj
+  );
+
+  /**
+   * @brief Check if the input values are valid.
+   * 
+   * @param q_0 Start positions. 
+   * @param v_0 Start velocities.
+   * @param a_0 Start accelerations.
+   * @return true if inputs okay
+   * @return false if inputs not in bounds.
+   */
+  bool checkInputs(
+    std::vector<double> q_0,
+    std::vector<double> v_0,
+    std::vector<double> a_0
   );
 
  protected:
