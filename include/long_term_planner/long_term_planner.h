@@ -15,6 +15,8 @@
  */
 
 #include <vector>
+#include <array>
+#include <algorithm>
 
 #ifndef long_term_planner_H
 #define long_term_planner_H
@@ -163,10 +165,10 @@ class LongTermPlanner {
     double q_goal, 
     double q_0, 
     double v_0, 
-    double a_0, 
-    std::vector<double>& t, 
+    double a_0,
+    std::array<double, 7>& t,
     double& dir,
-    bool& mod_jerk_profile);
+    char& mod_jerk_profile);
 
   /**
    * @brief Calculate switching times to fulfil a given time by adjusting the maximally reached velocity.
@@ -192,9 +194,9 @@ class LongTermPlanner {
     double a_0, 
     double dir,
     double t_required,
-    std::vector<double>& scaled_t,
+    std::array<double, 7>& scaled_t,
     double& v_drive,
-    bool& scaled_mod_jerk_profile);
+    char& scaled_mod_jerk_profile);
 
   /**
    * @brief Calculate time and joint angles required to bring velocity to zero.
@@ -219,7 +221,7 @@ class LongTermPlanner {
     double v_0, 
     double a_0, 
     double& q,
-    std::vector<double>& t_rel,
+    std::array<double, 7>& t_rel,
     double& dir);
 
   /**
@@ -234,9 +236,9 @@ class LongTermPlanner {
    * @return Trajectory 
    */
   Trajectory getTrajectory(
-    const std::vector<double>& t,
-    double dir,
-    bool mod_jerk_profile,
+    const std::vector<std::array<double, 7>>& t,
+    const std::vector<double>& dir,
+    const std::vector<char>& mod_jerk_profile,
     const std::vector<double>& q_0,
     const std::vector<double>& v_0,
     const std::vector<double>& a_0

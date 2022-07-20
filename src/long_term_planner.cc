@@ -10,6 +10,49 @@ bool LongTermPlanner::planTrajectory(
     const std::vector<double>& v_0,
     const std::vector<double>& a_0,
     Trajectory& traj) {
+  //// Initialize values
+  // Optimal jerk switching times
+  std::vector<std::array<double, 7>> t_opt(dof_);
+  // Scaled jerk switching times
+  std::vector<std::array<double, 7>> t_scaled(dof_);
+  // Direction of movement
+  std::vector<double> dir(dof_);
+  // Boolean to choose jerk profile
+  std::vector<char> mod_jerk_profile(dof_);
+
+  //// Find slowest joint
+  for (int i=0; i<dof_; i++) {
+    bool success = optSwitchTimes(i, q_goal[i], q_0[i], v_0[i], a_0[i], t_opt[i], dir[i], mod_jerk_profile[i]);
+    if (!success) return false;
+  }
+  double t_required=-1;
+  int slowest_joint=-1;
+  for (int i=0; i<dof_; i++) {
+    if (t_opt[i][6] > t_required) {
+        t_required = t_opt[i][6];
+        slowest_joint = i;
+    }
+  }
+  if (slowest_joint == -1) return false; 
+
+  //// Scale other joints to require same time
+  std::vector<double> v_drive = v_max_;
+  for (int i=0; i<dof_; i++) {
+    if (i==slowest_joint) {
+      continue;
+    }
+    timeScaling(i, q_goal[i], q_0[i], v_0[i], a_0[i], dir[i], t_required, t_scaled[i], v_drive[i], mod_jerk_profile[i]);
+  }
+  // If no solution was found, use optimal time
+  for (int i=0; i<dof_; i++) {
+    if (*std::max_element(std::begin(t_scaled[i]), std::end(t_scaled[i])) <= 0.0) {
+      // t_scaled[i] = t_opt[i]
+      std::copy(std::begin(t_opt[i]), std::end(t_opt[i]), std::begin(t_scaled[i]));
+    }
+  }
+
+  // Calculate sampled trajectories
+  traj = getTrajectory(t_scaled, dir, mod_jerk_profile, q_0, v_0, a_0);
   return true;
 }
 
@@ -30,10 +73,10 @@ bool LongTermPlanner::optSwitchTimes(int joint,
     double q_goal, 
     double q_0, 
     double v_0, 
-    double a_0, 
-    std::vector<double>& t, 
+    double a_0,
+    std::array<double, 7>& t,
     double& dir,
-    bool& mod_jerk_profile) {
+    char& mod_jerk_profile) {
   return true;
 }
 
@@ -48,9 +91,9 @@ bool LongTermPlanner::timeScaling(
     double a_0, 
     double dir,
     double t_required,
-    std::vector<double>& scaled_t,
+    std::array<double, 7>& scaled_t,
     double& v_drive,
-    bool& scaled_mod_jerk_profile) {
+    char& scaled_mod_jerk_profile) {
   return true;
 }
 
@@ -62,7 +105,7 @@ bool LongTermPlanner::optBraking(
     double v_0, 
     double a_0, 
     double& q,
-    std::vector<double>& t_rel,
+    std::array<double, 7>& t_rel,
     double& dir) {
   return true;
 }
@@ -71,9 +114,9 @@ bool LongTermPlanner::optBraking(
 // ================== Get Trajectory =========================
 // ===========================================================
 Trajectory LongTermPlanner::getTrajectory(
-    const std::vector<double>& t,
-    double dir,
-    bool mod_jerk_profile,
+    const std::vector<std::array<double, 7>>& t,
+    const std::vector<double>& dir,
+    const std::vector<char>& mod_jerk_profile,
     const std::vector<double>& q_0,
     const std::vector<double>& v_0,
     const std::vector<double>& a_0) {
