@@ -5,7 +5,7 @@
 // File: LTPlanner.cpp
 //
 // MATLAB Coder version            : 5.0
-// C/C++ source code generated on  : 09-May-2022 10:45:13
+// C/C++ source code generated on  : 20-Jul-2022 14:48:22
 //
 
 // Include Files
@@ -1266,7 +1266,7 @@ void LTPlanner::c_optSwitchTimes(double varargin_2, double varargin_3, double
 //  times
 // Arguments    : const coder::array<double, 2U> &varargin_2
 //                const coder::array<double, 1U> &varargin_3
-//                const boolean_T varargin_4[7]
+//                const coder::array<boolean_T, 1U> &varargin_4
 //                const double varargin_5[6]
 //                const double varargin_6[6]
 //                const double varargin_7[6]
@@ -1277,10 +1277,10 @@ void LTPlanner::c_optSwitchTimes(double varargin_2, double varargin_3, double
 // Return Type  : void
 //
 void LTPlanner::getTrajectories(const coder::array<double, 2U> &varargin_2,
-  const coder::array<double, 1U> &varargin_3, const boolean_T varargin_4[7],
-  const double varargin_5[6], const double varargin_6[6], const double
-  varargin_7[6], const double varargin_8[6], double q_traj[6], double v_traj[6],
-  double a_traj[6]) const
+  const coder::array<double, 1U> &varargin_3, const coder::array<boolean_T, 1U>
+  &varargin_4, const double varargin_5[6], const double varargin_6[6], const
+  double varargin_7[6], const double varargin_8[6], double q_traj[6], double
+  v_traj[6], double a_traj[6]) const
 {
   int loop_ub;
   coder::array<boolean_T, 1U> const_v;
@@ -3373,7 +3373,7 @@ void LTPlanner::trajectory(const double q_goal[6], const double q_0[6], const
   coder::array<double, 2U> t_scaled;
   int i;
   coder::array<double, 1U> dir;
-  boolean_T mod_jerk_profile[7];
+  coder::array<boolean_T, 1U> mod_jerk_profile;
   double dv[7];
   boolean_T unusedU0;
   int idx;
@@ -3395,12 +3395,11 @@ void LTPlanner::trajectory(const double q_goal[6], const double q_0[6], const
 
   //  Scaled jerk switching times
   dir.set_size(loop_ub);
-  for (i = 0; i < loop_ub; i++) {
-    dir[i] = 0.0;
-  }
 
   //  Direction of movement
-  for (i = 0; i < 7; i++) {
+  mod_jerk_profile.set_size(loop_ub);
+  for (i = 0; i < loop_ub; i++) {
+    dir[i] = 0.0;
     mod_jerk_profile[i] = false;
   }
 

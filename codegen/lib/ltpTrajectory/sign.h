@@ -5,7 +5,7 @@
 // File: sign.h
 //
 // MATLAB Coder version            : 5.0
-// C/C++ source code generated on  : 09-May-2022 10:45:13
+// C/C++ source code generated on  : 20-Jul-2022 14:48:22
 //
 #ifndef SIGN_H
 #define SIGN_H
