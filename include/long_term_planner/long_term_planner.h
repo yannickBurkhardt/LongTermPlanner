@@ -22,6 +22,19 @@
 namespace long_term_planner {
 
 /**
+ * @brief Trajectory structure.
+ */
+struct {        
+  int dof;
+  double t_sample;
+  int length;
+  std::vector<std::vector<double>> q;
+  std::vector<std::vector<double>> v;
+  std::vector<std::vector<double>> a;
+  std::vector<std::vector<double>> j;
+} trajectory;
+
+/**
  * @brief Plans a trajectory for multiple joints.
  */
 class LongTermPlanner {
