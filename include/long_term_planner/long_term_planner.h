@@ -81,7 +81,6 @@ class LongTermPlanner {
   std::vector<double> j_max_;
 
  public:
-  
   /**
    * @brief Construct a new dummy Long Term Planner object.
    */
@@ -93,14 +92,14 @@ class LongTermPlanner {
   /**
    * @brief Construct a new Long Term Planner object
    * 
-   * @param dof Degrees of freedom, i.e., number of joints.
-   * @param t_sample Time between two samples of the planned trajectories.
-   * @param num_samples Output length in samples.
-   * @param q_min Minimum joint positions.
-   * @param q_max Maximum joint positions.
-   * @param v_max Maximum allowed velocities per DoF.
-   * @param a_max Maximum allowed accelerations per DoF.
-   * @param j_max Maximum allowed jerk per DoF.
+   * @param[in] dof Degrees of freedom, i.e., number of joints.
+   * @param[in] t_sample Time between two samples of the planned trajectories.
+   * @param[in] num_samples Output length in samples.
+   * @param[in] q_min Minimum joint positions.
+   * @param[in] q_max Maximum joint positions.
+   * @param[in] v_max Maximum allowed velocities per DoF.
+   * @param[in] a_max Maximum allowed accelerations per DoF.
+   * @param[in] j_max Maximum allowed jerk per DoF.
    */
   LongTermPlanner(int dof,
     double t_sample,
@@ -114,18 +113,45 @@ class LongTermPlanner {
   /**
    * @brief Plan a trajectory from the given start state to the goal position and zero velocity/acc.
    * 
-   * @param q_goal Goal position.
-   * @param q_0 Start position.
-   * @param v_0 Start velocity
-   * @param a_0 Start acceleration.
-   * @return Trajectory 
+   * @param[in] q_goal Goal position.
+   * @param[in] q_0 Start position.
+   * @param[in] v_0 Start velocity
+   * @param[in] a_0 Start acceleration.
+   * @param[out] traj The trajectory structure to return.
+   * @return true if successful.
+   * @return false if planning not possible.
    */
-  Trajectory planTrajectory(
+   bool planTrajectory(
     std::vector<double> q_goal,
     std::vector<double> q_0,
     std::vector<double> v_0,
-    std::vector<double> a_0
+    std::vector<double> a_0,
+    Trajectory& traj
   );
+
+ protected:
+  /**
+   * @brief Calculate time-optimal jerk swtiches.
+   * 
+   * @param[in] joint Joint id to access joint limit vectors.
+   * @param[in] q_goal goal position of the joint.
+   * @param[in] q_0 start position of the joint.
+   * @param[in] v_0 start velocity of the joint.
+   * @param[in] a_0 start acceleration of the joint.
+   * @param[out] t time points of jerk switches.
+   * @param[out] dir direction of the goal.
+   * @param[out] mod_jerk_profile true if slowing down is necessary to satisfy v_drive, false otherwise.
+   * @return true if successful.
+   * @return false if planning not possible.
+   */
+  bool optSwitchTimes(int joint, 
+    double q_goal, 
+    double q_0, 
+    double v_0, 
+    double a_0, 
+    std::vector<double>& t, 
+    double& dir,
+    bool& mod_jerk_profile);
 };
 } // namespace long_term_planner
 
