@@ -195,6 +195,33 @@ class LongTermPlanner {
     std::vector<double>& scaled_t,
     double& v_drive,
     bool& scaled_mod_jerk_profile);
+
+  /**
+   * @brief Calculate time and joint angles required to bring velocity to zero.
+   * @details This function can be used to:
+   *           - bring a joint to a full stop as fast as possible
+   *           - calculate in which direction a joint has to be actuated to
+   *             reach a goal
+   *           - slow a joint down to a desired velocity (v_0 must be set to
+   *             v_current - v_desired)
+   *
+   * @param[in] joint Joint id to access joint limit vectors.
+   * @param[in] v_0 Start velocity of the joint.
+   * @param[in] a_0 Start acceleration of the joint.
+   * @param[out] q Position after breaking.
+   * @param[out] t_rel Time points of jerk switches
+   * @param[out] dir Direction of the goal.
+   * @return true if successful. 
+   * @return false if planning not possible.
+   */
+  bool optBreaking(
+    int joint, 
+    double v_0, 
+    double a_0, 
+    double& q,
+    std::vector<double>& t_rel,
+    double& dir
+  );
 };
 } // namespace long_term_planner
 
