@@ -122,26 +122,26 @@ class LongTermPlanner {
    * @return false if planning not possible.
    */
    bool planTrajectory(
-    std::vector<double> q_goal,
-    std::vector<double> q_0,
-    std::vector<double> v_0,
-    std::vector<double> a_0,
+    const std::vector<double>& q_goal,
+    const std::vector<double>& q_0,
+    const std::vector<double>& v_0,
+    const std::vector<double>& a_0,
     Trajectory& traj
   );
 
   /**
    * @brief Check if the input values are valid.
    * 
-   * @param q_0 Start positions. 
-   * @param v_0 Start velocities.
-   * @param a_0 Start accelerations.
+   * @param[in] q_0 Start positions. 
+   * @param[in] v_0 Start velocities.
+   * @param[in] a_0 Start accelerations.
    * @return true if inputs okay
    * @return false if inputs not in bounds.
    */
   bool checkInputs(
-    std::vector<double> q_0,
-    std::vector<double> v_0,
-    std::vector<double> a_0
+    const std::vector<double>& q_0,
+    const std::vector<double>& v_0,
+    const std::vector<double>& a_0
   );
 
  protected:
@@ -208,19 +208,38 @@ class LongTermPlanner {
    * @param[in] joint Joint id to access joint limit vectors.
    * @param[in] v_0 Start velocity of the joint.
    * @param[in] a_0 Start acceleration of the joint.
-   * @param[out] q Position after breaking.
+   * @param[out] q Position after braking.
    * @param[out] t_rel Time points of jerk switches
    * @param[out] dir Direction of the goal.
    * @return true if successful. 
    * @return false if planning not possible.
    */
-  bool optBreaking(
+  bool optBraking(
     int joint, 
     double v_0, 
     double a_0, 
     double& q,
     std::vector<double>& t_rel,
-    double& dir
+    double& dir);
+
+  /**
+   * @brief Calculate a trajectory from the given jerk profile.
+   * 
+   * @param[in] t Time points of jerk switches.
+   * @param[in] dir Direction of the goal.
+   * @param[in] mod_jerk_profile true if slowing down is necessary to satisfy v_drive, false otherwise.
+   * @param[in] q_0 Start positions. 
+   * @param[in] v_0 Start velocities.
+   * @param[in] a_0 Start accelerations.
+   * @return Trajectory 
+   */
+  Trajectory getTrajectory(
+    const std::vector<double>& t,
+    double dir,
+    bool mod_jerk_profile,
+    const std::vector<double>& q_0,
+    const std::vector<double>& v_0,
+    const std::vector<double>& a_0
   );
 };
 } // namespace long_term_planner
