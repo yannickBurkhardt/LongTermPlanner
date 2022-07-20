@@ -1,4 +1,5 @@
 #include "long_term_planner/long_term_planner.h"
+#include "long_term_planner/roots.h"
 
 namespace long_term_planner {
 // ===========================================================
@@ -85,6 +86,7 @@ bool LongTermPlanner::optSwitchTimes(int joint,
     std::array<double, 7>& t,
     double& dir,
     char& mod_jerk_profile) {
+  /*
   //// Parameters for calculation
   // Time that is required for one jerk phase
   std::array<double, 7> t_rel = {}; 
@@ -222,7 +224,12 @@ bool LongTermPlanner::optSwitchTimes(int joint,
     // Check if phase 2 and/ or phase 6 does not exist 
     // (max velocity and max acceleration cannot be reached)
     if (t_rel[6] < -eps || t_rel[2] < -eps) {
-      root = roots([12, 0, (-24*pow(a_0,2) + 48*j_max_[joint] * v_0), (48*dir * pow(j_max_[joint],2) * q_0 - 48*dir * pow(j_max_[joint],2) * q_goal + 16*a_0^3 - 48*a_0*j_max_[joint] * v_0), -3*a_0^4 + 12*pow(a_0,2)*j_max_[joint] * v_0 - 12 * pow(j_max_[joint],2) * pow(v_0,2)]);
+      root = roots([12, // x^4
+                    0, // x^3
+                    (-24*pow(a_0,2) + 48*j_max_[joint] * v_0), // x^2
+                    (48*dir * pow(j_max_[joint],2) * q_0 - 48*dir * pow(j_max_[joint],2) * q_goal + 16*a_0^3 - 48*a_0*j_max_[joint] * v_0), // x^1
+                    -3*a_0^4 + 12*pow(a_0,2)*j_max_[joint] * v_0 - 12 * pow(j_max_[joint],2) * pow(v_0,2) // x^0
+                    ]);
 
       // Choose non-complex, positive solution
       root = root((abs(imag(root)) < eps));
@@ -282,6 +289,7 @@ bool LongTermPlanner::optSwitchTimes(int joint,
 
   // Calculate absolute times for jerk switches
   t = cumsum(t_rel);
+  */
   return true;
 }
 

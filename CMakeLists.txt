@@ -4,7 +4,10 @@ project(long_term_planner)
 ## Compile as C++17
 add_compile_options(-std=c++17)
 
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+set(Boost_USE_STATIC_LIBS OFF) 
+set(Boost_USE_MULTITHREADED ON)  
+set(Boost_USE_STATIC_RUNTIME OFF) 
+find_package(Boost 1.71.0 COMPONENTS math) 
 
 include_directories(
   include
@@ -15,6 +18,9 @@ add_library(${PROJECT_NAME}
     src/long_term_planner.cc 
     )
 
-target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS}) 
+    target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+endif()
 
 install(TARGETS ${PROJECT_NAME} DESTINATION /usr/lib)
