@@ -5,7 +5,7 @@
 // File: ltpTrajectory_types.h
 //
 // MATLAB Coder version            : 5.0
-// C/C++ source code generated on  : 09-May-2022 10:45:13
+// C/C++ source code generated on  : 20-Jul-2022 14:48:22
 //
 #ifndef LTPTRAJECTORY_TYPES_H
 #define LTPTRAJECTORY_TYPES_H
@@ -50,11 +50,11 @@ class LTPlanner
   void optBreaking(creal_T v_0, double a_0, double joint, creal_T *q, double
                    t_rel[3]) const;
   void getTrajectories(const coder::array<double, 2U> &varargin_2, const coder::
-                       array<double, 1U> &varargin_3, const boolean_T
-                       varargin_4[7], const double varargin_5[6], const double
-                       varargin_6[6], const double varargin_7[6], const double
-                       varargin_8[6], double q_traj[6], double v_traj[6], double
-                       a_traj[6]) const;
+                       array<double, 1U> &varargin_3, const coder::array<
+                       boolean_T, 1U> &varargin_4, const double varargin_5[6],
+                       const double varargin_6[6], const double varargin_7[6],
+                       const double varargin_8[6], double q_traj[6], double
+                       v_traj[6], double a_traj[6]) const;
   double DoF;
   double Tsample;
   double j_max[6];
