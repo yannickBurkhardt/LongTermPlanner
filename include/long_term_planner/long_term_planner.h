@@ -249,6 +249,7 @@ class LongTermPlanner {
    * @param[in] q_0 Start positions. 
    * @param[in] v_0 Start velocities.
    * @param[in] a_0 Start accelerations.
+   * @param[in] v_drive Constant velocity in phase 4.
    * @return Trajectory 
    */
   Trajectory getTrajectory(
@@ -257,7 +258,8 @@ class LongTermPlanner {
     const std::vector<char>& mod_jerk_profile,
     const std::vector<double>& q_0,
     const std::vector<double>& v_0,
-    const std::vector<double>& a_0
+    const std::vector<double>& a_0,
+    const std::vector<double>& v_drive
   );
 };
 } // namespace long_term_planner

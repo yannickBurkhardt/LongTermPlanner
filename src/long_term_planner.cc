@@ -22,7 +22,7 @@ bool LongTermPlanner::planTrajectory(
   // Direction of movement
   std::vector<double> dir(dof_);
   // Boolean to choose jerk profile
-  std::vector<char> mod_jerk_profile(dof_);
+  std::vector<char> mod_jerk_profile[dof_];
 
   //// Find slowest joint
   for (int i=0; i<dof_; i++) {
@@ -56,7 +56,7 @@ bool LongTermPlanner::planTrajectory(
   }
 
   //// Calculate sampled trajectories
-  traj = getTrajectory(t_scaled, dir, mod_jerk_profile, q_0, v_0, a_0);
+  traj = getTrajectory(t_scaled, dir, mod_jerk_profile, q_0, v_0, a_0, v_drive);
   return true;
 }
 
@@ -667,8 +667,122 @@ Trajectory LongTermPlanner::getTrajectory(
     const std::vector<char>& mod_jerk_profile,
     const std::vector<double>& q_0,
     const std::vector<double>& v_0,
-    const std::vector<double>& a_0) {
+    const std::vector<double>& a_0,
+    const std::vector<double>& v_drive) {
   Trajectory traj;
+  // Calculate length of trajectory in samples
+  int traj_len = 0;
+  for (int i=0; i<dof_; i++) {
+    traj_len = std::max(traj_len, (int)ceil(t[i][7]/t_sample_) + 1);
+  }
+  // Jerk switch times in samples
+  std::vector<std::array<double, 7>> sampled_t(dof_);
+
+  //// Calculate jerk trajectories
+  std::vector<std::array<double, 7>> j_traj(dof_);      
+  for (int joint=0; joint<dof_; joint++) {
+      // Save fractions lost when discretizing switch times
+      std::array<double, 7> sampled_t_trans = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
+      
+      // Check which jerk profile to use
+      if (mod_jerk_profile[joint]) {
+        // Only used for specific scenarios in time scaling
+        jerk_profile = dir(joint) * obj.j_max(joint) * [-1 0 1 0 -1 0 1];
+      } else {
+        // Standard case
+        jerk_profile = dir(joint) * obj.j_max(joint) * [1 0 -1 0 -1 0 1];
+      }
+      
+      // Calculate inaccuraties when sampling times
+      for (int j=0; j<7; j++) {
+        sampled_t_trans[j] = t[joint][j] - t_sample_ * floor(t[joint][j]/t_sample_);
+      }
+
+      // Round towards phases with zero jerk
+      sampled_t[joint][1] = floor(t[joint][1]/t_sample_);
+      sampled_t[joint][2] = ceil(t[joint][2]/t_sample_);
+      sampled_t[joint][3] = floor(t[joint][3]/t_sample_);
+      sampled_t[joint][4] = ceil(t[joint][4]/t_sample_);
+      sampled_t[joint][5] = floor(t[joint][5]/t_sample_);
+      sampled_t[joint][6] = ceil(t[joint][6]/t_sample_);
+      sampled_t[joint][7] = floor(t[joint][7]/t_sample_);
+      
+      // Calculate sampled jerk trajectory
+      if (sampled_t[joint][1] > 0) {
+        j_traj(joint,1:sampled_t[joint][1]) = jerk_profile[1];
+      }
+      for (int j=1; j<7; j++) {
+        if (sampled_t[joint][j] - sampled_t[joint][j-1] > 0) {
+          j_traj(joint,sampled_t[joint][j-1]+1:sampled_t[joint][j]) = jerk_profile[j];
+        }
+      }
+      
+      %// Add partial jerk of sample fractions to increase accuracy
+      if(sampled_t[joint][3] >= sampled_t[joint][2])
+          // Phase 2 exists: 
+          // Fractions can be added to its beginning and end
+          j_traj(joint,sampled_t[joint][1] + 1) = j_traj(joint,sampled_t[joint][1] + 1) + sampled_t_trans(1)/t_sample_ * jerk_profile[1];
+          if(sampled_t[joint][2] > 0)
+              j_traj(joint,sampled_t[joint][2]) = j_traj(joint,sampled_t[joint][2]) + (1 - sampled_t_trans(2)/t_sample_) * jerk_profile[3];
+          end
+          // Add fraction to end of phase 3
+          j_traj(joint,sampled_t[joint][3] + 1) = j_traj(joint,sampled_t[joint][3] + 1) + sampled_t_trans(3)/t_sample_ * jerk_profile[3];
+      else
+          // Phase 2 does not exist: 
+          // Calculate transition sample
+          if(sampled_t[joint][2] > 0)
+              j_traj(joint,sampled_t[joint][2]) = j_traj(joint,sampled_t[joint][2]) + sampled_t_trans(1)/t_sample_ * jerk_profile[1] + (sampled_t_trans(3)-sampled_t_trans(1))/t_sample_ * jerk_profile[3];
+          end
+      end
+      
+      // Add fraction to end of phase 4
+      if(sampled_t[joint][4] > 0)
+          j_traj(joint,sampled_t[joint][4]) = j_traj(joint,sampled_t[joint][4]) + (1 - sampled_t_trans(4)/t_sample_) * jerk_profile[5];
+      end
+      
+      if(sampled_t[joint][3] - sampled_t[joint][1] > 0)
+          // Phase 2 and/ or 3 exist:
+          // Add fraction to beginning of phase 6
+          j_traj(joint,sampled_t[joint][5] + 1) = j_traj(joint,sampled_t[joint][5] + 1) + sampled_t_trans(5)/t_sample_ * jerk_profile[5];
+      else
+          // Phase 2 and 3 do not exist:
+          // Add fractions from previous phases to end of phase 5
+          if(sampled_t[joint][5] > 0)
+              j_traj(joint,sampled_t[joint][5]) = j_traj(joint,sampled_t[joint][5]) + sampled_t_trans(5)/t_sample_ * jerk_profile[5]  + sampled_t_trans(1)/t_sample_ * jerk_profile[1] + (sampled_t_trans(3)-sampled_t_trans(1))/t_sample_ * jerk_profile[3];
+          end
+      end
+      
+      // Add fraction to end of phase 4
+      if(sampled_t[joint][6] > 0)
+          j_traj(joint,sampled_t[joint][6]) = j_traj(joint,sampled_t[joint][6]) + (1 - sampled_t_trans(6)/t_sample_) * jerk_profile[7];
+      end
+      
+      // Add fraction to end of trajectory (after phase 7)
+      j_traj(joint,sampled_t[joint][7] + 1) = j_traj(joint,sampled_t[joint][7] + 1) + sampled_t_trans(7)/t_sample_ * jerk_profile[7];
+
+      // Check if phase 4 exists (constant velocity)
+      const_v = false(obj.DoF,1);
+      if sampled_t[joint][4] - sampled_t[joint][3] > 2
+          const_v(joint) = true;
+      end
+  }
+
+  %// Calculate acceleration trajectories
+  a_traj = t_sample_ * cumsum(j_traj,2) + a_0;
+
+  %// Calculate velocitie trajectories
+  v_traj = t_sample_ * cumsum(a_traj,2) + v_0;
+
+  // Set constant velocity periods to exactly v_drive
+  // (increases accuracy)
+  for joint=1:obj.DoF
+      if const_v(joint)
+          v_traj(joint,sampled_t[joint][3]+1:sampled_t[joint][4]-1) = v_drive(joint) * dir(joint);
+      end
+  end
+
+  %// Calculate joint angle trajectories
+  q_traj = t_sample_ * cumsum(v_traj,2) + q_0;
   return traj;
 }
 } // namespace long_term_planner
