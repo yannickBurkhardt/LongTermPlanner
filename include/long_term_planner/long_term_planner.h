@@ -32,6 +32,42 @@ class LongTermPlanner {
    */
   int dof_;
 
+  /**
+   * @brief Time between two samples of the planned trajectories.
+   */
+  double t_sample_;
+
+  /**
+   * @brief Output length in samples.
+   */
+  int num_samples_;
+
+  /**
+   * @brief Minimum joint positions.
+   */
+  std::vector<double> q_min_;
+
+  /**
+   * @brief Maximum joint positions.
+   */
+  std::vector<double> q_max_;
+
+  /**
+   * @brief Maximum allowed velocities per DoF.
+   */
+  std::vector<double> v_max_;
+
+  /**
+   * @brief Maximum allowed accelerations per DoF.
+   */
+  std::vector<double> a_max_;
+
+  /**
+   * @brief Maximum allowed jerk per DoF.
+   */
+  std::vector<double> j_max_;
+
+
 };
 } // namespace long_term_planner
 
