@@ -17,6 +17,8 @@
 #include <vector>
 #include <array>
 #include <algorithm>
+#include <numeric>
+#include <math.h> 
 
 #ifndef long_term_planner_H
 #define long_term_planner_H
@@ -35,6 +37,17 @@ struct Trajectory {
   std::vector<std::vector<double>> a;
   std::vector<std::vector<double>> j;
 };
+
+/**
+ * @brief Sign function
+ * 
+ * @tparam T 
+ * @param val value
+ * @return -1 if negaitve, 0 if 0, and 1 if positive 
+ */
+template <typename T> int sign(T val) {
+    return (T(0) < val) - (val < T(0));
+}
 
 /**
  * @brief Plans a trajectory for multiple joints.
@@ -155,6 +168,7 @@ class LongTermPlanner {
    * @param[in] q_0 Start position of the joint.
    * @param[in] v_0 Start velocity of the joint.
    * @param[in] a_0 Start acceleration of the joint.
+   * @param[in] v_drive Constant velocity in phase 4.
    * @param[out] t Time points of jerk switches.
    * @param[out] dir Direction of the goal.
    * @param[out] mod_jerk_profile true if slowing down is necessary to satisfy v_drive, false otherwise.
@@ -166,6 +180,7 @@ class LongTermPlanner {
     double q_0, 
     double v_0, 
     double a_0,
+    double v_drive,
     std::array<double, 7>& t,
     double& dir,
     char& mod_jerk_profile);
