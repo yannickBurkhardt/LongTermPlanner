@@ -360,7 +360,25 @@ bool LongTermPlanner::timeScaling(
   }
   //// Calculate required v_drive to reach goal at given time
   // Standard jerk profile: Phases 2 and 6 exist
-  v_drive = (a_max_[joint]*j_max_[joint]*t_required/2 - a_0^2/4 + a_0*a_max_[joint]/2 - a_max_[joint]^2/2 + v_0*j_max_[joint]/2 - sqrt(36*a_max_[joint]^2*j_max_[joint]^2*t_required^2 - 36*a_0^2*a_max_[joint]*j_max_[joint]*t_required + 72*a_0*a_max_[joint]^2*j_max_[joint]*t_required - 72*a_max_[joint]^3*j_max_[joint]*t_required + 144*a_max_[joint]*dir*j_max_[joint]^2*q_0 - 144*a_max_[joint]*dir*j_max_[joint]^2*q_goal + 72*a_max_[joint]*j_max_[joint]^2*v_0*t_required - 9*a_0^4 + 12*a_0^3*a_max_[joint] + 36*a_0^2*a_max_[joint]^2 + 36*a_0^2*j_max_[joint]*v_0 - 72*a_0*a_max_[joint]^3 - 72*a_0*a_max_[joint]*j_max_[joint]*v_0 + 36*a_max_[joint]^4 - 36*j_max_[joint]^2*v_0^2)/12)/j_max_[joint];
+  v_drive = (a_max_[joint]*j_max_[joint]*t_required/2 - 
+             pow(a_0,2)/4 + a_0*a_max_[joint]/2 - 
+             pow(a_max_[joint],2)/2 + 
+             v_0*j_max_[joint]/2 - 
+             sqrt(36*pow(a_max_[joint],2)*pow(j_max_[joint],2)*pow(t_required,2) - 
+                  36*pow(a_0,2)*a_max_[joint]*j_max_[joint]*t_required + 
+                  72*a_0*pow(a_max_[joint],2)*j_max_[joint]*t_required - 
+                  72*pow(a_max_[joint],3)*j_max_[joint]*t_required + 
+                  144*a_max_[joint]*dir*pow(j_max_[joint],2)*q_0 - 
+                  144*a_max_[joint]*dir*pow(j_max_[joint],2)*q_goal + 
+                  72*a_max_[joint]*pow(j_max_[joint],2)*v_0*t_required 
+                  - 9*pow(a_0,4) 
+                  + 12*pow(a_0,3)*a_max_[joint] 
+                  + 36*pow(a_0,2)*pow(a_max_[joint],2) + 
+                  36*pow(a_0,2)*j_max_[joint]*v_0 - 
+                  72*a_0*pow(a_max_[joint],3) - 
+                  72*a_0*a_max_[joint]*j_max_[joint]*v_0 + 
+                  36*pow(a_max_[joint],4) - 
+                  36*pow(j_max_[joint],2)*v_0^2)/12)/j_max_[joint];
   // Check if v_drive is real and positive
   if (v_drive > 0) {
     [t, ~, mod_jerk_profile] = optSwitchTimes(obj, q_goal, q_0, dir*v_0, dir*a_0, joint, v_drive);
@@ -372,7 +390,7 @@ bool LongTermPlanner::timeScaling(
   }
 
   // Modified jerk profile: Phases 2 and 6 exist
-  v_drive = -(dir*(q_0 - q_goal) - j_max_[joint]*((a_0 + a_max_[joint])^3/(6*j_max_[joint]^3) - a_max_[joint]^3/(6*j_max_[joint]^3) + (a_max_[joint]^2*(a_0 + a_max_[joint]))/(2*j_max_[joint]^3) + ((a_0 + a_max_[joint])^2*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] + a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint])))/(2*j_max_[joint]^2)) + a_0*((a_0 + a_max_[joint])^2/(2*j_max_[joint]^2) + a_max_[joint]^2/(2*j_max_[joint]^2) + ((a_0 + a_max_[joint])*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] + a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint])))/j_max_[joint]) - a_max_[joint]*(((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] - a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint]))^2/2 + (a_max_[joint]*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] - a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint])))/j_max_[joint]) + v_0*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] + (a_0 + a_max_[joint])/j_max_[joint] + a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint])))/(a_max_[joint]/(2*j_max_[joint]) - v_0/a_max_[joint] + a_max_[joint]*(((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] - a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint]))/a_max_[joint] + 1/j_max_[joint]) - (a_0^2 + 2*a_0*a_max_[joint] + 4*a_max_[joint]^2 - 2*j_max_[joint]*t_required*a_max_[joint] + 2*j_max_[joint]*v_0)/(2*a_max_[joint]*j_max_[joint]) + (a_0 + a_max_[joint])^2/(2*a_max_[joint]*j_max_[joint]) - (a_0*(a_0 + a_max_[joint]))/(a_max_[joint]*j_max_[joint]));
+  v_drive = -(dir*(q_0 - q_goal) - j_max_[joint]*((a_0 + a_max_[joint])^3/(6*pow(j_max_[joint],3)) - pow(a_max_[joint],3)/(6*pow(j_max_[joint],3)) + (pow(a_max_[joint],2)*(a_0 + a_max_[joint]))/(2*pow(j_max_[joint],3)) + ((a_0 + a_max_[joint])^2*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] + a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint])))/(2*pow(j_max_[joint],2))) + a_0*((a_0 + a_max_[joint])^2/(2*pow(j_max_[joint],2)) + pow(a_max_[joint],2)/(2*pow(j_max_[joint],2)) + ((a_0 + a_max_[joint])*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] + a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint])))/j_max_[joint]) - a_max_[joint]*(((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] - a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint]))^2/2 + (a_max_[joint]*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] - a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint])))/j_max_[joint]) + v_0*((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] + (a_0 + a_max_[joint])/j_max_[joint] + a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint])))/(a_max_[joint]/(2*j_max_[joint]) - v_0/a_max_[joint] + a_max_[joint]*(((v_0 + (a_0*(a_0 - a_max_[joint]))/(2*j_max_[joint]))/a_max_[joint] - a_max_[joint]/(2*j_max_[joint]) + (a_0 - a_max_[joint])/(2*j_max_[joint]))/a_max_[joint] + 1/j_max_[joint]) - (pow(a_0,2) + 2*a_0*a_max_[joint] + 4*pow(a_max_[joint],2) - 2*j_max_[joint]*t_required*a_max_[joint] + 2*j_max_[joint]*v_0)/(2*a_max_[joint]*j_max_[joint]) + (a_0 + a_max_[joint])^2/(2*a_max_[joint]*j_max_[joint]) - (a_0*(a_0 + a_max_[joint]))/(a_max_[joint]*j_max_[joint]));
   
   // Check if v_drive is real and positive
   if (v_drive > 0) {
@@ -385,8 +403,8 @@ bool LongTermPlanner::timeScaling(
   }
 
   // Standard jerk profile: Phase 2 does not exist
-  root=roots([3, 12*a_max_[joint], (-24*a_max_[joint]*j_max_[joint]*t_required - 12*a_0^2 - 24*a_0*a_max_[joint] + 12*a_max_[joint]^2 + 24*j_max_[joint]*v_0), 0, 48*a_0^2*a_max_[joint]*j_max_[joint]*t_required - 96*dir*j_max_[joint]^2*a_max_[joint]*q_0 + 96*dir*j_max_[joint]^2*a_max_[joint]*q_goal - 96*a_max_[joint]*j_max_[joint]^2*v_0*t_required + 12*a_0^4 + 16*a_0^3*a_max_[joint] - 24*a_0^2*a_max_[joint]^2 - 48*a_0^2*j_max_[joint]*v_0 + 48*a_max_[joint]^2*j_max_[joint]*v_0 + 48*j_max_[joint]^2*v_0^2]);
-  v_drive = (-2*a_0^2 + 4*j_max_[joint]*v_0 + root(3)^2)/(4*j_max_[joint]);
+  root=roots([3, 12*a_max_[joint], (-24*a_max_[joint]*j_max_[joint]*t_required - 12*pow(a_0,2) - 24*a_0*a_max_[joint] + 12*pow(a_max_[joint],2) + 24*j_max_[joint]*v_0), 0, 48*pow(a_0,2)*a_max_[joint]*j_max_[joint]*t_required - 96*dir*pow(j_max_[joint],2)*a_max_[joint]*q_0 + 96*dir*pow(j_max_[joint],2)*a_max_[joint]*q_goal - 96*a_max_[joint]*pow(j_max_[joint],2)*v_0*t_required + 12*pow(a_0,4) + 16*pow(a_0,3)*a_max_[joint] - 24*pow(a_0,2)*pow(a_max_[joint],2) - 48*pow(a_0,2)*j_max_[joint]*v_0 + 48*pow(a_max_[joint],2)*j_max_[joint]*v_0 + 48*pow(j_max_[joint],2)*v_0^2]);
+  v_drive = (-2*pow(a_0,2) + 4*j_max_[joint]*v_0 + root(3)^2)/(4*j_max_[joint]);
   
   // Check if v_drive is real and positive
   if (v_drive > 0) {
@@ -399,7 +417,7 @@ bool LongTermPlanner::timeScaling(
   }
 
   // Standard jerk profile: Phase 6 does not exist
-  root = roots([12, 24*a_max_[joint], (-24*a_max_[joint]*j_max_[joint]*t_required + 24*a_0^2 - 48*a_0*a_max_[joint] + 24*a_max_[joint]^2 - 24*j_max_[joint]*v_0 + 12*a_0 - 12*a_max_[joint]), 0, -24*dir*j_max_[joint]^2*a_max_[joint]*q_0 + 24*dir*j_max_[joint]^2*a_max_[joint]*q_goal + 9*a_0^4 - 12*a_0^3*a_max_[joint] - 24*a_0^2*j_max_[joint]*v_0 + 48*a_0*a_max_[joint]*j_max_[joint]*v_0 + 4*a_max_[joint]^4 - 24*a_max_[joint]^2*j_max_[joint]*v_0 + 12*j_max_[joint]^2*v_0^2 + 6*a_0^3 + 6*a_0^2*a_max_[joint] - 12*a_0*a_max_[joint]^2 - 12*a_0*j_max_[joint]*v_0 + 12*a_max_[joint]*j_max_[joint]*v_0 + 4*a_0*a_max_[joint] - 4*a_max_[joint]^2]);
+  root = roots([12, 24*a_max_[joint], (-24*a_max_[joint]*j_max_[joint]*t_required + 24*pow(a_0,2) - 48*a_0*a_max_[joint] + 24*pow(a_max_[joint],2) - 24*j_max_[joint]*v_0 + 12*a_0 - 12*a_max_[joint]), 0, -24*dir*pow(j_max_[joint],2)*a_max_[joint]*q_0 + 24*dir*pow(j_max_[joint],2)*a_max_[joint]*q_goal + 9*pow(a_0,4) - 12*pow(a_0,3)*a_max_[joint] - 24*pow(a_0,2)*j_max_[joint]*v_0 + 48*a_0*a_max_[joint]*j_max_[joint]*v_0 + 4*pow(a_max_[joint],4) - 24*pow(a_max_[joint],2)*j_max_[joint]*v_0 + 12*pow(j_max_[joint],2)*v_0^2 + 6*pow(a_0,3) + 6*pow(a_0,2)*a_max_[joint] - 12*a_0*pow(a_max_[joint],2) - 12*a_0*j_max_[joint]*v_0 + 12*a_max_[joint]*j_max_[joint]*v_0 + 4*a_0*a_max_[joint] - 4*pow(a_max_[joint],2)]);
   v_drive = root(3)^2/j_max_[joint];
   
   // Check if v_drive is real and positive
@@ -413,7 +431,7 @@ bool LongTermPlanner::timeScaling(
   }
 
   // Standard jerk profile: Phases 2 and 6 do not exist
-  root = roots([(144*j_max_[joint]*t_required + 144*a_0), (-72*j_max_[joint]^2*t_required^2 - 144*a_0*j_max_[joint]*t_required + 36*a_0^2 - 216*j_max_[joint]*v_0), (144*dir*j_max_[joint]^2*q_0 - 144*dir*j_max_[joint]^2*q_goal + 48*a_0^3 - 144*a_0*j_max_[joint]*v_0), (-144*dir*j_max_[joint]^3*q_0*t_required + 144*dir*j_max_[joint]^3*q_goal*t_required - 48*a_0^3*j_max_[joint]*t_required - 144*a_0*dir*j_max_[joint]^2*q_0 + 144*a_0*dir*j_max_[joint]^2*q_goal + 144*a_0*j_max_[joint]^2*v_0*t_required + 6*a_0^4 - 72*a_0^2*j_max_[joint]*v_0 + 216*j_max_[joint]^2*v_0^2), 0, -72*dir^2*j_max_[joint]^4*q_0^2 + 144*dir^2*j_max_[joint]^4*q_0*q_goal - 72*dir^2*j_max_[joint]^4*q_goal^2 - 48*a_0^3*dir*j_max_[joint]^2*q_0 + 48*a_0^3*dir*j_max_[joint]^2*q_goal + 144*a_0*dir*j_max_[joint]^3*q_0*v_0 - 144*a_0*dir*j_max_[joint]^3*q_goal*v_0 + a_0^6 - 6*a_0^4*j_max_[joint]*v_0 + 36*a_0^2*j_max_[joint]^2*v_0^2 - 72*j_max_[joint]^3*v_0^3]);
+  root = roots([(144*j_max_[joint]*t_required + 144*a_0), (-72*pow(j_max_[joint],2)*pow(t_required,2) - 144*a_0*j_max_[joint]*t_required + 36*pow(a_0,2) - 216*j_max_[joint]*v_0), (144*dir*pow(j_max_[joint],2)*q_0 - 144*dir*pow(j_max_[joint],2)*q_goal + 48*pow(a_0,3) - 144*a_0*j_max_[joint]*v_0), (-144*dir*pow(j_max_[joint],3)*q_0*t_required + 144*dir*pow(j_max_[joint],3)*q_goal*t_required - 48*pow(a_0,3)*j_max_[joint]*t_required - 144*a_0*dir*pow(j_max_[joint],2)*q_0 + 144*a_0*dir*pow(j_max_[joint],2)*q_goal + 144*a_0*pow(j_max_[joint],2)*v_0*t_required + 6*pow(a_0,4) - 72*pow(a_0,2)*j_max_[joint]*v_0 + 216*pow(j_max_[joint],2)*v_0^2), 0, -72*dir^2*pow(j_max_[joint],4)*q_0^2 + 144*dir^2*pow(j_max_[joint],4)*q_0*q_goal - 72*dir^2*pow(j_max_[joint],4)*q_goal^2 - 48*pow(a_0,3)*dir*pow(j_max_[joint],2)*q_0 + 48*pow(a_0,3)*dir*pow(j_max_[joint],2)*q_goal + 144*a_0*dir*pow(j_max_[joint],3)*q_0*v_0 - 144*a_0*dir*pow(j_max_[joint],3)*q_goal*v_0 + pow(a_0,6) - 6*pow(a_0,4)*j_max_[joint]*v_0 + 36*pow(a_0,2)*pow(j_max_[joint],2)*v_0^2 - 72*pow(j_max_[joint],3)*v_0^3]);
   v_drive = root(2)^2/j_max_[joint];
   
   // Check if v_drive is real and positive
@@ -427,8 +445,8 @@ bool LongTermPlanner::timeScaling(
   }
 
   // Modified profile: Phase 2 does not exist
-  root = roots([3, - 6*sqrt(2)*a_max_[joint], (12*a_max_[joint]*j_max_[joint]*t_required - 6*a_0^2 - 12*a_0*a_max_[joint] - 6*a_max_[joint]^2 - 12*j_max_[joint]*v_0), 0, -12*a_0^2*a_max_[joint]*j_max_[joint]*t_required - 24*dir*j_max_[joint]^2*a_max_[joint]*q_0 + 24*dir*j_max_[joint]^2*a_max_[joint]*q_goal - 24*a_max_[joint]*j_max_[joint]^2*v_0*t_required + 3*a_0^4 + 4*a_0^3*a_max_[joint] + 6*a_0^2*a_max_[joint]^2 + 12*a_0^2*j_max_[joint]*v_0 + 12*a_max_[joint]^2*j_max_[joint]*v_0 + 12*j_max_[joint]^2*v_0^2]);
-  v_drive = -(root(3)^2 - a_0^2 - 2*j_max_[joint]*v_0)/(2*j_max_[joint]);
+  root = roots([3, - 6*sqrt(2)*a_max_[joint], (12*a_max_[joint]*j_max_[joint]*t_required - 6*pow(a_0,2) - 12*a_0*a_max_[joint] - 6*pow(a_max_[joint],2) - 12*j_max_[joint]*v_0), 0, -12*pow(a_0,2)*a_max_[joint]*j_max_[joint]*t_required - 24*dir*pow(j_max_[joint],2)*a_max_[joint]*q_0 + 24*dir*pow(j_max_[joint],2)*a_max_[joint]*q_goal - 24*a_max_[joint]*pow(j_max_[joint],2)*v_0*t_required + 3*pow(a_0,4) + 4*pow(a_0,3)*a_max_[joint] + 6*pow(a_0,2)*pow(a_max_[joint],2) + 12*pow(a_0,2)*j_max_[joint]*v_0 + 12*pow(a_max_[joint],2)*j_max_[joint]*v_0 + 12*pow(j_max_[joint],2)*v_0^2]);
+  v_drive = -(root(3)^2 - pow(a_0,2) - 2*j_max_[joint]*v_0)/(2*j_max_[joint]);
   
   // Check if v_drive is real and positive
   if (v_drive > 0) {
@@ -441,7 +459,7 @@ bool LongTermPlanner::timeScaling(
   }
 
   // Modified profile: Phase 6 does not exist
-  root = roots([12, - 24*a_max_[joint], (24*a_max_[joint]*j_max_[joint]*t_required - 12*a_0^2 - 24*a_0*a_max_[joint] - 12*a_max_[joint]^2 - 24*j_max_[joint]*v_0), 0, 24*dir*j_max_[joint]^2*a_max_[joint]*q_0 - 24*dir*j_max_[joint]^2*a_max_[joint]*q_goal + 3*a_0^4 + 8*a_0^3*a_max_[joint] + 6*a_0^2*a_max_[joint]^2 + 12*a_0^2*j_max_[joint]*v_0 + 24*a_0*a_max_[joint]*j_max_[joint]*v_0 + 12*a_max_[joint]^2*j_max_[joint]*v_0 + 12*j_max_[joint]^2*v_0^2]);
+  root = roots([12, - 24*a_max_[joint], (24*a_max_[joint]*j_max_[joint]*t_required - 12*pow(a_0,2) - 24*a_0*a_max_[joint] - 12*pow(a_max_[joint],2) - 24*j_max_[joint]*v_0), 0, 24*dir*pow(j_max_[joint],2)*a_max_[joint]*q_0 - 24*dir*pow(j_max_[joint],2)*a_max_[joint]*q_goal + 3*pow(a_0,4) + 8*pow(a_0,3)*a_max_[joint] + 6*pow(a_0,2)*pow(a_max_[joint],2) + 12*pow(a_0,2)*j_max_[joint]*v_0 + 24*a_0*a_max_[joint]*j_max_[joint]*v_0 + 12*pow(a_max_[joint],2)*j_max_[joint]*v_0 + 12*pow(j_max_[joint],2)*v_0^2]);
   v_drive = root(3)^2/j_max_[joint];
   
   // Check if v_drive is real and positive
@@ -455,7 +473,7 @@ bool LongTermPlanner::timeScaling(
   }
 
   // Modified profile: Phases 2 and 6 do not exist
-  root = roots([144, (-144*j_max_[joint]*t_required + 144*a_0), (72*j_max_[joint]^2*t_required^2 - 144*a_0*j_max_[joint]*t_required - 36*a_0^2 - 216*j_max_[joint]*v_0), (-144*dir*j_max_[joint]^2*q_0 + 144*dir*j_max_[joint]^2*q_goal - 48*a_0^3 - 144*a_0*j_max_[joint]*v_0), (144*dir*j_max_[joint]^3*q_0*t_required - 144*dir*j_max_[joint]^3*q_goal*t_required + 48*a_0^3*j_max_[joint]*t_required - 144*a_0*dir*j_max_[joint]^2*q_0 + 144*a_0*dir*j_max_[joint]^2*q_goal + 144*a_0*j_max_[joint]^2*v_0*t_required + 6*a_0^4 + 72*a_0^2*j_max_[joint]*v_0 + 216*j_max_[joint]^2*v_0^2), 0, 72*dir^2*j_max_[joint]^4*q_0^2 - 144*dir^2*j_max_[joint]^4*q_0*q_goal + 72*dir^2*j_max_[joint]^4*q_goal^2 + 48*a_0^3*dir*j_max_[joint]^2*q_0 - 48*a_0^3*dir*j_max_[joint]^2*q_goal + 144*a_0*dir*j_max_[joint]^3*q_0*v_0 - 144*a_0*dir*j_max_[joint]^3*q_goal*v_0 - a_0^6 - 6*a_0^4*j_max_[joint]*v_0 - 36*a_0^2*j_max_[joint]^2*v_0^2 - 72*j_max_[joint]^3*v_0^3]);
+  root = roots([144, (-144*j_max_[joint]*t_required + 144*a_0), (72*pow(j_max_[joint],2)*pow(t_required,2) - 144*a_0*j_max_[joint]*t_required - 36*pow(a_0,2) - 216*j_max_[joint]*v_0), (-144*dir*pow(j_max_[joint],2)*q_0 + 144*dir*pow(j_max_[joint],2)*q_goal - 48*pow(a_0,3) - 144*a_0*j_max_[joint]*v_0), (144*dir*pow(j_max_[joint],3)*q_0*t_required - 144*dir*pow(j_max_[joint],3)*q_goal*t_required + 48*pow(a_0,3)*j_max_[joint]*t_required - 144*a_0*dir*pow(j_max_[joint],2)*q_0 + 144*a_0*dir*pow(j_max_[joint],2)*q_goal + 144*a_0*pow(j_max_[joint],2)*v_0*t_required + 6*pow(a_0,4) + 72*pow(a_0,2)*j_max_[joint]*v_0 + 216*pow(j_max_[joint],2)*v_0^2), 0, 72*dir^2*pow(j_max_[joint],4)*q_0^2 - 144*dir^2*pow(j_max_[joint],4)*q_0*q_goal + 72*dir^2*pow(j_max_[joint],4)*q_goal^2 + 48*pow(a_0,3)*dir*pow(j_max_[joint],2)*q_0 - 48*pow(a_0,3)*dir*pow(j_max_[joint],2)*q_goal + 144*a_0*dir*pow(j_max_[joint],3)*q_0*v_0 - 144*a_0*dir*pow(j_max_[joint],3)*q_goal*v_0 - pow(a_0,6) - 6*pow(a_0,4)*j_max_[joint]*v_0 - 36*pow(a_0,2)*pow(j_max_[joint],2)*v_0^2 - 72*pow(j_max_[joint],3)*v_0^3]);
   v_drive = root(4)^2/j_max_[joint];
   
   // Check if v_drive is real and positive
