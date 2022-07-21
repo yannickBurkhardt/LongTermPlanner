@@ -173,7 +173,7 @@ class LongTermPlanner {
    * @param[in] v_drive Constant velocity in phase 4.
    * @param[out] t Time points of jerk switches.
    * @param[out] dir Direction of the goal.
-   * @param[out] mod_jerk_profile true if slowing down is necessary to satisfy v_drive, false otherwise.
+   * @param[out] mod_jerk_profile 1 if slowing down is necessary to satisfy v_drive, 0 otherwise.
    * @return true if successful.
    * @return false if planning not possible.
    */
@@ -199,7 +199,7 @@ class LongTermPlanner {
    * @param[in] t_required Required end time.
    * @param[out] scaled_t Scaled time points of jerk switches.
    * @param[out] v_drive Driving velocity.
-   * @param[out] mod_jerk_profile true if slowing down is necessary to satisfy v_drive, false otherwise.
+   * @param[out] mod_jerk_profile 1 if slowing down is necessary to satisfy v_drive, 0 otherwise.
    * @return true if successful. 
    * @return false if planning not possible.
    */
@@ -246,7 +246,7 @@ class LongTermPlanner {
    * 
    * @param[in] t Time points of jerk switches.
    * @param[in] dir Direction of the goal.
-   * @param[in] mod_jerk_profile true if slowing down is necessary to satisfy v_drive, false otherwise.
+   * @param[in] mod_jerk_profile 1 if slowing down is necessary to satisfy v_drive, 0 otherwise.
    * @param[in] q_0 Start positions. 
    * @param[in] v_0 Start velocities.
    * @param[in] a_0 Start accelerations.

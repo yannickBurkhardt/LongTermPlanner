@@ -22,7 +22,7 @@ bool LongTermPlanner::planTrajectory(
   // Direction of movement
   std::vector<double> dir(dof_);
   // Boolean to choose jerk profile
-  std::vector<char> mod_jerk_profile[dof_];
+  std::vector<char> mod_jerk_profile(dof_);
 
   //// Find slowest joint
   for (int i=0; i<dof_; i++) {
@@ -164,7 +164,7 @@ bool LongTermPlanner::optSwitchTimes(int joint,
 
   // Constant velocity (Phase 4)
   double q_part1 = 0;
-  if (mod_jerk_profile) {
+  if (mod_jerk_profile == 1) {
     // Braking to satisfy v_drive
     q_part1 = q_brake + v_drive * (t_rel[1] + t_rel[2] + t_rel[3]);
   } else {
@@ -190,7 +190,7 @@ bool LongTermPlanner::optSwitchTimes(int joint,
   // Check if phase 4 does not exist
   // (max velocity cannot be reached)
   if (t_rel[4] < -eps) {
-    if (mod_jerk_profile) {
+    if (mod_jerk_profile==1) {
       // This case is not valid
       // (is handled in timeScaling function)
       t = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -596,7 +596,7 @@ bool LongTermPlanner::timeScaling(
   }
 
   // No valid solution found, reset return parameters
-  mod_jerk_profile = false;
+  mod_jerk_profile = 0;
   scaled_t = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   v_drive = v_max_[joint];
   return false;
@@ -690,7 +690,7 @@ Trajectory LongTermPlanner::getTrajectory(
     std::array<double, 7> jerk_profile = {};
     // Check which jerk profile to use
     std::array<int, 7> profile = {};
-    if (mod_jerk_profile[joint]) {
+    if (mod_jerk_profile[joint] == 1) {
       // Only used for specific scenarios in time scaling
       profile = {-1, 0, 1, 0, -1, 0, 1};
     } else {
