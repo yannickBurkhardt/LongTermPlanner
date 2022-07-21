@@ -20,6 +20,7 @@
 #include <numeric>
 #include <math.h>
 #include <cmath>
+#include <functional>
 
 #ifndef long_term_planner_H
 #define long_term_planner_H
