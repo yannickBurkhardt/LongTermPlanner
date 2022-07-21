@@ -160,6 +160,19 @@ class LongTermPlanner {
     const std::vector<double>& a_0
   );
 
+  inline void setLimits(
+    std::vector<double> q_min,
+    std::vector<double> q_max,
+    std::vector<double> v_max,
+    std::vector<double> a_max,
+    std::vector<double> j_max) {
+    q_min_ = q_min;
+    q_max_ = q_max;
+    v_max_ = v_max;
+    a_max_ = a_max;
+    j_max_ = j_max;
+  }
+
  protected:
   /**
    * @brief Calculate time-optimal jerk swtiches.

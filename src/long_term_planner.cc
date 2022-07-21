@@ -173,15 +173,15 @@ bool LongTermPlanner::optSwitchTimes(int joint,
               a_0 * (1.0/2 * pow(t_rel[0],2) + 
               t_rel[0] * (t_rel[1] + t_rel[2]) + 
               1.0/2 * pow(t_rel[2],2)) + 
-              j_max_[joint] * (1.0/6 * pow(t_rel[0],3) + 
+              j_max_[joint] * (1.0/6.0 * pow(t_rel[0],3) + 
                                1.0/2 * pow(t_rel[0],2) * (t_rel[1] + t_rel[2]) - 
-                               1.0/6 * pow(t_rel[2],3) + 
+                               1.0/6.0 * pow(t_rel[2],3) + 
                                1.0/2 * t_rel[0] * pow(t_rel[2],2)) + 
               a_max_[joint] * (1.0/2 * pow(t_rel[1],2) + t_rel[1] * t_rel[2]);
   }
-  double q_part2 = j_max_[joint] * (1.0/6 * pow(t_rel[6],3) + 
+  double q_part2 = j_max_[joint] * (1.0/6.0 * pow(t_rel[6],3) + 
                    1.0/2 * pow(t_rel[6],2) * (t_rel[5] + t_rel[4]) - 
-                   1.0/6 * pow(t_rel[4],3) + 
+                   1.0/6.0 * pow(t_rel[4],3) + 
                    1.0/2 * t_rel[6] * pow(t_rel[4],2)) + 
                    a_max_[joint] * (1.0/2 * pow(t_rel[5],2) + 
                    t_rel[5] * t_rel[4]);
@@ -275,7 +275,7 @@ bool LongTermPlanner::optSwitchTimes(int joint,
                         72 * a_max_[joint] * dir * pow(j_max_[joint],2) * q_goal - 
                         36 * a_max_[joint] * pow(j_max_[joint],2) * t_rel[0] * v_0 + 
                         3 * pow(a_max_[joint],4) + 
-                        36 * pow(j_max_[joint],2) * pow(v_0,2)))/6 - a_max_[joint]);
+                        36 * pow(j_max_[joint],2) * pow(v_0,2)))/6.0 - a_max_[joint]);
         t_rel[4] = t_rel[6] + a_max_[joint]/j_max_[joint];
         t_rel[1] = -(-j_max_[joint] * pow(t_rel[4],2) - 
                      2 * j_max_[joint] * t_rel[4] * t_rel[6] + 
@@ -414,7 +414,7 @@ bool LongTermPlanner::timeScaling(
               (a_max_[joint] / (2 * j_max_[joint]) - 
               v_0/a_max_[joint] + a_max_[joint] * (((v_0 + (a_0 * (a_0 - a_max_[joint])) / (2 * j_max_[joint])) /
               a_max_[joint] - a_max_[joint]/(2 * j_max_[joint]) + 
-              (a_0 - a_max_[joint])/(2 * j_max_[joint]))/a_max_[joint] + 1/j_max_[joint]) - 
+              (a_0 - a_max_[joint])/(2 * j_max_[joint]))/a_max_[joint] + 1.0/j_max_[joint]) - 
               (pow(a_0,2) + 2 * a_0 * a_max_[joint] + 
               4 * pow(a_max_[joint],2) - 2 * j_max_[joint] * t_required * a_max_[joint] + 
               2 * j_max_[joint] * v_0)/(2 * a_max_[joint] * j_max_[joint]) + 
@@ -620,7 +620,7 @@ bool LongTermPlanner::optBraking(
     // If initial acceleration will cause the robot to
     // eventually move into opposite direction of velocity, use 
     // this direction
-    if (abs(v_0) > 1/2*pow(a_0,2)/j_max_[joint]) {
+    if (abs(v_0) > 1.0/2.0*pow(a_0,2)/j_max_[joint]) {
       dir = -sign(v_0);
     } else {
       dir = -sign(a_0);
@@ -636,7 +636,7 @@ bool LongTermPlanner::optBraking(
   // Bring velocity to zero
   t_rel[0] = (a_max_[joint] - a_0)/j_max_[joint];
   t_rel[2] = a_max_[joint]/j_max_[joint];
-  t_rel[1] = (- v_0 - 1/2*t_rel[0]*a_0)/a_max_[joint] - 1/2*(t_rel[0] + t_rel[2]);
+  t_rel[1] = (- v_0 - 1.0/2.0*t_rel[0]*a_0)/a_max_[joint] - 1.0/2.0*(t_rel[0] + t_rel[2]);
   
   // Check if phase 2 does not exist 
   // (max acceleration is not reached)
@@ -648,10 +648,10 @@ bool LongTermPlanner::optBraking(
   
   // Calculate position after breaking
   q = v_0*(t_rel[0] + t_rel[1] + t_rel[2]) + 
-      a_0*(1/2*pow(t_rel[0],2) + t_rel[0]*(t_rel[1] + t_rel[2]) + 1/2*pow(t_rel[2],2)) + 
-      j_max_[joint]*(1/6*pow(t_rel[0],3) + 1/2*pow(t_rel[0],2)*(t_rel[1] + t_rel[2]) - 
-      1/6*pow(t_rel[2],3) + 1/2*t_rel[0]*pow(t_rel[2],2)) + 
-      a_max_[joint]*(1/2*pow(t_rel[1],2) + t_rel[1]*t_rel[2]);
+      a_0*(1.0/2.0*pow(t_rel[0],2) + t_rel[0]*(t_rel[1] + t_rel[2]) + 1.0/2.0*pow(t_rel[2],2)) + 
+      j_max_[joint]*(1.0/6.0*pow(t_rel[0],3) + 1.0/2.0*pow(t_rel[0],2)*(t_rel[1] + t_rel[2]) - 
+      1.0/6.0*pow(t_rel[2],3) + 1.0/2.0*t_rel[0]*pow(t_rel[2],2)) + 
+      a_max_[joint]*(1.0/2.0*pow(t_rel[1],2) + t_rel[1]*t_rel[2]);
 
   // Correct direction
   q = dir * q;

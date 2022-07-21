@@ -60,7 +60,7 @@ class LongTermPlannerExposed : public LongTermPlanner {
 /**
  * @brief Test fixture for long term planner class
  */
-class LongTermPlannerTest : public ::testing::Test {
+class LongTermPlannerTest1DoF : public ::testing::Test {
  protected:
   /**
    * @brief The long term planner object
@@ -71,18 +71,41 @@ class LongTermPlannerTest : public ::testing::Test {
    * @brief Create the safety shield object
    */
   void SetUp() override {
-    int dof = 3;
+    int dof = 1;
+    double t_sample = 0.001;
+    std::vector<double> q_min = {-3.1};
+    std::vector<double> q_max = {3.1};
+    std::vector<double> v_max = {10};
+    std::vector<double> a_max = {2};
+    std::vector<double> j_max = {4};
+    ltp_ = LongTermPlannerExposed(dof, t_sample, q_min, q_max, v_max, a_max, j_max);
+  }
+};
+
+/**
+ * @brief Test fixture for long term planner class
+ */
+class LongTermPlannerTest6DoF : public ::testing::Test {
+ protected:
+  /**
+   * @brief The long term planner object
+   */
+  LongTermPlannerExposed ltp_;
+
+  /**
+   * @brief Create the safety shield object
+   */
+  void SetUp() override {
+    int dof = 6;
     double t_sample = 0.001;
     std::vector<double> q_min(dof);
     std::fill(q_min.begin(), q_min.end(), -3.1);
     std::vector<double> q_max(dof);
     std::fill(q_max.begin(), q_max.end(), 3.1);
     std::vector<double> v_max(dof);
-    std::fill(v_max.begin(), v_max.end(), 2.0);
-    std::vector<double> a_max(dof);
-    std::fill(a_max.begin(), a_max.end(), 10.0);
-    std::vector<double> j_max(dof);
-    std::fill(j_max.begin(), j_max.end(), 100.0);
+    std::fill(v_max.begin(), v_max.end(), 10.0);
+    std::vector<double> a_max = {2, 2, 2, 4, 4, 4};
+    std::vector<double> j_max = {4, 4, 4, 4, 4, 2};
     ltp_ = LongTermPlannerExposed(dof, t_sample, q_min, q_max, v_max, a_max, j_max);
   }
 };
