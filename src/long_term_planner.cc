@@ -384,9 +384,8 @@ bool LongTermPlanner::timeScaling(
   if (!isnan(v_drive) && v_drive > 0) {
     double trash;
     bool success = optSwitchTimes(joint, q_goal, q_0, dir * v_0, dir * a_0, v_drive, scaled_t, trash, mod_jerk_profile);
-    if (!success) return false;
     // Check time constraint was fulfilled
-    if (t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
+    if (success && t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
       return true;
     }
   }
@@ -426,9 +425,8 @@ bool LongTermPlanner::timeScaling(
   if (!isnan(v_drive) && v_drive > 0) {
     double trash;
     bool success = optSwitchTimes(joint, q_goal, q_0, dir * v_0, dir * a_0, v_drive, scaled_t, trash, mod_jerk_profile);
-
     // Check time constraint was fulfilled
-    if (t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
+    if (success && t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
       return true;
     }
   }
@@ -457,9 +455,8 @@ bool LongTermPlanner::timeScaling(
   if (!isnan(v_drive) && v_drive > 0) {
     double trash;
     bool success = optSwitchTimes(joint, q_goal, q_0, dir * v_0, dir * a_0, v_drive, scaled_t, trash, mod_jerk_profile);
-
     // Check time constraint was fulfilled
-    if (t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
+    if (success && t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
       return true;
     }
   }
@@ -493,9 +490,8 @@ bool LongTermPlanner::timeScaling(
   if (!isnan(v_drive) && v_drive > 0) {
     double trash;
     bool success = optSwitchTimes(joint, q_goal, q_0, dir * v_0, dir * a_0, v_drive, scaled_t, trash, mod_jerk_profile);
-
     // Check time constraint was fulfilled
-    if (t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
+    if (success && t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
       return true;
     }
   }
@@ -515,9 +511,8 @@ bool LongTermPlanner::timeScaling(
   if (!isnan(v_drive) && v_drive > 0) {
     double trash;
     bool success = optSwitchTimes(joint, q_goal, q_0, dir * v_0, dir * a_0, v_drive, scaled_t, trash, mod_jerk_profile);
-
     // Check time constraint was fulfilled
-    if (t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
+    if (success && t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
       return true;
     }
   }
@@ -536,9 +531,8 @@ bool LongTermPlanner::timeScaling(
   if (!isnan(v_drive) && v_drive > 0) {
     double trash;
     bool success = optSwitchTimes(joint, q_goal, q_0, dir * v_0, dir * a_0, v_drive, scaled_t, trash, mod_jerk_profile);
-
     // Check time constraint was fulfilled
-    if (t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
+    if (success && t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
       return true;
     }
   }
@@ -557,9 +551,8 @@ bool LongTermPlanner::timeScaling(
   if (!isnan(v_drive) && v_drive > 0) {
     double trash;
     bool success = optSwitchTimes(joint, q_goal, q_0, dir * v_0, dir * a_0, v_drive, scaled_t, trash, mod_jerk_profile);
-
     // Check time constraint was fulfilled
-    if (t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
+    if (success && t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
       return true;
     }
   }
@@ -584,14 +577,13 @@ bool LongTermPlanner::timeScaling(
   root = sixth_2deriv(A_6, A_5, A_4, A_3, A_2, A_1, A_0);
   // WAS root(4) --> Debug this
   v_drive = pow(root,2)/j_max_[joint];
-  
+  std::cerr << "v_drive = " << v_drive << std::endl;
   // Check if v_drive is real and positive
   if (!isnan(v_drive) && v_drive > 0) {
     double trash;
     bool success = optSwitchTimes(joint, q_goal, q_0, dir * v_0, dir * a_0, v_drive, scaled_t, trash, mod_jerk_profile);
-
     // Check time constraint was fulfilled
-    if (t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
+    if (success && t_required - scaled_t.back() < tol && t_required - scaled_t.back() > -tol/10) {
       return true;
     }
   }

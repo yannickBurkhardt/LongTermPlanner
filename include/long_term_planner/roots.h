@@ -8,6 +8,9 @@
 #include <boost/math/special_functions/cbrt.hpp>
 #include <boost/math/special_functions/pow.hpp>
 
+#include <Eigen/Dense>
+#include <Eigen/Eigenvalues> 
+
 #ifndef roots_H
 #define roots_H
 
@@ -198,6 +201,28 @@ T sixth_2deriv(T a_6, T a_5, T a_4, T a_3, T a_2, T a_1, T a_0) {
   return result;
 }
 
+/**
+ * @brief Calculate all roots of a polynomial using the companion matrix.
+ * 
+ * @tparam T 
+ * @param poly_vals vector of polynomial factors starting with the highest exponent.
+ * @return Eigen::Vector<T, Dynamic> Vector of roots.
+ */
+template <class T>
+Eigen::Vector<T, Eigen::Dynamic> roots(Eigen::Vector<T, Eigen::Dynamic> poly_vals) {
+  using namespace Eigen;
+  int poly_size = poly_vals.size();
+  // Build companion matrix as in https://en.wikipedia.org/wiki/Companion_matrix
+  // and https://de.mathworks.com/help/matlab/ref/roots.html
+  Matrix<T, Dynamic, Dynamic> C = Array<T, Dynamic, Dynamic>::Zero(poly_size-1, poly_size-1);
+  C.bottomLeftCorner(poly_size-2, poly_size-2) = Matrix<T, Dynamic, Dynamic>::Identity(poly_size-2, poly_size-2);
+  poly_vals = -1 * poly_vals / poly_vals[0];
+  C.col(poly_size-2) = poly_vals.reverse().head(poly_size-1);
+  EigenSolver<Matrix<T, Dynamic, Dynamic>> es(C);
+  std::cout << "The roots of the polynome are:" << std::endl << es.eigenvalues() << std::endl;
+  Vector<T, Dynamic> result(1);
+  return result;
+}
 
 } // namespace long_term_planner
 #endif // roots_H

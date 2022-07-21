@@ -8,6 +8,7 @@ set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_RUNTIME OFF) 
 find_package(Boost 1.71.0 COMPONENTS math) 
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 include_directories(
   include
@@ -22,6 +23,8 @@ if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS}) 
     target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 endif()
+
+target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION /usr/lib)
 
