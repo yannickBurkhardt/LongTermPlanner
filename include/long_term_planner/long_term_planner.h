@@ -68,11 +68,6 @@ class LongTermPlanner {
   double t_sample_;
 
   /**
-   * @brief Output length in samples.
-   */
-  int num_samples_;
-
-  /**
    * @brief Minimum joint positions.
    */
   std::vector<double> q_min_;
@@ -103,15 +98,13 @@ class LongTermPlanner {
    */
   LongTermPlanner() :
     dof_(0),
-    t_sample_(0.001),
-    num_samples_(1) {};
+    t_sample_(0.001) {}
 
   /**
    * @brief Construct a new Long Term Planner object
    * 
    * @param[in] dof Degrees of freedom, i.e., number of joints.
    * @param[in] t_sample Time between two samples of the planned trajectories.
-   * @param[in] num_samples Output length in samples.
    * @param[in] q_min Minimum joint positions.
    * @param[in] q_max Maximum joint positions.
    * @param[in] v_max Maximum allowed velocities per DoF.
@@ -120,12 +113,18 @@ class LongTermPlanner {
    */
   LongTermPlanner(int dof,
     double t_sample,
-    int num_samples,
     std::vector<double> q_min,
     std::vector<double> q_max,
     std::vector<double> v_max,
     std::vector<double> a_max,
-    std::vector<double> j_max) {};
+    std::vector<double> j_max) : 
+      dof_(dof),
+      t_sample_(t_sample),
+      q_min_(q_min),
+      q_max_(q_max),
+      v_max_(v_max),
+      a_max_(a_max),
+      j_max_(j_max) {}
 
   /**
    * @brief Plan a trajectory from the given start state to the goal position and zero velocity/acc.
