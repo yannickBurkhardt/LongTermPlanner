@@ -32,8 +32,8 @@ bool LongTermPlanner::planTrajectory(
   double t_required=-1;
   int slowest_joint=-1;
   for (int i=0; i<dof_; i++) {
-    if (t_opt[i][7] > t_required) {
-        t_required = t_opt[i][7];
+    if (t_opt[i][6] > t_required) {
+        t_required = t_opt[i][6];
         slowest_joint = i;
     }
   }
@@ -120,19 +120,19 @@ bool LongTermPlanner::optSwitchTimes(int joint,
     optBraking(joint, v_0 - v_drive, a_0, q_brake, t_rel, emp);
   } else {
     // Constant max/ min jerk (Phase 1, 3)
-    t_rel[1] = (a_max_[joint] - a_0)/j_max_[joint];
-    t_rel[3] = a_max_[joint]/j_max_[joint];
+    t_rel[0] = (a_max_[joint] - a_0)/j_max_[joint];
+    t_rel[2] = a_max_[joint]/j_max_[joint];
     // Constant acceleration (Phase 2)
-    t_rel[2] = (v_drive - v_0 - 0.5 * t_rel[1] * a_0)/a_max_[joint] - 0.5 * (t_rel[1] + t_rel[3]);
+    t_rel[1] = (v_drive - v_0 - 0.5 * t_rel[0] * a_0)/a_max_[joint] - 0.5 * (t_rel[0] + t_rel[2]);
     // Check if phase 2 does not exist
     // (max acceleration cannot be reached)
-    if(t_rel[2] < -eps) {
+    if(t_rel[1] < -eps) {
       // Check if root is positive
       double root = j_max_[joint] * (v_drive - v_0) + 0.5 * pow(a_0, 2);
       if (root > 0) {
-        t_rel[3] = sqrt(root)/j_max_[joint];
-        t_rel[1] = t_rel[3] - a_0/j_max_[joint];
-        t_rel[2] = 0;
+        t_rel[2] = sqrt(root)/j_max_[joint];
+        t_rel[0] = t_rel[2] - a_0/j_max_[joint];
+        t_rel[1] = 0;
       } else {
         // This should never occur, only for safety
         t = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -142,19 +142,19 @@ bool LongTermPlanner::optSwitchTimes(int joint,
   }
 
   // Constant max/ min jerk (Phase 5, 7)
-  t_rel[5] = a_max_[joint]/j_max_[joint];
-  t_rel[7] = t_rel[5];
+  t_rel[4] = a_max_[joint]/j_max_[joint];
+  t_rel[6] = t_rel[4];
   // Constant acceleration (Phase 6)
-  t_rel[6] = v_drive/a_max_[joint] - 1.0/2 * (t_rel[5] + t_rel[7]);
+  t_rel[5] = v_drive/a_max_[joint] - 1.0/2 * (t_rel[4] + t_rel[6]);
   // Check if phase 6 does not exist
   // (max acceleration cannot be reached)
-  if (t_rel[6] < -eps) {
+  if (t_rel[5] < -eps) {
     // Check if root is positive
     double root = v_drive/j_max_[joint];
     if (root > 0) {
-      t_rel[5] = sqrt(root);
-      t_rel[7] = t_rel[5];
-      t_rel[6] = 0;
+      t_rel[4] = sqrt(root);
+      t_rel[6] = t_rel[4];
+      t_rel[5] = 0;
     } else {
       // This should never occur, only for safety
       t = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -166,30 +166,30 @@ bool LongTermPlanner::optSwitchTimes(int joint,
   double q_part1 = 0;
   if (mod_jerk_profile == 1) {
     // Braking to satisfy v_drive
-    q_part1 = q_brake + v_drive * (t_rel[1] + t_rel[2] + t_rel[3]);
+    q_part1 = q_brake + v_drive * (t_rel[0] + t_rel[1] + t_rel[2]);
   } else {
     // Acceleration to reach v_drive
-    q_part1 = v_0 * (t_rel[1] + t_rel[2] + t_rel[3]) + 
-              a_0 * (1.0/2 * pow(t_rel[1],2) + 
-              t_rel[1] * (t_rel[2] + t_rel[3]) + 
-              1.0/2 * pow(t_rel[3],2)) + 
-              j_max_[joint] * (1.0/6 * pow(t_rel[1],3) + 
-                               1.0/2 * pow(t_rel[1],2) * (t_rel[2] + t_rel[3]) - 
-                               1.0/6 * pow(t_rel[3],3) + 
-                               1.0/2 * t_rel[1] * pow(t_rel[3],2)) + 
-              a_max_[joint] * (1.0/2 * pow(t_rel[2],2) + t_rel[2] * t_rel[3]);
+    q_part1 = v_0 * (t_rel[0] + t_rel[1] + t_rel[2]) + 
+              a_0 * (1.0/2 * pow(t_rel[0],2) + 
+              t_rel[0] * (t_rel[1] + t_rel[2]) + 
+              1.0/2 * pow(t_rel[2],2)) + 
+              j_max_[joint] * (1.0/6 * pow(t_rel[0],3) + 
+                               1.0/2 * pow(t_rel[0],2) * (t_rel[1] + t_rel[2]) - 
+                               1.0/6 * pow(t_rel[2],3) + 
+                               1.0/2 * t_rel[0] * pow(t_rel[2],2)) + 
+              a_max_[joint] * (1.0/2 * pow(t_rel[1],2) + t_rel[1] * t_rel[2]);
   }
-  double q_part2 = j_max_[joint] * (1.0/6 * pow(t_rel[7],3) + 
-                   1.0/2 * pow(t_rel[7],2) * (t_rel[6] + t_rel[5]) - 
-                   1.0/6 * pow(t_rel[5],3) + 
-                   1.0/2 * t_rel[7] * pow(t_rel[5],2)) + 
-                   a_max_[joint] * (1.0/2 * pow(t_rel[6],2) + 
-                   t_rel[6] * t_rel[5]);
-  t_rel[4] = ((q_goal - q_0) * dir - q_part1 - q_part2)/v_drive;
+  double q_part2 = j_max_[joint] * (1.0/6 * pow(t_rel[6],3) + 
+                   1.0/2 * pow(t_rel[6],2) * (t_rel[5] + t_rel[4]) - 
+                   1.0/6 * pow(t_rel[4],3) + 
+                   1.0/2 * t_rel[6] * pow(t_rel[4],2)) + 
+                   a_max_[joint] * (1.0/2 * pow(t_rel[5],2) + 
+                   t_rel[5] * t_rel[4]);
+  t_rel[3] = ((q_goal - q_0) * dir - q_part1 - q_part2)/v_drive;
 
   // Check if phase 4 does not exist
   // (max velocity cannot be reached)
-  if (t_rel[4] < -eps) {
+  if (t_rel[3] < -eps) {
     if (mod_jerk_profile==1) {
       // This case is not valid
       // (is handled in timeScaling function)
@@ -197,41 +197,41 @@ bool LongTermPlanner::optSwitchTimes(int joint,
       return false;
     }
     // Calculate times if max velocity is not reached 
-    double root = (pow(j_max_[joint],2) * pow(t_rel[1],4))/2 - 
-                  (pow(j_max_[joint],2) * pow(t_rel[3],4))/4 + 
-                  (pow(j_max_[joint],2) * pow(t_rel[3],2) * pow(t_rel[5],2))/2 - 
-                  (pow(j_max_[joint],2) * pow(t_rel[5],4))/4 + 
-                  (pow(j_max_[joint],2) * pow(t_rel[7],4))/2 + 
-                  2 * j_max_[joint] * a_0 * pow(t_rel[1],3) - 
-                  (2 * j_max_[joint] * a_max_[joint] * pow(t_rel[1],3))/3 - 
-                  2 * j_max_[joint] * a_max_[joint] * t_rel[1] * pow(t_rel[3],2) + 
-                  (2 * j_max_[joint] * a_max_[joint] * pow(t_rel[3],3))/3 + 
-                  (2 * j_max_[joint] * a_max_[joint] * pow(t_rel[5],3))/3 - 
-                  2 * j_max_[joint] * a_max_[joint] * pow(t_rel[5],2) * t_rel[7] - 
-                  (2 * j_max_[joint] * a_max_[joint] * pow(t_rel[7],3))/3 + 
-                  2 * j_max_[joint] * v_0 * pow(t_rel[1],2) + 
-                  2 * pow(a_0,2) * pow(t_rel[1],2) - 
-                  2 * a_0 * a_max_[joint] * pow(t_rel[1],2) - 
-                  2 * a_0 * a_max_[joint] * pow(t_rel[3],2) + 
-                  4 * a_0 * v_0 * t_rel[1] + 
-                  2 * pow(a_max_[joint],2) * pow(t_rel[3],2) + 
-                  2 * pow(a_max_[joint],2) * pow(t_rel[5],2) - 
-                  4 * a_max_[joint] * v_0 * t_rel[1] + 
+    double root = (pow(j_max_[joint],2) * pow(t_rel[0],4))/2 - 
+                  (pow(j_max_[joint],2) * pow(t_rel[2],4))/4 + 
+                  (pow(j_max_[joint],2) * pow(t_rel[2],2) * pow(t_rel[4],2))/2 - 
+                  (pow(j_max_[joint],2) * pow(t_rel[4],4))/4 + 
+                  (pow(j_max_[joint],2) * pow(t_rel[6],4))/2 + 
+                  2 * j_max_[joint] * a_0 * pow(t_rel[0],3) - 
+                  (2 * j_max_[joint] * a_max_[joint] * pow(t_rel[0],3))/3 - 
+                  2 * j_max_[joint] * a_max_[joint] * t_rel[0] * pow(t_rel[2],2) + 
+                  (2 * j_max_[joint] * a_max_[joint] * pow(t_rel[2],3))/3 + 
+                  (2 * j_max_[joint] * a_max_[joint] * pow(t_rel[4],3))/3 - 
+                  2 * j_max_[joint] * a_max_[joint] * pow(t_rel[4],2) * t_rel[6] - 
+                  (2 * j_max_[joint] * a_max_[joint] * pow(t_rel[6],3))/3 + 
+                  2 * j_max_[joint] * v_0 * pow(t_rel[0],2) + 
+                  2 * pow(a_0,2) * pow(t_rel[0],2) - 
+                  2 * a_0 * a_max_[joint] * pow(t_rel[0],2) - 
+                  2 * a_0 * a_max_[joint] * pow(t_rel[2],2) + 
+                  4 * a_0 * v_0 * t_rel[0] + 
+                  2 * pow(a_max_[joint],2) * pow(t_rel[2],2) + 
+                  2 * pow(a_max_[joint],2) * pow(t_rel[4],2) - 
+                  4 * a_max_[joint] * v_0 * t_rel[0] + 
                   4 * dir * (q_goal - q_0) * a_max_[joint] + 
                   2 * pow(v_0,2);
     if (root > 0) {
-      t_rel[6] = -(4 * a_max_[joint] * t_rel[5] - 
+      t_rel[5] = -(4 * a_max_[joint] * t_rel[4] - 
                    2 * pow(root,(1.0/2)) + 
-                   j_max_[joint] * pow(t_rel[3],2) - 
-                   j_max_[joint] * pow(t_rel[5],2) + 
-                   2 * j_max_[joint] * pow(t_rel[7],2))/(4 * a_max_[joint]);
-      t_rel[2] = (-v_0 - a_0 * t_rel[1] - 
-                  1.0/2 * j_max_[joint] * pow(t_rel[1],2) + 
-                  1.0/2 * j_max_[joint] * pow(t_rel[3],2) + 
-                  1.0/2 * j_max_[joint] * pow(t_rel[7],2) - 
-                  1.0/2 * j_max_[joint] * pow(t_rel[5],2))/a_max_[joint] 
-                 - t_rel[3] + t_rel[6] + t_rel[5];
-      t_rel[4] = 0;
+                   j_max_[joint] * pow(t_rel[2],2) - 
+                   j_max_[joint] * pow(t_rel[4],2) + 
+                   2 * j_max_[joint] * pow(t_rel[6],2))/(4 * a_max_[joint]);
+      t_rel[1] = (-v_0 - a_0 * t_rel[0] - 
+                  1.0/2 * j_max_[joint] * pow(t_rel[0],2) + 
+                  1.0/2 * j_max_[joint] * pow(t_rel[2],2) + 
+                  1.0/2 * j_max_[joint] * pow(t_rel[6],2) - 
+                  1.0/2 * j_max_[joint] * pow(t_rel[4],2))/a_max_[joint] 
+                 - t_rel[2] + t_rel[5] + t_rel[4];
+      t_rel[3] = 0;
     } else {
       // This should never occur, only for safety
       t = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -240,7 +240,7 @@ bool LongTermPlanner::optSwitchTimes(int joint,
 
     // Check if phase 2 and/ or phase 6 does not exist 
     // (max velocity and max acceleration cannot be reached)
-    if (t_rel[6] < -eps || t_rel[2] < -eps) {
+    if (t_rel[5] < -eps || t_rel[1] < -eps) {
       double a_4 = 12;
       double a_3 = 0;
       double a_2 = -24 * pow(a_0,2) + 48 * j_max_[joint] * v_0;
@@ -251,45 +251,45 @@ bool LongTermPlanner::optSwitchTimes(int joint,
       // This will be a non-complex, positive solution
       root = fourth_2deriv(a_4, a_3, a_2, a_1, a_0);
 
-      t_rel[1] = (2 * pow(root,2) - 4 * a_0*root + pow(a_0,2) - 2 * v_0 * j_max_[joint])/(4 * j_max_[joint] * root);
+      t_rel[0] = (2 * pow(root,2) - 4 * a_0*root + pow(a_0,2) - 2 * v_0 * j_max_[joint])/(4 * j_max_[joint] * root);
       // Calculate other switch times
-      t_rel[7] = sqrt(4 * pow(j_max_[joint],2) * pow(t_rel[1],2) + 
-                      8 * a_0 * j_max_[joint] * t_rel[1] + 
+      t_rel[6] = sqrt(4 * pow(j_max_[joint],2) * pow(t_rel[0],2) + 
+                      8 * a_0 * j_max_[joint] * t_rel[0] + 
                       2 * pow(a_0,2) + 
                       4 * j_max_[joint] * v_0) / (2 * j_max_[joint]);
-      t_rel[5] = a_0/j_max_[joint] + t_rel[1] + t_rel[7];
-      t_rel[2] = 0;
-      t_rel[6] = 0;
+      t_rel[4] = a_0/j_max_[joint] + t_rel[0] + t_rel[6];
+      t_rel[1] = 0;
+      t_rel[5] = 0;
 
       // Check if a_max is exceeded (Phase 2 exists)
-      if (a_0 + t_rel[1] * j_max_[joint] > a_max_[joint]) {
-        t_rel[1] = (a_max_[joint] - a_0) / j_max_[joint];
-        t_rel[7] = 1.0/j_max_[joint] * (a_max_[joint]/2 + sqrt(
+      if (a_0 + t_rel[0] * j_max_[joint] > a_max_[joint]) {
+        t_rel[0] = (a_max_[joint] - a_0) / j_max_[joint];
+        t_rel[6] = 1.0/j_max_[joint] * (a_max_[joint]/2 + sqrt(
                       9 * pow(a_max_[joint],2) + 6*sqrt(
-                        -12 * a_max_[joint] * pow(j_max_[joint],3) * pow(t_rel[1],3) + 
-                        9 * pow(a_0,2) * pow(j_max_[joint],2) * pow(t_rel[1],2) - 
-                        18 * a_0 * a_max_[joint] * pow(j_max_[joint],2) * pow(t_rel[1],2) + 
-                        9 * pow(a_max_[joint],2) * pow(j_max_[joint],2) * pow(t_rel[1],2) + 
-                        36 * a_0 * pow(j_max_[joint],2) * t_rel[1] * v_0 - 
+                        -12 * a_max_[joint] * pow(j_max_[joint],3) * pow(t_rel[0],3) + 
+                        9 * pow(a_0,2) * pow(j_max_[joint],2) * pow(t_rel[0],2) - 
+                        18 * a_0 * a_max_[joint] * pow(j_max_[joint],2) * pow(t_rel[0],2) + 
+                        9 * pow(a_max_[joint],2) * pow(j_max_[joint],2) * pow(t_rel[0],2) + 
+                        36 * a_0 * pow(j_max_[joint],2) * t_rel[0] * v_0 - 
                         72 * a_max_[joint] * dir * pow(j_max_[joint],2) * q_0 + 
                         72 * a_max_[joint] * dir * pow(j_max_[joint],2) * q_goal - 
-                        36 * a_max_[joint] * pow(j_max_[joint],2) * t_rel[1] * v_0 + 
+                        36 * a_max_[joint] * pow(j_max_[joint],2) * t_rel[0] * v_0 + 
                         3 * pow(a_max_[joint],4) + 
                         36 * pow(j_max_[joint],2) * pow(v_0,2)))/6 - a_max_[joint]);
-        t_rel[5] = t_rel[7] + a_max_[joint]/j_max_[joint];
-        t_rel[2] = -(-j_max_[joint] * pow(t_rel[5],2) - 
-                     2 * j_max_[joint] * t_rel[5] * t_rel[7] + 
-                     j_max_[joint] * pow(t_rel[7],2) + a_0 * t_rel[1] + 
-                     a_max_[joint] * t_rel[1] + 
-                     2 * a_max_[joint] * t_rel[5] + 
-                     2 * a_max_[joint] * t_rel[7] + 
+        t_rel[4] = t_rel[6] + a_max_[joint]/j_max_[joint];
+        t_rel[1] = -(-j_max_[joint] * pow(t_rel[4],2) - 
+                     2 * j_max_[joint] * t_rel[4] * t_rel[6] + 
+                     j_max_[joint] * pow(t_rel[6],2) + a_0 * t_rel[0] + 
+                     a_max_[joint] * t_rel[0] + 
+                     2 * a_max_[joint] * t_rel[4] + 
+                     2 * a_max_[joint] * t_rel[6] + 
                      2 * v_0)/(2 * a_max_[joint]);
-        t_rel[6] = 0;
+        t_rel[5] = 0;
       }
 
       // Check if -a_max is exceeded (Phase 6 exists)
-      if (t_rel[7] * j_max_[joint] > a_max_[joint]) {
-        t_rel[7] = a_max_[joint]/j_max_[joint];
+      if (t_rel[6] * j_max_[joint] > a_max_[joint]) {
+        t_rel[6] = a_max_[joint]/j_max_[joint];
         double a_4 = 12;
         double a_3 = - 24 * a_max_[joint];
         double a_2 = -12 * pow(a_0,2) + 12 * pow(a_max_[joint],2) + 24 * j_max_[joint] * v_0;
@@ -305,20 +305,20 @@ bool LongTermPlanner::optSwitchTimes(int joint,
         // This will be a non-complex, positive solution
         root = fourth_2deriv(a_4, a_3, a_2, a_1, a_0);
 
-        t_rel[1] = (root - a_0 - a_max_[joint])/j_max_[joint];
+        t_rel[0] = (root - a_0 - a_max_[joint])/j_max_[joint];
         // Calculate other switch times
-        t_rel[5] = (a_0 + a_max_[joint])/j_max_[joint] + t_rel[1];
-        t_rel[6] = (pow(j_max_[joint],2) * pow(t_rel[1],2) + 
-                    2 * pow(j_max_[joint],2) * t_rel[1] * t_rel[5] - 
-                    pow(j_max_[joint],2) * pow(t_rel[5],2) + 
-                    2 * a_0 * j_max_[joint] * t_rel[1] + 2 * a_0 * j_max_[joint] * t_rel[5] - 
+        t_rel[4] = (a_0 + a_max_[joint])/j_max_[joint] + t_rel[0];
+        t_rel[5] = (pow(j_max_[joint],2) * pow(t_rel[0],2) + 
+                    2 * pow(j_max_[joint],2) * t_rel[0] * t_rel[4] - 
+                    pow(j_max_[joint],2) * pow(t_rel[4],2) + 
+                    2 * a_0 * j_max_[joint] * t_rel[0] + 2 * a_0 * j_max_[joint] * t_rel[4] - 
                     pow(a_max_[joint],2) + 
                     2 * j_max_[joint] * v_0)/(2 * j_max_[joint] * a_max_[joint]);
-        t_rel[2] = 0;
+        t_rel[1] = 0;
       }
       // All other times are 0
+      t_rel[2] = 0;
       t_rel[3] = 0;
-      t_rel[4] = 0;
     }
   }
   // Safety checks
@@ -634,24 +634,24 @@ bool LongTermPlanner::optBraking(
   }
 
   // Bring velocity to zero
-  t_rel[1] = (a_max_[joint] - a_0)/j_max_[joint];
-  t_rel[3] = a_max_[joint]/j_max_[joint];
-  t_rel[2] = (- v_0 - 1/2*t_rel[1]*a_0)/a_max_[joint] - 1/2*(t_rel[1] + t_rel[3]);
+  t_rel[0] = (a_max_[joint] - a_0)/j_max_[joint];
+  t_rel[2] = a_max_[joint]/j_max_[joint];
+  t_rel[1] = (- v_0 - 1/2*t_rel[0]*a_0)/a_max_[joint] - 1/2*(t_rel[0] + t_rel[2]);
   
   // Check if phase 2 does not exist 
   // (max acceleration is not reached)
-  if (t_rel[2] < -t_sample_) {
-    t_rel[1] = -a_0/j_max_[joint] + sqrt(pow(a_0,2)/(2*pow(j_max_[joint],2)) - v_0/j_max_[joint]);
-    t_rel[3] = t_rel[1] + a_0/j_max_[joint];
-    t_rel[2] = 0;
+  if (t_rel[1] < -t_sample_) {
+    t_rel[0] = -a_0/j_max_[joint] + sqrt(pow(a_0,2)/(2*pow(j_max_[joint],2)) - v_0/j_max_[joint]);
+    t_rel[2] = t_rel[0] + a_0/j_max_[joint];
+    t_rel[1] = 0;
   }
   
   // Calculate position after breaking
-  q = v_0*(t_rel[1] + t_rel[2] + t_rel[3]) + 
-      a_0*(1/2*pow(t_rel[1],2) + t_rel[1]*(t_rel[2] + t_rel[3]) + 1/2*pow(t_rel[3],2)) + 
-      j_max_[joint]*(1/6*pow(t_rel[1],3) + 1/2*pow(t_rel[1],2)*(t_rel[2] + t_rel[3]) - 
-      1/6*pow(t_rel[3],3) + 1/2*t_rel[1]*pow(t_rel[3],2)) + 
-      a_max_[joint]*(1/2*pow(t_rel[2],2) + t_rel[2]*t_rel[3]);
+  q = v_0*(t_rel[0] + t_rel[1] + t_rel[2]) + 
+      a_0*(1/2*pow(t_rel[0],2) + t_rel[0]*(t_rel[1] + t_rel[2]) + 1/2*pow(t_rel[2],2)) + 
+      j_max_[joint]*(1/6*pow(t_rel[0],3) + 1/2*pow(t_rel[0],2)*(t_rel[1] + t_rel[2]) - 
+      1/6*pow(t_rel[2],3) + 1/2*t_rel[0]*pow(t_rel[2],2)) + 
+      a_max_[joint]*(1/2*pow(t_rel[1],2) + t_rel[1]*t_rel[2]);
 
   // Correct direction
   q = dir * q;
@@ -673,7 +673,7 @@ Trajectory LongTermPlanner::getTrajectory(
   // Calculate length of trajectory in samples
   int traj_len = 0;
   for (int i=0; i<dof_; i++) {
-    traj_len = std::max(traj_len, (int)ceil(t[i][7]/t_sample_) + 1);
+    traj_len = std::max(traj_len, (int)ceil(t[i][6]/t_sample_) + 1);
   }
   // Jerk switch times in samples
   std::vector<std::array<int, 7>> sampled_t(dof_);
@@ -706,18 +706,18 @@ Trajectory LongTermPlanner::getTrajectory(
     }
 
     // Round towards phases with zero jerk
-    sampled_t[joint][1] = (int) floor(t[joint][1]/t_sample_);
-    sampled_t[joint][2] = (int) ceil(t[joint][2]/t_sample_);
-    sampled_t[joint][3] = (int) floor(t[joint][3]/t_sample_);
-    sampled_t[joint][4] = (int) ceil(t[joint][4]/t_sample_);
-    sampled_t[joint][5] = (int) floor(t[joint][5]/t_sample_);
-    sampled_t[joint][6] = (int) ceil(t[joint][6]/t_sample_);
-    sampled_t[joint][7] = (int) floor(t[joint][7]/t_sample_);
+    sampled_t[joint][0] = (int) floor(t[joint][0]/t_sample_);
+    sampled_t[joint][1] = (int) ceil(t[joint][1]/t_sample_);
+    sampled_t[joint][2] = (int) floor(t[joint][2]/t_sample_);
+    sampled_t[joint][3] = (int) ceil(t[joint][3]/t_sample_);
+    sampled_t[joint][4] = (int) floor(t[joint][4]/t_sample_);
+    sampled_t[joint][5] = (int) ceil(t[joint][5]/t_sample_);
+    sampled_t[joint][6] = (int) floor(t[joint][6]/t_sample_);
     
     // Calculate sampled jerk trajectory
     std::vector<double>::iterator it = j_traj[joint].begin();
-    if (sampled_t[joint][1] > 0) {
-      std::fill(it, (it+sampled_t[joint][1]), jerk_profile[1]);
+    if (sampled_t[joint][0] > 0) {
+      std::fill(it, (it+sampled_t[joint][0]), jerk_profile[0]);
     }
     for (int j=1; j<7; j++) {
       if (sampled_t[joint][j] - sampled_t[joint][j-1] > 0) {
@@ -727,47 +727,47 @@ Trajectory LongTermPlanner::getTrajectory(
     }
     
     //// Add partial jerk of sample fractions to increase accuracy
-    if(sampled_t[joint][3] >= sampled_t[joint][2]) {
+    if(sampled_t[joint][2] >= sampled_t[joint][1]) {
       // Phase 2 exists: 
       // Fractions can be added to its beginning and end
-      j_traj[joint][sampled_t[joint][1] + 1] = j_traj[joint][sampled_t[joint][1] + 1] + sampled_t_trans[1]/t_sample_ * jerk_profile[1];
-      if (sampled_t[joint][2] > 0) {
-        j_traj[joint][sampled_t[joint][2]] = j_traj[joint][sampled_t[joint][2]] + (1 - sampled_t_trans[2]/t_sample_) * jerk_profile[3];
+      j_traj[joint][sampled_t[joint][0] + 1] = j_traj[joint][sampled_t[joint][0] + 1] + sampled_t_trans[0]/t_sample_ * jerk_profile[0];
+      if (sampled_t[joint][1] > 0) {
+        j_traj[joint][sampled_t[joint][1]] = j_traj[joint][sampled_t[joint][1]] + (1 - sampled_t_trans[1]/t_sample_) * jerk_profile[2];
       }
       // Add fraction to end of phase 3
-      j_traj[joint][sampled_t[joint][3] + 1] = j_traj[joint][sampled_t[joint][3] + 1] + sampled_t_trans[3]/t_sample_ * jerk_profile[3];
+      j_traj[joint][sampled_t[joint][2] + 1] = j_traj[joint][sampled_t[joint][2] + 1] + sampled_t_trans[2]/t_sample_ * jerk_profile[2];
     } else {
       // Phase 2 does not exist: 
       // Calculate transition sample
-      if (sampled_t[joint][2] > 0) {
-        j_traj[joint][sampled_t[joint][2]] = j_traj[joint][sampled_t[joint][2]] + sampled_t_trans[1]/t_sample_ * jerk_profile[1] + (sampled_t_trans[3]-sampled_t_trans[1])/t_sample_ * jerk_profile[3];
+      if (sampled_t[joint][1] > 0) {
+        j_traj[joint][sampled_t[joint][1]] = j_traj[joint][sampled_t[joint][1]] + sampled_t_trans[0]/t_sample_ * jerk_profile[0] + (sampled_t_trans[2]-sampled_t_trans[0])/t_sample_ * jerk_profile[2];
       }
     }
     
     // Add fraction to end of phase 4
-    if (sampled_t[joint][4] > 0) {
-      j_traj[joint][sampled_t[joint][4]] = j_traj[joint][sampled_t[joint][4]] + (1 - sampled_t_trans[4]/t_sample_) * jerk_profile[5];
+    if (sampled_t[joint][3] > 0) {
+      j_traj[joint][sampled_t[joint][3]] = j_traj[joint][sampled_t[joint][3]] + (1 - sampled_t_trans[3]/t_sample_) * jerk_profile[4];
     }
     
-    if (sampled_t[joint][3] - sampled_t[joint][1] > 0) {
+    if (sampled_t[joint][2] - sampled_t[joint][0] > 0) {
       // Phase 2 and/ or 3 exist:
       // Add fraction to beginning of phase 6
-      j_traj[joint][sampled_t[joint][5] + 1] = j_traj[joint][sampled_t[joint][5] + 1] + sampled_t_trans[5]/t_sample_ * jerk_profile[5];
+      j_traj[joint][sampled_t[joint][4] + 1] = j_traj[joint][sampled_t[joint][4] + 1] + sampled_t_trans[4]/t_sample_ * jerk_profile[4];
     } else {
       // Phase 2 and 3 do not exist:
       // Add fractions from previous phases to end of phase 5
-      if (sampled_t[joint][5] > 0) {
-        j_traj[joint][sampled_t[joint][5]] = j_traj[joint][sampled_t[joint][5]] + sampled_t_trans[5]/t_sample_ * jerk_profile[5]  + sampled_t_trans[1]/t_sample_ * jerk_profile[1] + (sampled_t_trans[3]-sampled_t_trans[1])/t_sample_ * jerk_profile[3];
+      if (sampled_t[joint][4] > 0) {
+        j_traj[joint][sampled_t[joint][4]] = j_traj[joint][sampled_t[joint][4]] + sampled_t_trans[4]/t_sample_ * jerk_profile[4]  + sampled_t_trans[0]/t_sample_ * jerk_profile[0] + (sampled_t_trans[2]-sampled_t_trans[0])/t_sample_ * jerk_profile[2];
       }
     }
     
     // Add fraction to end of phase 4
-    if (sampled_t[joint][6] > 0) {
-      j_traj[joint][sampled_t[joint][6]] = j_traj[joint][sampled_t[joint][6]] + (1 - sampled_t_trans[6]/t_sample_) * jerk_profile[7];
+    if (sampled_t[joint][5] > 0) {
+      j_traj[joint][sampled_t[joint][5]] = j_traj[joint][sampled_t[joint][5]] + (1 - sampled_t_trans[5]/t_sample_) * jerk_profile[6];
     }
     
     // Add fraction to end of trajectory (after phase 7)
-    j_traj[joint][sampled_t[joint][7] + 1] = j_traj[joint][sampled_t[joint][7] + 1] + sampled_t_trans[7]/t_sample_ * jerk_profile[7];
+    j_traj[joint][sampled_t[joint][6] + 1] = j_traj[joint][sampled_t[joint][6] + 1] + sampled_t_trans[6]/t_sample_ * jerk_profile[6];
     //// Calculate acceleration trajectories
     // a_traj = t_sample_ * cumsum(j_traj,2) + a_0;
     std::partial_sum(j_traj[joint].begin(), j_traj[joint].end(), a_traj[joint].begin(), std::plus<double>());
@@ -780,10 +780,10 @@ Trajectory LongTermPlanner::getTrajectory(
     double vf = v_0[joint];
     std::transform(v_traj[joint].begin(), v_traj[joint].end(), v_traj[joint].begin(), [&ts, &vf](auto& c){return c*ts + vf;});
     // Check if phase 4 exists (constant velocity)
-    if (sampled_t[joint][4] - sampled_t[joint][3] > 2) {
+    if (sampled_t[joint][3] - sampled_t[joint][2] > 2) {
       // Set constant velocity periods to exactly v_drive (increases accuracy)
-      // v_traj(joint,sampled_t[joint][3]+1:sampled_t[joint][4]-1) = v_drive(joint) * dir(joint);
-      std::fill(v_traj[joint].begin()+sampled_t[joint][3]+1, v_traj[joint].begin()+sampled_t[joint][4]-1, v_drive[joint] * dir[joint]);
+      // v_traj(joint,sampled_t[joint][2]+1:sampled_t[joint][3]-1) = v_drive(joint) * dir(joint);
+      std::fill(v_traj[joint].begin()+sampled_t[joint][2]+1, v_traj[joint].begin()+sampled_t[joint][3]-1, v_drive[joint] * dir[joint]);
     }
     //// Calculate joint angle trajectories
     // q_traj = t_sample_ * cumsum(v_traj,2) + q_0;
