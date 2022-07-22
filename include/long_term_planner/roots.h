@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <limits>
 #include <tuple>
+#include <complex>
 
 #include <boost/math/tools/roots.hpp>
 #include <boost/math/special_functions/next.hpp>
@@ -135,73 +136,6 @@ T fifth_2deriv(T a_5, T a_4, T a_3, T a_2, T a_1, T a_0) {
 }
 
 /**
- * @brief Functor for a 6th degree polynomial.
- * a_6 * x^6 + a_5 * x^5 + a_4 * x^4 + a_3 * x^3 + a_2 * x^2 + a_1 * x + a_0 = 0
- */
-template <class T>
-struct sixth_functor_2deriv {
- private:
-  T a_6;
-  T a_5;
-  T a_4;
-  T a_3;
-  T a_2;
-  T a_1;
-  T a_0;
- public:
-  // Functor returning both 1st and 2nd derivatives.
-  sixth_functor_2deriv(T const& a_6, T const& a_5, T const& a_4, T const& a_3, T const& a_2, T const& a_1, T const& a_0) : 
-    a_6(a_6),
-    a_5(a_5),
-    a_4(a_4),
-    a_3(a_3),
-    a_2(a_2),
-    a_1(a_1),
-    a_0(a_0) {}
-
-  std::tuple<T, T, T> operator()(T const& x) {
-    // Return f(x), f'(x) and f''(x).
-    T fx = a_6 * boost::math::pow<6>(x) + 
-           a_5 * boost::math::pow<5>(x) + 
-           a_4 * boost::math::pow<4>(x) + 
-           a_3 * boost::math::pow<3>(x) + 
-           a_2 * boost::math::pow<2>(x) + 
-           a_1 * x +
-           a_0;
-    T dx = 6.0 * a_6 * boost::math::pow<5>(x) +
-           5.0 * a_5 * boost::math::pow<4>(x) +
-           4.0 * a_4 * boost::math::pow<3>(x) +
-           3.0 * a_3 * boost::math::pow<2>(x) +
-           2.0 * a_2 * x + a_1;
-    T d2x = 30.0 * a_6 * boost::math::pow<4>(x) +
-            20.0 * a_5 * boost::math::pow<3>(x) +
-            12.0 * a_4 * boost::math::pow<2>(x) +
-            6.0 * a_3 * x +
-            2.0 * a_2;
-    return std::make_tuple(fx, dx, d2x);
-  }
-};
-
-template <class T>
-T sixth_2deriv(T a_6, T a_5, T a_4, T a_3, T a_2, T a_1, T a_0) {
-  // return sixth root of x using 1st and 2nd derivatives and Halley.
-  using namespace std;                  // Help ADL of std functions.
-  using namespace boost::math::tools;   // for halley_iterate.
-
-  int exponent;
-  frexp(a_0, &exponent);                 // Get exponent of z (ignore mantissa).
-  T guess = ldexp(1., exponent / 6);     // Rough guess is to divide the exponent by four.
-  T min = 0.0;                           // Minimum possible value is zero.
-  T max = ldexp(10., exponent / 6);      // Maximum possible value is ten times our guess.
-  // Stop when slightly more than one of the digits are correct:
-  const int digits = 8;
-  const boost::uintmax_t maxit = 50;
-  boost::uintmax_t it = maxit;
-  T result = halley_iterate(sixth_functor_2deriv<T>(a_6, a_5, a_4, a_3, a_2, a_1, a_0), guess, min, max, digits, it);
-  return result;
-}
-
-/**
  * @brief Calculate all roots of a polynomial using the companion matrix.
  * 
  * @tparam T 
@@ -209,7 +143,7 @@ T sixth_2deriv(T a_6, T a_5, T a_4, T a_3, T a_2, T a_1, T a_0) {
  * @return Eigen::Vector<T, Dynamic> Vector of roots.
  */
 template <class T>
-Eigen::Vector<T, Eigen::Dynamic> roots(Eigen::Vector<T, Eigen::Dynamic> poly_vals) {
+Eigen::Matrix<std::complex<T>, Eigen::Dynamic, Eigen::Dynamic> roots(Eigen::Vector<T, Eigen::Dynamic> poly_vals) {
   using namespace Eigen;
   int poly_size = poly_vals.size();
   // Build companion matrix as in https://en.wikipedia.org/wiki/Companion_matrix
@@ -220,8 +154,23 @@ Eigen::Vector<T, Eigen::Dynamic> roots(Eigen::Vector<T, Eigen::Dynamic> poly_val
   C.col(poly_size-2) = poly_vals.reverse().head(poly_size-1);
   EigenSolver<Matrix<T, Dynamic, Dynamic>> es(C);
   std::cout << "The roots of the polynome are:" << std::endl << es.eigenvalues() << std::endl;
-  Vector<T, Dynamic> result(1);
-  return result;
+  return es.eigenvalues();
+}
+
+/**
+ * @brief Get the Smallest Positive Non Complex Root object
+ * 
+ * @tparam T 
+ * @param r get the roots from the roots() function.
+ * @return T Smallest Positive Non Complex Root
+ */
+template <class T>
+T getSmallestPositiveNonComplexRoot(Eigen::Matrix<std::complex<T>, Eigen::Dynamic, Eigen::Dynamic> r) {
+  T smallest_val = INFINITY;
+  for (const auto& root : r.col(0)) {
+    if (root.imag() == 0 && root.real() > 0) smallest_val = std::min(smallest_val, root.real());
+  }
+  return smallest_val;
 }
 
 } // namespace long_term_planner

@@ -22,6 +22,8 @@
 #include <cmath>
 #include <functional>
 
+#include <Eigen/Dense>
+
 #ifndef long_term_planner_H
 #define long_term_planner_H
 

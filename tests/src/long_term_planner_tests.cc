@@ -113,7 +113,7 @@ TEST_F(LongTermPlannerTest1DoF, OptSwitchTimesTest) {
     }
   }
 }
-/*
+
 TEST_F(LongTermPlannerTest1DoF, TimeScalingTest) {
   // Define test values
   double eps = 0.1;
@@ -181,7 +181,7 @@ TEST_F(LongTermPlannerTest1DoF, TimeScalingTest) {
     }
   }
 }
-*/
+
 TEST_F(LongTermPlannerTest6DoF, InitializationTest) {
   EXPECT_DOUBLE_EQ(0, 0.0);
 }

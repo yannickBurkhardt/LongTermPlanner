@@ -248,9 +248,15 @@ bool LongTermPlanner::optSwitchTimes(int joint,
                    48 * dir * pow(j_max_[joint],2) * q_goal + 
                    16 * pow(a_0,3) - 48 * a_0 * j_max_[joint] * v_0;
       double A_0 = -3 * pow(a_0,4) + 12.0 * pow(a_0,2) * j_max_[joint] * v_0 - 12.0 * pow(j_max_[joint],2) * pow(v_0,2);
-      // This will be a non-complex, positive solution
-      root = fourth_2deriv(A_4, A_3, A_2, A_1, A_0);
-
+      // 2nd order deriv root finding
+      // root = fourth_2deriv(A_4, A_3, A_2, A_1, A_0);
+      // Companion matrix root finding
+      {
+        Eigen::VectorXd poly_vals(5); 
+        poly_vals << A_4, A_3, A_2, A_1, A_0;
+        Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
+        root = getSmallestPositiveNonComplexRoot(result);
+      }
       t_rel[0] = (2.0 * pow(root,2) - 4 * a_0*root + pow(a_0,2) - 2.0 * v_0 * j_max_[joint])/(4 * j_max_[joint] * root);
       // Calculate other switch times
       t_rel[6] = sqrt(4 * pow(j_max_[joint],2) * pow(t_rel[0],2) + 
@@ -302,9 +308,15 @@ bool LongTermPlanner::optSwitchTimes(int joint,
                      24 * a_0 * j_max_[joint] * v_0 * a_max_[joint] - 
                      12.0 * pow(a_max_[joint],2) * j_max_[joint] * v_0 + 
                      12.0 * pow(j_max_[joint],2) * pow(v_0,2);
-        // This will be a non-complex, positive solution
-        root = fourth_2deriv(A_4, A_3, A_2, A_1, A_0);
-
+        // 2nd order deriv root finding
+        // root = fourth_2deriv(A_4, A_3, A_2, A_1, A_0);
+        // Companion matrix root finding
+        {
+          Eigen::VectorXd poly_vals(5); 
+          poly_vals << A_4, A_3, A_2, A_1, A_0;
+          Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
+          root = getSmallestPositiveNonComplexRoot(result);
+        }
         t_rel[0] = (root - a_0 - a_max_[joint])/j_max_[joint];
         // Calculate other switch times
         t_rel[4] = (a_0 + a_max_[joint])/j_max_[joint] + t_rel[0];
@@ -446,11 +458,17 @@ bool LongTermPlanner::timeScaling(
                48 * pow(a_0,2) * j_max_[joint] * v_0 + 
                48 * pow(a_max_[joint],2) * j_max_[joint] * v_0 + 
                48 * pow(j_max_[joint],2) * pow(v_0,2);
-  // This will be a non-complex, positive solution
-  double root = fourth_2deriv(A_4, A_3, A_2, A_1, A_0);
-  // WAS root(3) --> Debug this
+  // 2nd order deriv root finding
+  // root = fourth_2deriv(A_4, A_3, A_2, A_1, A_0);
+  // Companion matrix root finding
+  double root;
+  {
+    Eigen::VectorXd poly_vals(5); 
+    poly_vals << A_4, A_3, A_2, A_1, A_0;
+    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
+    root = getSmallestPositiveNonComplexRoot(result);
+  }
   v_drive = (-2.0 * pow(a_0,2) + 4 * j_max_[joint] * v_0 + pow(root,2))/(4 * j_max_[joint]);
-  
   // Check if v_drive is real and positive
   if (!isnan(v_drive) && v_drive > 0) {
     double trash;
@@ -482,10 +500,16 @@ bool LongTermPlanner::timeScaling(
                12.0 * a_max_[joint] * j_max_[joint] * v_0 + 
                4 * a_0 * a_max_[joint] - 
                4 * pow(a_max_[joint],2);
-  root = fourth_2deriv(A_4, A_3, A_2, A_1, A_0);
-  // WAS root(3) --> Debug this
+  // 2nd order deriv root finding
+  // root = fourth_2deriv(A_4, A_3, A_2, A_1, A_0);
+  // Companion matrix root finding
+  {
+    Eigen::VectorXd poly_vals(5); 
+    poly_vals << A_4, A_3, A_2, A_1, A_0;
+    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
+    root = getSmallestPositiveNonComplexRoot(result);
+  }
   v_drive = pow(root,2)/j_max_[joint];
-  
   // Check if v_drive is real and positive
   if (!isnan(v_drive) && v_drive > 0) {
     double trash;
@@ -503,10 +527,16 @@ bool LongTermPlanner::timeScaling(
   A_2 = (-144 * dir * pow(j_max_[joint],3) * q_0 * t_required + 144 * dir * pow(j_max_[joint],3) * q_goal * t_required - 48 * pow(a_0,3) * j_max_[joint] * t_required - 144 * a_0 * dir * pow(j_max_[joint],2) * q_0 + 144 * a_0 * dir * pow(j_max_[joint],2) * q_goal + 144 * a_0 * pow(j_max_[joint],2) * v_0 * t_required + 6 * pow(a_0,4) - 72.0 * pow(a_0,2) * j_max_[joint] * v_0 + 216 * pow(j_max_[joint],2) * pow(v_0,2));
   A_1 = 0;
   A_0 = -72.0 * pow(dir,2) * pow(j_max_[joint],4) * pow(q_0,2) + 144 * pow(dir,2) * pow(j_max_[joint],4) * q_0 * q_goal - 72.0 * pow(dir,2) * pow(j_max_[joint],4) * pow(q_goal,2) - 48 * pow(a_0,3) * dir * pow(j_max_[joint],2) * q_0 + 48 * pow(a_0,3) * dir * pow(j_max_[joint],2) * q_goal + 144 * a_0 * dir * pow(j_max_[joint],3) * q_0 * v_0 - 144 * a_0 * dir * pow(j_max_[joint],3) * q_goal * v_0 + pow(a_0,6) - 6 * pow(a_0,4) * j_max_[joint] * v_0 + 36 * pow(a_0,2) * pow(j_max_[joint],2) * pow(v_0,2) - 72.0 * pow(j_max_[joint],3) * pow(v_0,3);
-  root = fifth_2deriv(A_5, A_4, A_3, A_2, A_1, A_0);
-  // WAS root(2) --> Debug this
+  // 2nd order deriv root finding
+  // root = fifth_2deriv(A_5, A_4, A_3, A_2, A_1, A_0);
+  // Companion matrix root finding
+  {
+    Eigen::VectorXd poly_vals(6); 
+    poly_vals << A_5, A_4, A_3, A_2, A_1, A_0;
+    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
+    root = getSmallestPositiveNonComplexRoot(result);
+  }
   v_drive = pow(root,2)/j_max_[joint];
-  
   // Check if v_drive is real and positive
   if (!isnan(v_drive) && v_drive > 0) {
     double trash;
@@ -523,10 +553,16 @@ bool LongTermPlanner::timeScaling(
   A_2 = (12.0 * a_max_[joint] * j_max_[joint] * t_required - 6 * pow(a_0,2) - 12.0 * a_0 * a_max_[joint] - 6 * pow(a_max_[joint],2) - 12.0 * j_max_[joint] * v_0);
   A_1 = 0;
   A_0 = -12.0 * pow(a_0,2) * a_max_[joint] * j_max_[joint] * t_required - 24 * dir * pow(j_max_[joint],2) * a_max_[joint] * q_0 + 24 * dir * pow(j_max_[joint],2) * a_max_[joint] * q_goal - 24 * a_max_[joint] * pow(j_max_[joint],2) * v_0 * t_required + 3 * pow(a_0,4) + 4 * pow(a_0,3) * a_max_[joint] + 6 * pow(a_0,2) * pow(a_max_[joint],2) + 12.0 * pow(a_0,2) * j_max_[joint] * v_0 + 12.0 * pow(a_max_[joint],2) * j_max_[joint] * v_0 + 12.0 * pow(j_max_[joint],2) * pow(v_0,2);
-  root = fourth_2deriv(A_4, A_3, A_2, A_1, A_0);
-  // WAS root(3) --> Debug this
+  // 2nd order deriv root finding
+  // root = fourth_2deriv(A_4, A_3, A_2, A_1, A_0);
+  // Companion matrix root finding
+  {
+    Eigen::VectorXd poly_vals(5); 
+    poly_vals << A_4, A_3, A_2, A_1, A_0;
+    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
+    root = getSmallestPositiveNonComplexRoot(result);
+  }
   v_drive = -(pow(root,2) - pow(a_0,2) - 2.0 * j_max_[joint] * v_0)/(2.0 * j_max_[joint]);
-  
   // Check if v_drive is real and positive
   if (!isnan(v_drive) && v_drive > 0) {
     double trash;
@@ -543,8 +579,15 @@ bool LongTermPlanner::timeScaling(
   A_2 = (24 * a_max_[joint] * j_max_[joint] * t_required - 12.0 * pow(a_0,2) - 24 * a_0 * a_max_[joint] - 12.0 * pow(a_max_[joint],2) - 24 * j_max_[joint] * v_0);
   A_1 = 0;
   A_0 = 24 * dir * pow(j_max_[joint],2) * a_max_[joint] * q_0 - 24 * dir * pow(j_max_[joint],2) * a_max_[joint] * q_goal + 3 * pow(a_0,4) + 8 * pow(a_0,3) * a_max_[joint] + 6 * pow(a_0,2) * pow(a_max_[joint],2) + 12.0 * pow(a_0,2) * j_max_[joint] * v_0 + 24 * a_0 * a_max_[joint] * j_max_[joint] * v_0 + 12.0 * pow(a_max_[joint],2) * j_max_[joint] * v_0 + 12.0 * pow(j_max_[joint],2) * pow(v_0,2);
-  root = fourth_2deriv(A_4, A_3, A_2, A_1, A_0);
-  // WAS root(3) --> Debug this
+  // 2nd order deriv root finding
+  // root = fourth_2deriv(A_4, A_3, A_2, A_1, A_0);
+  // Companion matrix root finding
+  {
+    Eigen::VectorXd poly_vals(5); 
+    poly_vals << A_4, A_3, A_2, A_1, A_0;
+    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
+    root = getSmallestPositiveNonComplexRoot(result);
+  }
   v_drive = pow(root,2)/j_max_[joint];
   
   // Check if v_drive is real and positive
@@ -574,7 +617,12 @@ bool LongTermPlanner::timeScaling(
                6 * pow(a_0,4) * j_max_[joint] * v_0 - 
                36 * pow(a_0,2) * pow(j_max_[joint],2) * pow(v_0,2) - 
                72.0 * pow(j_max_[joint],3) * pow(v_0,3);
-  root = sixth_2deriv(A_6, A_5, A_4, A_3, A_2, A_1, A_0);
+  {
+    Eigen::VectorXd poly_vals(7); 
+    poly_vals << A_6, A_5, A_4, A_3, A_2, A_1, A_0;
+    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
+    root = getSmallestPositiveNonComplexRoot(result);
+  }
   // WAS root(4) --> Debug this
   v_drive = pow(root,2)/j_max_[joint];
   std::cerr << "v_drive = " << v_drive << std::endl;
