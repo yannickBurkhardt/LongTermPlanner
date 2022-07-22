@@ -24,6 +24,8 @@
 
 #include <Eigen/Dense>
 
+#include "long_term_planner/roots.h"
+
 #ifndef long_term_planner_H
 #define long_term_planner_H
 

@@ -1,5 +1,4 @@
 #include "long_term_planner/long_term_planner.h"
-#include "long_term_planner/roots.h"
 
 namespace long_term_planner {
 // ===========================================================
@@ -254,8 +253,8 @@ bool LongTermPlanner::optSwitchTimes(int joint,
       {
         Eigen::VectorXd poly_vals(5); 
         poly_vals << A_4, A_3, A_2, A_1, A_0;
-        Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
-        root = getSmallestPositiveNonComplexRoot(result);
+        Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots<double>(poly_vals);
+        root = getSmallestPositiveNonComplexRoot<double>(result);
       }
       t_rel[0] = (2.0 * pow(root,2) - 4 * a_0*root + pow(a_0,2) - 2.0 * v_0 * j_max_[joint])/(4 * j_max_[joint] * root);
       // Calculate other switch times
@@ -314,8 +313,8 @@ bool LongTermPlanner::optSwitchTimes(int joint,
         {
           Eigen::VectorXd poly_vals(5); 
           poly_vals << A_4, A_3, A_2, A_1, A_0;
-          Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
-          root = getSmallestPositiveNonComplexRoot(result);
+          Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots<double>(poly_vals);
+          root = getSmallestPositiveNonComplexRoot<double>(result);
         }
         t_rel[0] = (root - a_0 - a_max_[joint])/j_max_[joint];
         // Calculate other switch times
@@ -465,8 +464,8 @@ bool LongTermPlanner::timeScaling(
   {
     Eigen::VectorXd poly_vals(5); 
     poly_vals << A_4, A_3, A_2, A_1, A_0;
-    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
-    root = getSmallestPositiveNonComplexRoot(result);
+    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots<double>(poly_vals);
+    root = getSmallestPositiveNonComplexRoot<double>(result);
   }
   v_drive = (-2.0 * pow(a_0,2) + 4 * j_max_[joint] * v_0 + pow(root,2))/(4 * j_max_[joint]);
   // Check if v_drive is real and positive
@@ -506,8 +505,8 @@ bool LongTermPlanner::timeScaling(
   {
     Eigen::VectorXd poly_vals(5); 
     poly_vals << A_4, A_3, A_2, A_1, A_0;
-    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
-    root = getSmallestPositiveNonComplexRoot(result);
+    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots<double>(poly_vals);
+    root = getSmallestPositiveNonComplexRoot<double>(result);
   }
   v_drive = pow(root,2)/j_max_[joint];
   // Check if v_drive is real and positive
@@ -533,8 +532,8 @@ bool LongTermPlanner::timeScaling(
   {
     Eigen::VectorXd poly_vals(6); 
     poly_vals << A_5, A_4, A_3, A_2, A_1, A_0;
-    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
-    root = getSmallestPositiveNonComplexRoot(result);
+    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots<double>(poly_vals);
+    root = getSmallestPositiveNonComplexRoot<double>(result);
   }
   v_drive = pow(root,2)/j_max_[joint];
   // Check if v_drive is real and positive
@@ -559,8 +558,8 @@ bool LongTermPlanner::timeScaling(
   {
     Eigen::VectorXd poly_vals(5); 
     poly_vals << A_4, A_3, A_2, A_1, A_0;
-    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
-    root = getSmallestPositiveNonComplexRoot(result);
+    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots<double>(poly_vals);
+    root = getSmallestPositiveNonComplexRoot<double>(result);
   }
   v_drive = -(pow(root,2) - pow(a_0,2) - 2.0 * j_max_[joint] * v_0)/(2.0 * j_max_[joint]);
   // Check if v_drive is real and positive
@@ -585,8 +584,8 @@ bool LongTermPlanner::timeScaling(
   {
     Eigen::VectorXd poly_vals(5); 
     poly_vals << A_4, A_3, A_2, A_1, A_0;
-    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots(poly_vals);
-    root = getSmallestPositiveNonComplexRoot(result);
+    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> result = roots<double>(poly_vals);
+    root = getSmallestPositiveNonComplexRoot<double>(result);
   }
   v_drive = pow(root,2)/j_max_[joint];
   

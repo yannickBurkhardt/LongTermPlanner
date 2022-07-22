@@ -5,6 +5,7 @@
 #include "long_term_planner/roots.h"
 
 namespace long_term_planner {
+
 TEST(RootsTests, SimpleTest4) {
   float a_4 = 1.0;
   float a_3 = 0.0;
@@ -13,7 +14,7 @@ TEST(RootsTests, SimpleTest4) {
   float a_0 = -625.0;
   float r = fourth_2deriv(a_4, a_3, a_2, a_1, a_0);
   EXPECT_NEAR(r, 5, 1e-6);
-}
+};
 
 TEST(RootsTests, ComplicatedTest4) {
   float a_4 = 5.0;
@@ -23,7 +24,7 @@ TEST(RootsTests, ComplicatedTest4) {
   float a_0 = -80.0;
   float r = fourth_2deriv(a_4, a_3, a_2, a_1, a_0);
   EXPECT_NEAR(r, 0.281658, 1e-5);
-}
+};
 
 TEST(RootsTests, SimpleTest5) {
   float a_5 = 1.0;
@@ -34,7 +35,7 @@ TEST(RootsTests, SimpleTest5) {
   float a_0 = -3125.0;
   float r = fifth_2deriv(a_5, a_4, a_3, a_2, a_1, a_0);
   EXPECT_NEAR(r, 5, 1e-6);
-}
+};
 
 TEST(RootsTests, ComplexRootsTest6) {
   float a_6 = 144;
@@ -46,7 +47,7 @@ TEST(RootsTests, ComplexRootsTest6) {
   float a_0 =	22752.4032012800;
   Eigen::VectorXf poly_vals(7); 
   poly_vals << a_6, a_5, a_4, a_3, a_2, a_1, a_0;
-  Eigen::Matrix<std::complex<float>, Eigen::Dynamic, Eigen::Dynamic> r = roots(poly_vals);
+  Eigen::Matrix<std::complex<float>, Eigen::Dynamic, Eigen::Dynamic> r = roots<float>(poly_vals);
   EXPECT_NEAR(r(0,0).real(), -1.67276, 1e-5);
   EXPECT_NEAR(r(0,0).imag(), 0.0, 1e-9);
   EXPECT_NEAR(r(1,0).real(), -1.35687, 1e-5);
@@ -59,7 +60,7 @@ TEST(RootsTests, ComplexRootsTest6) {
   EXPECT_NEAR(r(4,0).imag(), 2.79663, 1e-5);
   EXPECT_NEAR(r(5,0).real(), 2.9685, 1e-5);
   EXPECT_NEAR(r(5,0).imag(), -2.79663, 1e-5);
-}
+};
 } // namespace long_term_planner
 
 int main(int argc, char **argv){

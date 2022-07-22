@@ -7,7 +7,7 @@ namespace long_term_planner {
 
 TEST_F(LongTermPlannerTest1DoF, InitializationTest) {
   EXPECT_DOUBLE_EQ(0, 0.0);
-}
+};
 
 TEST_F(LongTermPlannerTest1DoF, OptBrakingTest) {
   // Define test values
@@ -51,7 +51,7 @@ TEST_F(LongTermPlannerTest1DoF, OptBrakingTest) {
     std::cerr << "dir = " << dir << std::endl;
     EXPECT_NEAR(q_ltp, -q_goal[i], eps);
   }
-}
+};
 
 TEST_F(LongTermPlannerTest1DoF, OptSwitchTimesTest) {
   // Define test values
@@ -112,7 +112,7 @@ TEST_F(LongTermPlannerTest1DoF, OptSwitchTimesTest) {
       EXPECT_NEAR(t_ltp[j], t[i][j], eps);
     }
   }
-}
+};
 
 TEST_F(LongTermPlannerTest1DoF, TimeScalingTest) {
   // Define test values
@@ -180,15 +180,15 @@ TEST_F(LongTermPlannerTest1DoF, TimeScalingTest) {
       EXPECT_NEAR(t_ltp[j], t[i][j], eps);
     }
   }
-}
+};
 
 TEST_F(LongTermPlannerTest6DoF, InitializationTest) {
   EXPECT_DOUBLE_EQ(0, 0.0);
-}
+};
 
 } // namespace long_term_planner
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
-}
+};

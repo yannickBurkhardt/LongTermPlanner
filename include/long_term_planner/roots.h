@@ -71,7 +71,7 @@ T fourth_2deriv(T a_4, T a_3, T a_2, T a_1, T a_0) {
   boost::uintmax_t it = maxit;
   T result = halley_iterate(fourth_functor_2deriv<T>(a_4, a_3, a_2, a_1, a_0), guess, min, max, digits, it);
   return result;
-}
+};
 
 /**
  * @brief Functor for a 5th degree polynomial.
@@ -133,7 +133,7 @@ T fifth_2deriv(T a_5, T a_4, T a_3, T a_2, T a_1, T a_0) {
   boost::uintmax_t it = maxit;
   T result = halley_iterate(fifth_functor_2deriv<T>(a_5, a_4, a_3, a_2, a_1, a_0), guess, min, max, digits, it);
   return result;
-}
+};
 
 /**
  * @brief Calculate all roots of a polynomial using the companion matrix.
@@ -155,7 +155,7 @@ Eigen::Matrix<std::complex<T>, Eigen::Dynamic, Eigen::Dynamic> roots(Eigen::Vect
   EigenSolver<Matrix<T, Dynamic, Dynamic>> es(C);
   std::cout << "The roots of the polynome are:" << std::endl << es.eigenvalues() << std::endl;
   return es.eigenvalues();
-}
+};
 
 /**
  * @brief Get the Smallest Positive Non Complex Root object
@@ -171,7 +171,7 @@ T getSmallestPositiveNonComplexRoot(Eigen::Matrix<std::complex<T>, Eigen::Dynami
     if (root.imag() == 0 && root.real() > 0) smallest_val = std::min(smallest_val, root.real());
   }
   return smallest_val;
-}
+};
 
 } // namespace long_term_planner
 #endif // roots_H
