@@ -153,7 +153,6 @@ Eigen::Matrix<std::complex<T>, Eigen::Dynamic, Eigen::Dynamic> roots(Eigen::Vect
   poly_vals = -1 * poly_vals / poly_vals[0];
   C.col(poly_size-2) = poly_vals.reverse().head(poly_size-1);
   EigenSolver<Matrix<T, Dynamic, Dynamic>> es(C);
-  std::cout << "The roots of the polynome are:" << std::endl << es.eigenvalues() << std::endl;
   return es.eigenvalues();
 };
 

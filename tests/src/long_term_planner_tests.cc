@@ -34,10 +34,8 @@ TEST_F(LongTermPlannerTest1DoF, OptBrakingTest) {
     EXPECT_TRUE(ltp_.optBraking(0, v_0[i], a_0[i], q_ltp, t_ltp, dir));
     // all(abs(t_ltp - t_rel(i,:)) < eps) && (abs(q_ltp - q_goal(i)) < eps)
     for (int j=0; j<3; j++) {
-      std::cerr << "Positive test t_rel[" << i << "][" << j << "] = " << t_rel[i][j] << std::endl;
       EXPECT_NEAR(t_ltp[j], t_rel[i][j], eps);
     }
-    std::cerr << "dir = " << dir << std::endl;
     EXPECT_NEAR(q_ltp, q_goal[i], eps);
     // Skip for first test
     if (i == 0) continue;
@@ -45,10 +43,8 @@ TEST_F(LongTermPlannerTest1DoF, OptBrakingTest) {
     // Execute same scenario in opposite direction
     EXPECT_TRUE(ltp_.optBraking(0, -v_0[i], -a_0[i], q_ltp, t_ltp, dir));
     for (int j=0; j<3; j++) {
-      std::cerr << "Negative test t_rel[" << i << "][" << j << "] = " << t_rel[i][j] << std::endl;
       EXPECT_NEAR(t_ltp[j], t_rel[i][j], eps);
     }
-    std::cerr << "dir = " << dir << std::endl;
     EXPECT_NEAR(q_ltp, -q_goal[i], eps);
   }
 };
@@ -99,7 +95,6 @@ TEST_F(LongTermPlannerTest1DoF, OptSwitchTimesTest) {
     char mod_jerk_profile;
     EXPECT_TRUE(ltp_.optSwitchTimes(0, q_goal[i], q_0[i], v_0[i], a_0[i], v_max[i][0], t_ltp, dir, mod_jerk_profile));
     for (int j=0; j<3; j++) {
-      std::cerr << "Positive test t[" << i << "][" << j << "] = " << t[i][j] << std::endl;
       EXPECT_NEAR(t_ltp[j], t[i][j], eps);
     }
     // Skip for first test
@@ -108,7 +103,6 @@ TEST_F(LongTermPlannerTest1DoF, OptSwitchTimesTest) {
     // Execute same scenario in opposite direction
     EXPECT_TRUE(ltp_.optSwitchTimes(0, -q_goal[i], -q_0[i], -v_0[i], -a_0[i], v_max[i][0], t_ltp, dir, mod_jerk_profile));
     for (int j=0; j<3; j++) {
-      std::cerr << "Negative test t[" << i << "][" << j << "] = " << t[i][j] << std::endl;
       EXPECT_NEAR(t_ltp[j], t[i][j], eps);
     }
   }
@@ -167,7 +161,6 @@ TEST_F(LongTermPlannerTest1DoF, TimeScalingTest) {
     char mod_jerk_profile;
     EXPECT_TRUE(ltp_.timeScaling(0, q_goal[i], q_0[i], v_0[i], a_0[i], dir[i], t_required[i], t_ltp, v_drive, mod_jerk_profile));
     for (int j=0; j<3; j++) {
-      std::cerr << "Positive test t[" << i << "][" << j << "] = " << t[i][j] << std::endl;
       EXPECT_NEAR(t_ltp[j], t[i][j], eps);
     }
     // Skip for first test
@@ -176,7 +169,6 @@ TEST_F(LongTermPlannerTest1DoF, TimeScalingTest) {
     // Execute same scenario in opposite direction
     EXPECT_TRUE(ltp_.timeScaling(0, -q_goal[i], -q_0[i], -v_0[i], -a_0[i], -dir[i], t_required[i], t_ltp, v_drive, mod_jerk_profile));
     for (int j=0; j<3; j++) {
-      std::cerr << "Negative test t[" << i << "][" << j << "] = " << t[i][j] << std::endl;
       EXPECT_NEAR(t_ltp[j], t[i][j], eps);
     }
   }
