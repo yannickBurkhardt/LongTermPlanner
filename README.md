@@ -36,6 +36,8 @@ It returns the sampled trajectory information of acceleration, velocity, and ang
 
 ### C++
 
+The installation requires `gcc`, `c++>=17`, and `Eigen3` version 3.4 (download it here: https://eigen.tuxfamily.org/index.php?title=Main_Page).
+
 An example of how to use the C++ library can be found in [`codegen/lib/ltpTrajectory/examples/main.cpp`](https://github.com/yannickBurkhardt/LongTermPlanner/blob/main/codegen/lib/ltpTrajectory/examples/main.cpp).
 
 ## Time optimality

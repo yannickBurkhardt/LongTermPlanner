@@ -164,6 +164,15 @@ class LongTermPlanner {
     const std::vector<double>& a_0
   );
 
+  /**
+   * @brief Set the joint position, velocity and jerk limits
+   * 
+   * @param q_min minimum position of each joint
+   * @param q_max maximum position of each joint
+   * @param v_max absolute maximum velocity of each joint
+   * @param a_max absolute maximum acceleration of each joint
+   * @param j_max absolute maximum jerk of each joint
+   */
   inline void setLimits(
     std::vector<double> q_min,
     std::vector<double> q_max,
@@ -175,6 +184,24 @@ class LongTermPlanner {
     v_max_ = v_max;
     a_max_ = a_max;
     j_max_ = j_max;
+  }
+
+  /**
+   * @brief Set the Sample Time of the trajectory.
+   * 
+   * @param t_sample 
+   */
+  inline void setSampleTime(double t_sample) {
+    t_sample_ = t_sample;
+  }
+
+  /**
+   * @brief Set the degrees of freedom of the trajectory.
+   * 
+   * @param dof 
+   */
+  inline void setDoF(double dof) {
+    dof_ = dof;
   }
 
  protected:

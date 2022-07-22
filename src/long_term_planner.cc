@@ -753,19 +753,15 @@ Trajectory LongTermPlanner::getTrajectory(
     sampled_t[joint][4] = (int) floor(t[joint][4]/t_sample_);
     sampled_t[joint][5] = (int) ceil(t[joint][5]/t_sample_);
     sampled_t[joint][6] = (int) floor(t[joint][6]/t_sample_);
-    
     // Calculate sampled jerk trajectory
-    std::vector<double>::iterator it = j_traj[joint].begin();
     if (sampled_t[joint][0] > 0) {
-      std::fill(it, (it+sampled_t[joint][0]), jerk_profile[0]);
+      std::fill(j_traj[joint].begin(), (j_traj[joint].begin()+sampled_t[joint][0]), jerk_profile[0]);
     }
     for (int j=1; j<7; j++) {
       if (sampled_t[joint][j] - sampled_t[joint][j-1] > 0) {
-        std::advance(it, sampled_t[joint][j-1]);
-        std::fill(it, (it+sampled_t[joint][j]), jerk_profile[j]);
+        std::fill(j_traj[joint].begin()+sampled_t[joint][j-1], (j_traj[joint].begin()+sampled_t[joint][j]), jerk_profile[j]);
       }
     }
-    
     //// Add partial jerk of sample fractions to increase accuracy
     if(sampled_t[joint][2] >= sampled_t[joint][1]) {
       // Phase 2 exists: 

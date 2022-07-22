@@ -182,6 +182,68 @@ TEST_F(LongTermPlannerTest1DoF, TimeScalingTest) {
   }
 };
 
+TEST_F(LongTermPlannerTest1DoF, gridTestOneJoint) {
+  // Initialize parameters
+  double eps = 1e-6;
+  double tol = 0.02;
+  double step = 0.1;
+  std::vector<double> q_min = {-3.1};
+  std::vector<double> q_max = {3.1};
+  std::vector<double> v_max = {1.0};
+  std::vector<double> a_max = {2.0};
+  std::vector<double> j_max = {15.0};
+  double t_sample = 0.004;
+  double q_0 = 0.5;
+
+  // Initialize planner
+  ltp_.setSampleTime(t_sample);
+  ltp_.setLimits(q_min, q_max, v_max, a_max, j_max);
+
+  // Set goal and joint angle
+  for (int i=(int)q_min[0]/step; i<=(int)q_max[0]/step; i++) {
+    double q_goal = i * step;
+    // Velocity in Limits
+    for (int j = (int)-v_max[0]/step; j<(int)v_max[0]/step; j++) {
+      double v_0 = j * step;
+      // Calculate maximal acceleration to not violate velocity limit
+      double a_lb, a_ub;
+      if (v_0 >= 0) {
+        a_lb = -(a_max[0]-eps);
+        a_ub = std::min(a_max[0]-eps, sqrt(2*j_max[0]*(v_max[0] - v_0)));
+      } else {
+        a_lb = std::max(-(a_max[0]-eps), -sqrt(2*j_max[0]*(v_max[0] - abs(v_0))));
+        a_ub = a_max[0];
+      }
+      // Acceleration in limits
+      for (int k=(int)a_lb/step; k<(int)a_ub/step; k++) {
+        double a_0 = k*step - eps;
+        // Plan trajectory
+        std::array<double, 7> t_ltp;
+        double dir;
+        char mod_jerk_profile;
+        EXPECT_TRUE(ltp_.optSwitchTimes(0, q_goal, q_0, v_0, a_0, v_max[0], t_ltp, dir, mod_jerk_profile));
+        std::vector<std::array<double, 7>> t = {t_ltp};
+        std::vector<double> dirs = {dir};
+        std::vector<char> mod_jerk_profiles = {mod_jerk_profile};
+        std::vector<double> q0s = {q_0};
+        std::vector<double> v0s = {v_0};
+        std::vector<double> a0s = {a_0};
+        Trajectory traj = ltp_.getTrajectory(t, dirs, mod_jerk_profiles, q0s, v0s, a0s, v_max);
+        // Check if goal was reached
+        EXPECT_NEAR(traj.q[0][traj.length-1], q_goal, tol);
+        if (abs(traj.q[0][traj.length-1] - q_goal) > tol) {
+          std::cout << 3.1 << std::endl;
+          std::cerr << "q_goal = " << q_goal << 
+                       ", v_0 = " << v_0 << 
+                       ", a_0 = " << a_0 <<
+                       ", dir = " << dir <<
+                       ", t_ltp = [" << t_ltp[0] << ", " << t_ltp[1] << ", " << t_ltp[2] << ", " << t_ltp[3] << ", " << t_ltp[4] << ", " << t_ltp[5] << ", " << t_ltp[6] << "]." << std::endl;
+        }
+      }
+    }
+  }
+}
+
 TEST_F(LongTermPlannerTest6DoF, InitializationTest) {
   EXPECT_DOUBLE_EQ(0, 0.0);
 };
