@@ -167,7 +167,7 @@ template <class T>
 T getSmallestPositiveNonComplexRoot(Eigen::Matrix<std::complex<T>, Eigen::Dynamic, Eigen::Dynamic> r) {
   T smallest_val = INFINITY;
   for (const auto& root : r.col(0)) {
-    if (root.imag() == 0 && root.real() > 0) smallest_val = std::min(smallest_val, root.real());
+    if (root.imag() == 0 && root.real() > 1e-7) smallest_val = std::min(smallest_val, root.real());
   }
   return smallest_val;
 };

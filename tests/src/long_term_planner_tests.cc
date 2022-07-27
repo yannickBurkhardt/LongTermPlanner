@@ -117,10 +117,10 @@ TEST_F(LongTermPlannerTest1DoF, TrajectoryTestV0) {
   std::vector<std::vector<double>> v_max = {{2}, {2}, {2}, {1}, {1}, {8}, {8}, {8}, {8}};
   std::vector<std::vector<double>> a_max = {{2}, {2}, {2}, {2}, {2}, {2}, {2}, {2}, {2}};
   std::vector<std::vector<double>> j_max = {{4}, {4}, {4}, {4}, {4}, {4}, {4}, {4}, {4}};
-  std::vector<double> q_goal = {1.0, 1.01, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.5};
+  std::vector<double> q_goal = {1.1, 1.01, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.5};
   std::vector<double> q_0    = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
   std::vector<double> v_0    = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-  std::vector<double> a_0    = { -1e-8, -1e-8, -1e-8, -1e-8, -1e-8, -1e-8, -1e-8, -1e-8, -1e-8};
+  std::vector<double> a_0    = { 1e-8, -1e-8, -1e-8, -1e-8, -1e-8, -1e-8, -1e-8, -1e-8, -1e-8};
   for (int i=0; i<num_scenarios; i++) {
     // Set limtits
     ltp_.setLimits(q_min[i], q_max[i], v_max[i], a_max[i], j_max[i]);
