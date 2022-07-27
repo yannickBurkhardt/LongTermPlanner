@@ -108,6 +108,93 @@ TEST_F(LongTermPlannerTest1DoF, OptSwitchTimesTest) {
   }
 };
 
+TEST_F(LongTermPlannerTest1DoF, TrajectoryTestV0) {
+  // Define test values
+  double eps = 0.001;
+  int num_scenarios = 9;
+  std::vector<std::vector<double>> q_min = {{-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}}; 
+  std::vector<std::vector<double>> q_max = {{3.1}, {3.1}, {3.1}, {3.1}, {3.1}, {3.1}, {3.1}, {3.1}, {3.1}}; 
+  std::vector<std::vector<double>> v_max = {{2}, {2}, {2}, {1}, {1}, {8}, {8}, {8}, {8}};
+  std::vector<std::vector<double>> a_max = {{2}, {2}, {2}, {2}, {2}, {2}, {2}, {2}, {2}};
+  std::vector<std::vector<double>> j_max = {{4}, {4}, {4}, {4}, {4}, {4}, {4}, {4}, {4}};
+  std::vector<double> q_goal = {1.0, 1.01, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.5};
+  std::vector<double> q_0    = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+  std::vector<double> v_0    = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  std::vector<double> a_0    = { -1e-8, -1e-8, -1e-8, -1e-8, -1e-8, -1e-8, -1e-8, -1e-8, -1e-8};
+  for (int i=0; i<num_scenarios; i++) {
+    // Set limtits
+    ltp_.setLimits(q_min[i], q_max[i], v_max[i], a_max[i], j_max[i]);
+    std::vector<double> q0s = {q_0[i]};
+    std::vector<double> q_goals = {q_goal[i]};
+    std::vector<double> v0s = {v_0[i]};
+    std::vector<double> a0s = {a_0[i]};
+    Trajectory traj;
+    std::cerr << i << std::endl;
+    bool success = ltp_.planTrajectory(q_goals, q0s, v0s, a0s, traj);
+    EXPECT_TRUE(success);
+    if (!success) continue;
+    EXPECT_NEAR(traj.q[0][traj.length-1], q_goal[i], 1e-2);
+  }
+};
+
+TEST_F(LongTermPlannerTest1DoF, TrajectoryTestV1) {
+  // Define test values
+  double eps = 0.001;
+  int num_scenarios = 9;
+  std::vector<std::vector<double>> q_min = {{-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}}; 
+  std::vector<std::vector<double>> q_max = {{3.1}, {3.1}, {3.1}, {3.1}, {3.1}, {3.1}, {3.1}, {3.1}, {3.1}}; 
+  std::vector<std::vector<double>> v_max = {{2}, {2}, {2}, {1}, {1}, {8}, {8}, {8}, {8}};
+  std::vector<std::vector<double>> a_max = {{2}, {2}, {2}, {2}, {2}, {2}, {2}, {2}, {2}};
+  std::vector<std::vector<double>> j_max = {{4}, {4}, {4}, {4}, {4}, {4}, {4}, {4}, {4}};
+  std::vector<double> q_goal = {1.0, 1.01, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.5};
+  std::vector<double> q_0    = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+  std::vector<double> v_0    = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  std::vector<double> a_0    = { 1e-8, 1e-8, 1e-8, 1e-8, 1e-8, 1e-8, 1e-8, 1e-8, 1e-8};
+  for (int i=0; i<num_scenarios; i++) {
+    // Set limtits
+    ltp_.setLimits(q_min[i], q_max[i], v_max[i], a_max[i], j_max[i]);
+    std::vector<double> q0s = {q_0[i]};
+    std::vector<double> q_goals = {q_goal[i]};
+    std::vector<double> v0s = {v_0[i]};
+    std::vector<double> a0s = {a_0[i]};
+    Trajectory traj;
+    std::cerr << i << std::endl;
+    bool success = ltp_.planTrajectory(q_goals, q0s, v0s, a0s, traj);
+    EXPECT_TRUE(success);
+    if (!success) continue;
+    EXPECT_NEAR(traj.q[0][traj.length-1], q_goal[i], 1e-2);
+  }
+};
+
+TEST_F(LongTermPlannerTest1DoF, TrajectoryTestV2) {
+  // Define test values
+  double eps = 0.001;
+  int num_scenarios = 9;
+  std::vector<std::vector<double>> q_min = {{-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}, {-3.1}}; 
+  std::vector<std::vector<double>> q_max = {{3.1}, {3.1}, {3.1}, {3.1}, {3.1}, {3.1}, {3.1}, {3.1}, {3.1}}; 
+  std::vector<std::vector<double>> v_max = {{2}, {2}, {2}, {1}, {1}, {8}, {8}, {8}, {8}};
+  std::vector<std::vector<double>> a_max = {{2}, {2}, {2}, {2}, {2}, {2}, {2}, {2}, {2}};
+  std::vector<std::vector<double>> j_max = {{4}, {4}, {4}, {4}, {4}, {4}, {4}, {4}, {4}};
+  std::vector<double> q_goal = {1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1};
+  std::vector<double> q_0    = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+  std::vector<double> v_0    = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  std::vector<double> a_0    = { 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9};
+  for (int i=0; i<num_scenarios; i++) {
+    // Set limtits
+    ltp_.setLimits(q_min[i], q_max[i], v_max[i], a_max[i], j_max[i]);
+    std::vector<double> q0s = {q_0[i]};
+    std::vector<double> q_goals = {q_goal[i]};
+    std::vector<double> v0s = {v_0[i]};
+    std::vector<double> a0s = {a_0[i]};
+    Trajectory traj;
+    std::cerr << i << std::endl;
+    bool success = ltp_.planTrajectory(q_goals, q0s, v0s, a0s, traj);
+    EXPECT_TRUE(success);
+    if (!success) continue;
+    EXPECT_NEAR(traj.q[0][traj.length-1], q_goal[i], 1e-2);
+  }
+};
+
 TEST_F(LongTermPlannerTest1DoF, TimeScalingTest) {
   // Define test values
   double eps = 0.1;
