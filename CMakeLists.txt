@@ -4,10 +4,6 @@ project(long_term_planner)
 ## Compile as C++17
 add_compile_options(-std=c++17)
 
-set(Boost_USE_STATIC_LIBS OFF) 
-set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME OFF) 
-find_package(Boost 1.71.0 COMPONENTS math) 
 find_package(Eigen3 3.3.7 COMPONENTS Dense, Eigenvalues)
 
 include_directories(
@@ -18,11 +14,6 @@ include_directories(
 add_library(${PROJECT_NAME}
     src/long_term_planner.cc 
     )
-
-if(Boost_FOUND)
-    include_directories(${Boost_INCLUDE_DIRS}) 
-    target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
-endif()
 
 if (TARGET Eigen3::Eigen)
   target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
