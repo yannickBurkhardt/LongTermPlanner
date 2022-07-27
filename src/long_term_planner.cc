@@ -627,7 +627,6 @@ bool LongTermPlanner::timeScaling(
   }
   // WAS root(4) --> Debug this
   v_drive = pow(root,2)/j_max_[joint];
-  std::cerr << "v_drive = " << v_drive << std::endl;
   // Check if v_drive is real and positive
   if (!isnan(v_drive) && v_drive > 0) {
     double trash;
