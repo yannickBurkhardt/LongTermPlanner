@@ -804,31 +804,24 @@ Trajectory LongTermPlanner::getTrajectory(
     if (sampled_t[joint][5] > 0) {
       j_traj[joint][sampled_t[joint][5]] = j_traj[joint][sampled_t[joint][5]] + (1 - sampled_t_trans[5]/t_sample_) * jerk_profile[6];
     }
-    
     // Add fraction to end of trajectory (after phase 7)
     j_traj[joint][sampled_t[joint][6] + 1] = j_traj[joint][sampled_t[joint][6] + 1] + sampled_t_trans[6]/t_sample_ * jerk_profile[6];
-    //// Calculate acceleration trajectories
-    // a_traj = t_sample_ * cumsum(j_traj,2) + a_0;
-    std::partial_sum(j_traj[joint].begin(), j_traj[joint].end(), a_traj[joint].begin(), std::plus<double>());
-    double ts = t_sample_;
-    double af = a_0[joint];
-    std::transform(a_traj[joint].begin(), a_traj[joint].end(), a_traj[joint].begin(), [&ts, &af](auto& c){return c*ts + af;});
-    //// Calculate velocitie trajectories
-    // v_traj = t_sample_ * cumsum(a_traj,2) + v_0;
-    std::partial_sum(a_traj[joint].begin(), a_traj[joint].end(), v_traj[joint].begin(), std::plus<double>());
-    double vf = v_0[joint];
-    std::transform(v_traj[joint].begin(), v_traj[joint].end(), v_traj[joint].begin(), [&ts, &vf](auto& c){return c*ts + vf;});
-    // Check if phase 4 exists (constant velocity)
-    if (sampled_t[joint][3] - sampled_t[joint][2] > 2) {
+
+    //// Calculate joint trajectories
+    a_traj[joint][0] = a_0[joint] + t_sample_ * j_traj[joint][0];
+    v_traj[joint][0] = v_0[joint] + t_sample_ * a_traj[joint][0];
+    q_traj[joint][0] = q_0[joint] + t_sample_ * v_traj[joint][0];
+    bool phase4 = sampled_t[joint][3] - sampled_t[joint][2] > 2;
+    for (int i = 1; i < traj_len; i++) {
+      a_traj[joint][i] = a_traj[joint][i-1] + t_sample_ * j_traj[joint][i];
       // Set constant velocity periods to exactly v_drive (increases accuracy)
-      // v_traj(joint,sampled_t[joint][2]+1:sampled_t[joint][3]-1) = v_drive(joint) * dir(joint);
-      std::fill(v_traj[joint].begin()+sampled_t[joint][2]+1, v_traj[joint].begin()+sampled_t[joint][3]-1, v_drive[joint] * dir[joint]);
+      if (phase4 && i >= sampled_t[joint][2]+1 && i< sampled_t[joint][3]-1) {
+        v_traj[joint][i] = v_drive[joint] * dir[joint];
+      } else {
+        v_traj[joint][i] = v_traj[joint][i-1] + t_sample_ * a_traj[joint][i];
+      }
+      q_traj[joint][i] = q_traj[joint][i-1] + t_sample_ * v_traj[joint][i];
     }
-    //// Calculate joint angle trajectories
-    // q_traj = t_sample_ * cumsum(v_traj,2) + q_0;
-    std::partial_sum(v_traj[joint].begin(), v_traj[joint].end(), q_traj[joint].begin(), std::plus<double>());
-    double qf = q_0[joint];
-    std::transform(q_traj[joint].begin(), q_traj[joint].end(), q_traj[joint].begin(), [&ts, &qf](auto& c){return c*ts + qf;});
   }
   traj.dof = dof_;
   traj.length = traj_len;
