@@ -340,7 +340,7 @@ bool LongTermPlanner::optSwitchTimes(int joint,
   for (int i=0; i<7;i++) {
     if (t_rel[i] < -eps) {
       // No numeric inaccuracy
-      std::cerr << "t_rel[" << i << "] = " << t_rel[i] << " < -eps" << std::endl;
+      std::cerr << "t_rel[" << i << "] = " << t_rel[i] << " < -eps. q_0 = " << q_0 << ", v_0 = " << v_0 << ", a_0 = " << a_0 << ", g_goal = " << q_goal << std::endl;
       return false;
     } else if (t_rel[i] < 0.0 && t_rel[i] >= -eps) {
       t_rel[i] = 0.0;
