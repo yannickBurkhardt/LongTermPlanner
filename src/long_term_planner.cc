@@ -56,6 +56,9 @@ bool LongTermPlanner::planTrajectory(
 
   //// Calculate sampled trajectories
   traj = getTrajectory(t_scaled, dir, mod_jerk_profile, q_0, v_0, a_0, v_drive);
+  for (int i = 0; i < dof_; i++) {
+    if (traj.q[i][traj.length-1] < q_min_[i] || traj.q[i][traj.length-1] > q_max_[i]) return false;
+  }
   return true;
 }
 
