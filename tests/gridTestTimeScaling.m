@@ -1,4 +1,5 @@
 % Initialize parameters
+tic;
 eps = 1e-6;
 tol_q = 0.02;
 tol_t = 0.1;
@@ -95,4 +96,4 @@ disp("Time error: " + size(time_error, 2))
 if size(not_finished, 2) > 0 || size(failure, 2) > 0 || size(time_error, 2) > 0
     error("Some scenarios were not solved correctly.")
 end
-
+toc;

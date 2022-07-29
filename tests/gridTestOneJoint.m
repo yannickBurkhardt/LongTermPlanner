@@ -1,4 +1,6 @@
 % Initialize parameters
+clear all;
+tic;
 eps = 1e-6;
 tol = 0.02;
 step = 0.1;
@@ -72,4 +74,4 @@ disp("Maximal error: " + max_error)
 if size(not_finished, 2) > 0 || size(failure, 2) > 0
     error("Some scenarios were not solved correctly.")
 end
-
+toc;
