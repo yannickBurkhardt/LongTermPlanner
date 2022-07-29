@@ -23,7 +23,6 @@
 #include <functional>
 
 #include <gtest/gtest.h>
-#include <yaml-cpp/yaml.h>
 
 #include "long_term_planner/long_term_planner.h"
 
