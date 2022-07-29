@@ -4,7 +4,7 @@ project(long_term_planner)
 ## Compile as C++17
 add_compile_options(-std=c++17)
 
-find_package(Eigen3 3.3.7 COMPONENTS Dense, Eigenvalues)
+find_package(Eigen3 3.4 REQUIRED)
 
 include_directories(
   include
