@@ -4,7 +4,7 @@ project(long_term_planner)
 ## Compile as C++17
 add_compile_options(-std=c++17)
 
-find_package(Eigen3 3.4 REQUIRED)
+INCLUDE_DIRECTORIES("$ENV{EIGEN3_INCLUDE_DIR}")
 
 include_directories(
   include
