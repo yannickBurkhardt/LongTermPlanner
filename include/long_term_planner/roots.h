@@ -17,7 +17,7 @@ namespace long_term_planner {
  * 
  * @tparam T 
  * @param poly_vals vector of polynomial factors starting with the highest exponent.
- * @return Eigen::Vector<T, Dynamic> Vector of roots.
+ * @return Eigen::Matrix<T, Eigen::Dynamic, 1> Vector of roots.
  */
 template <class T>
 Eigen::Matrix<std::complex<T>, Eigen::Dynamic, Eigen::Dynamic> roots(Eigen::Matrix<T, Eigen::Dynamic, 1> poly_vals) {

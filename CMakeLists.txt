@@ -4,7 +4,7 @@ project(long_term_planner)
 ## Compile as C++17
 add_compile_options(-std=c++17)
 
-INCLUDE_DIRECTORIES("$ENV{EIGEN3_INCLUDE_DIR}")
+find_package(Eigen3 3.4 REQUIRED NO_MODULE)
 
 include_directories(
   include
@@ -15,9 +15,7 @@ add_library(${PROJECT_NAME}
     src/long_term_planner.cc 
     )
 
-if (TARGET Eigen3::Eigen)
-  target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
-endif (TARGET Eigen3::Eigen)
+target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION /usr/lib)
 
