@@ -20,7 +20,7 @@ namespace long_term_planner {
  * @return Eigen::Vector<T, Dynamic> Vector of roots.
  */
 template <class T>
-Eigen::Matrix<std::complex<T>, Eigen::Dynamic, Eigen::Dynamic> roots(Eigen::Vector<T, Eigen::Dynamic> poly_vals) {
+Eigen::Matrix<std::complex<T>, Eigen::Dynamic, Eigen::Dynamic> roots(Eigen::Matrix<T, Eigen::Dynamic, 1> poly_vals) {
   using namespace Eigen;
   int poly_size = poly_vals.size();
   // Build companion matrix as in https://en.wikipedia.org/wiki/Companion_matrix
