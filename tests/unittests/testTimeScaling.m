@@ -31,7 +31,7 @@ ltp = LTPlanner(1, 0.001);
 % Test all scenarios
 success = 0;
 fail = 0;
-for i=12:num_scenarios
+for i=1:num_scenarios
 
     % Set limtits
     ltp.setLimits(v_max(i), a_max(i), j_max(i));
