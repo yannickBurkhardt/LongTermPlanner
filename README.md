@@ -5,7 +5,7 @@ A trajectory is calculated from an initial state with arbitrary position, veloci
 The maximal velocities, accelerations and jerks of every joint are limited. 
 
 The LongTermPlanner is written in MATLAB and optimized for usage with Simulink Real-Time.  
-The code has been compiled to a C++ library using the [MATLAB Coder](https://de.mathworks.com/help/releases/R2020a/coder/ug/generate-c-classes-from-matlab-classes.html#responsive_offcanvas). All relevant files can be found in the `codegen` folder.
+Thanks to [JakobThumm](https://github.com/JakobThumm), there is now also a C++ version of this project. The respective source code can be found in the `src` and `include` folders.
 
 This planner is useful when a robot controller requires a dense trajectory while external targets are given sparsely (e.g., by a Reinforcement Learning Agent).
 It then plans trajectories between these sparse targets.
@@ -36,8 +36,55 @@ It returns the sampled trajectory information of acceleration, velocity, and ang
 
 ### C++
 
-An example of how to use the C++ library can be found in [`codegen/lib/ltpTrajectory/examples/main.cpp`](https://github.com/yannickBurkhardt/LongTermPlanner/blob/main/codegen/lib/ltpTrajectory/examples/main.cpp).
+The installation requires `gcc`, `c++>=17`, and `Eigen3` version 3.4 (download it here: https://eigen.tuxfamily.org/index.php?title=Main_Page).
+Set the path to your eigen3 installation to this env variable, e.g.,
+```
+export EIGEN3_INCLUDE_DIR="/usr/include/eigen3/eigen-3.4.0"
+```
 
+Use `cmake` to install:
+```
+mkdir build && cd build
+cmake ..
+make -j8
+```
+Run the unit tests with (`gtest` is required)
+```
+ctest --output-on-failure
+```
+Usage:
+Initialize the `LongTermPlanner` with the planning limits 
+```
+int dof = ...;
+double t_sample = ...;
+std::vector<double> q_min = {...};
+std::vector<double> q_max = {...};
+std::vector<double> v_max = {...};
+std::vector<double> a_max = {...};
+std::vector<double> j_max = {...};
+LongTermPlanner ltp(dof, t_sample, q_min, q_max, v_max, a_max, j_max);
+```
+Run the planning for a desired goal
+```
+Trajectory traj;
+std::vector<double> q_goal = {...};
+std::vector<double> q_0 = {...};
+std::vector<double> v_0 = {...};
+std::vector<double> a_0 = {...};
+bool success = bool ltp.planTrajectory(q_goal, q_0, v_0, a_0, traj);
+```
+Your output `Trajectory` is a struct of the form
+```
+struct Trajectory {        
+  int dof;
+  double t_sample;
+  int length;
+  std::vector<std::vector<double>> q;
+  std::vector<std::vector<double>> v;
+  std::vector<std::vector<double>> a;
+  std::vector<std::vector<double>> j;
+};
+```
 ## Time optimality
 
 A general, time optimal trajectory profile of one joint consists of seven phases:  
