@@ -39,10 +39,10 @@ classdef LTPlanner < handle
         end
         
         function [q_traj, v_traj, a_traj] = trajectory(obj, q_goal, q_0, v_0, a_0)
-            t_opt = zeros(obj.DoF, 7);     % Optimal jerk switching times
-            t_scaled = zeros(obj.DoF, 7);  % Scaled jerk switching times
-            dir = zeros(obj.DoF, 1);       % Direction of movement
-            mod_jerk_profile = false(1,7); % Boolean to choose jerk profile
+            t_opt = zeros(obj.DoF, 7);            % Optimal jerk switching times
+            t_scaled = zeros(obj.DoF, 7);         % Scaled jerk switching times
+            dir = zeros(obj.DoF, 1);              % Direction of movement
+            mod_jerk_profile = false(obj.DoF, 1); % Boolean to choose jerk profile
             
             % Bring inputs into correct format
             if size(q_goal, 2) > 1
