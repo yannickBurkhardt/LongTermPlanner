@@ -612,6 +612,9 @@ classdef LTPlanner < handle
                 if const_v(joint)
                     v_traj(joint,sampled_t(joint,3)+1:sampled_t(joint,4)-1) = v_drive(joint) * dir(joint);
                 end
+
+                % Set final velocity to exactly 0 (increases accuracy)
+                v_traj(joint,sampled_t(joint,7):end) = 0;
             end
 
             %% Calculate joint angle trajectories
