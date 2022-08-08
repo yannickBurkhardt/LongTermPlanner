@@ -614,7 +614,7 @@ classdef LTPlanner < handle
                 end
 
                 % Set final velocity to exactly 0 (increases accuracy)
-                v_traj(joint,sampled_t(joint,7):end) = 0;
+                v_traj(joint,sampled_t(joint,7)+1:end) = 0;
             end
 
             %% Calculate joint angle trajectories
