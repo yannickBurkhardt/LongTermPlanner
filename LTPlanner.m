@@ -131,7 +131,7 @@ classdef LTPlanner < handle
             checkInputs(obj, v_0, a_0, joint);
             
             % Calculate direction of movement
-            [q_stop, t_rel(1:3), dir] = optBreaking(obj, v_0, a_0, joint);
+            [q_stop, t_rel(1:3), dir] = optBraking(obj, v_0, a_0, joint);
             q_diff = q_goal - (q_0 + q_stop);
             if (abs(q_diff) < eps)
                 % Skip rest if that fulfils scenario
@@ -149,12 +149,12 @@ classdef LTPlanner < handle
             %% Calculate min. time required per joint to reach goal state
             
             % Check if slowing down is necessary to satisfy v_drive
-            q_break = 0;
+            q_brake = 0;
             if(v_0 + 1/2*a_0*abs(a_0)/obj.j_max(joint) > v_drive)
                 mod_jerk_profile = true;
                 
-                % Get Joint Position after breaking and required times
-                [q_break, t_rel(1:3)] = optBreaking(obj, v_0 - v_drive, a_0, joint);
+                % Get Joint Position after braking and required times
+                [q_brake, t_rel(1:3)] = optBraking(obj, v_0 - v_drive, a_0, joint);
             else
 
                 % Constant max/ min jerk (Phase 1, 3)
@@ -206,8 +206,8 @@ classdef LTPlanner < handle
 
             % Constant velocity (Phase 4)
             if(mod_jerk_profile)
-                % Breaking to satisfy v_drive
-                q_part1 = q_break + v_drive*(t_rel(1) + t_rel(2) + t_rel(3));
+                % Braking to satisfy v_drive
+                q_part1 = q_brake + v_drive*(t_rel(1) + t_rel(2) + t_rel(3));
             else
                 % Acceleration to reach v_drive
                 q_part1 = v_0*(t_rel(1) + t_rel(2) + t_rel(3)) + a_0*(1/2*t_rel(1)^2 + t_rel(1)*(t_rel(2) + t_rel(3)) + 1/2*t_rel(3)^2) + obj.j_max(joint)*(1/6*t_rel(1)^3 + 1/2*t_rel(1)^2*(t_rel(2) + t_rel(3)) - 1/6*t_rel(3)^3 + 1/2*t_rel(1)*t_rel(3)^2) + obj.a_max(joint)*(1/2*t_rel(2)^2 + t_rel(2)*t_rel(3));
@@ -247,7 +247,6 @@ classdef LTPlanner < handle
                     root = root((abs(imag(root)) < eps));
                     root = root(root >= 0);
                     t_rel(1) = (2*root(1)^2 - 4*a_0*root(1) + a_0^2 - 2*v_0*obj.j_max(joint))/(4*obj.j_max(joint)*root(1));
-                    t_rel = real(t_rel);
 
                     % Calculate other switch times
                     t_rel(7) = sqrt(4*obj.j_max(joint)^2*t_rel(1)^2 + 8*a_0*obj.j_max(joint)*t_rel(1) + 2*a_0^2 + 4*obj.j_max(joint)*v_0)/(2*obj.j_max(joint));
@@ -434,8 +433,8 @@ classdef LTPlanner < handle
             v_drive = obj.v_max(joint);
         end
         
-        function [q, t_rel, dir] = optBreaking(obj, v_0, a_0, joint)
-            % OPTBREAKING % Calculate time and joint angles required to
+        function [q, t_rel, dir] = optBraking(obj, v_0, a_0, joint)
+            % OPTBRAKING % Calculate time and joint angles required to
             % bring velocity to zero
             
             % This function can be used to:
@@ -479,7 +478,7 @@ classdef LTPlanner < handle
                 t_rel(2) = 0;
             end
             
-            % Calculate position after breaking
+            % Calculate position after braking
             q = v_0*(t_rel(1) + t_rel(2) + t_rel(3)) + a_0*(1/2*t_rel(1)^2 + t_rel(1)*(t_rel(2) + t_rel(3)) + 1/2*t_rel(3)^2) + obj.j_max(joint)*(1/6*t_rel(1)^3 + 1/2*t_rel(1)^2*(t_rel(2) + t_rel(3)) - 1/6*t_rel(3)^3 + 1/2*t_rel(1)*t_rel(3)^2) + obj.a_max(joint)*(1/2*t_rel(2)^2 + t_rel(2)*t_rel(3));
 
             % Correct direction
@@ -512,7 +511,8 @@ classdef LTPlanner < handle
             sampled_t = zeros(obj.DoF,7);
 
             %% Calculate jerk trajectories
-            j_traj = zeros(obj.DoF,traj_len);         
+            j_traj = zeros(obj.DoF,traj_len); 
+            const_v = false(obj.DoF,1);
             for joint=1:obj.DoF
 
                 % Save fractions lost when discretizing switch times
@@ -595,7 +595,6 @@ classdef LTPlanner < handle
                 j_traj(joint,sampled_t(joint,7) + 1) = j_traj(joint,sampled_t(joint,7) + 1) + sampled_t_trans(7)/obj.Tsample * jerk_profile(7);
 
                 % Check if phase 4 exists (constant velocity)
-                const_v = false(obj.DoF,1);
                 if sampled_t(joint,4) - sampled_t(joint,3) > 2
                     const_v(joint) = true;
                 end

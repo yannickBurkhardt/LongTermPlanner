@@ -1,19 +1,19 @@
 name: UnitTests
 on: [push]
 jobs:
-  testOptBreaking:
-    name: testOptBreaking
+  testOptBraking:
+    name: testOptBraking
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v1
-      - name: testOptBreaking
+      - name: testOptBraking
         uses: matlab-actions/run-command@v1
         with:
           command: addpath("tests/unittests");
-                   testOptBreaking
+                   testOptBraking
 
   testOptSwitchTimes:
     name: testOptSwitchTimes
