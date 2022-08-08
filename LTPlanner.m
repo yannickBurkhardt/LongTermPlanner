@@ -603,6 +603,9 @@ classdef LTPlanner < handle
             %% Calculate acceleration trajectories
             a_traj = obj.Tsample * cumsum(j_traj,2) + a_0;
 
+            % Set final acceleration to exactly 0 (increases accuracy)
+            a_traj(joint,sampled_t(joint,7)+1:end) = 0;
+
             %% Calculate velocitie trajectories
             v_traj = obj.Tsample * cumsum(a_traj,2) + v_0;
 
