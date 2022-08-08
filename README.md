@@ -5,7 +5,7 @@ A trajectory is calculated from an initial state with arbitrary position, veloci
 The maximal velocities, accelerations and jerks of every joint are limited. 
 
 The LongTermPlanner is written in MATLAB and optimized for usage with Simulink Real-Time.  
-The code has been compiled to a C++ library using the [MATLAB Coder](https://de.mathworks.com/help/releases/R2020a/coder/ug/generate-c-classes-from-matlab-classes.html#responsive_offcanvas). All relevant files can be found in the `codegen` folder.
+Thanks to [JakobThumm](https://github.com/JakobThumm), there is now also a C++-Version of this Project. Please find the respective source code in the `src` and `include` folders.
 
 This planner is useful when a robot controller requires a dense trajectory while external targets are given sparsely (e.g., by a Reinforcement Learning Agent).
 It then plans trajectories between these sparse targets.
