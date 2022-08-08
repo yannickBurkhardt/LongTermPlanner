@@ -24,7 +24,7 @@ for i=1:num_scenarios
     ltp.setLimits(v_max, a_max(i), j_max(i));
     
     % Compare times to pre-calculation
-    [q_ltp, t_ltp] = ltp.optBreaking(v_0(i), a_0(i), 1);
+    [q_ltp, t_ltp] = ltp.optBraking(v_0(i), a_0(i), 1);
     if(all(abs(t_ltp - t_rel(i,:)) < eps) && (abs(q_ltp - q_goal(i)) < eps))
         success = success + 1;
     else
@@ -42,8 +42,8 @@ for i=1:num_scenarios
     end
 
     % Execute same scenario in opposite direction
-    [q_ltp, t_ltp] = ltp.optBreaking(-v_0(i), -a_0(i), 1);;
-    if(all(abs(t_ltp - t_rel(i,:)) < eps) && (abs(q_ltp + q_goal(i)) < eps))
+    [q_ltp, t_ltp] = ltp.optBraking(-v_0(i), -a_0(i), 1);
+    if(all(abs(t_ltp - t_rel(i,:)) < eps) && (abs(q_ltp - (-q_goal(i))) < eps))
         success = success + 1;
     else
         disp("Failure in test " + i + ".2.")
