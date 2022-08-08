@@ -820,7 +820,7 @@ Trajectory LongTermPlanner::getTrajectory(
         v_traj[joint][i] = v_traj[joint][i-1] + t_sample_ * a_traj[joint][i];
       } else {
         // Set final velocity to exactly 0 (increases accuracy)
-        v_traj[joint][i] = 0.0
+        v_traj[joint][i] = 0.0;
       }
       q_traj[joint][i] = q_traj[joint][i-1] + t_sample_ * v_traj[joint][i];
     }
