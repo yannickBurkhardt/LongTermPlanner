@@ -812,12 +812,20 @@ Trajectory LongTermPlanner::getTrajectory(
     q_traj[joint][0] = q_0[joint] + t_sample_ * v_traj[joint][0];
     bool phase4 = sampled_t[joint][3] - sampled_t[joint][2] > 2;
     for (int i = 1; i < traj_len; i++) {
-      a_traj[joint][i] = a_traj[joint][i-1] + t_sample_ * j_traj[joint][i];
+      if (i <= sampled_t[joint][6]) {
+        a_traj[joint][i] = a_traj[joint][i-1] + t_sample_ * j_traj[joint][i];
+      } else {
+        // Set final accelation to exactly 0 (increases accuracy)
+        a_traj[joint][i] = 0.0;
+      }
       // Set constant velocity periods to exactly v_drive (increases accuracy)
       if (phase4 && i >= sampled_t[joint][2]+1 && i< sampled_t[joint][3]-1) {
         v_traj[joint][i] = v_drive[joint] * dir[joint];
-      } else {
+      } else if (i <= sampled_t[joint][6]) {
         v_traj[joint][i] = v_traj[joint][i-1] + t_sample_ * a_traj[joint][i];
+      } else {
+        // Set final velocity to exactly 0 (increases accuracy)
+        v_traj[joint][i] = 0.0;
       }
       q_traj[joint][i] = q_traj[joint][i-1] + t_sample_ * v_traj[joint][i];
     }

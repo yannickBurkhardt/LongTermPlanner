@@ -1,6 +1,6 @@
 % Initialize parameters
 eps = 1e-6;
-tol = 0.01;
+tol = 0.02;
 Tsample = 0.004;
 DoF = 6;
 v_max = 1*ones(1,DoF);
