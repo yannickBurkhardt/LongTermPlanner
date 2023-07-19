@@ -17,7 +17,7 @@ add_library(${PROJECT_NAME}
 
 # target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
 
-install(TARGETS ${PROJECT_NAME} DESTINATION /usr/lib)
+install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 
 #############
 ## GTest ##
