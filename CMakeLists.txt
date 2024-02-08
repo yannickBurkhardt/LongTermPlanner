@@ -3,6 +3,7 @@ project(long_term_planner)
 
 ## Compile as C++17
 add_compile_options(-std=c++17)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 find_package(Eigen3 3.4 REQUIRED)
 
