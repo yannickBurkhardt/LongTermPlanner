@@ -22,15 +22,25 @@ add_library(${PROJECT_NAME}
 #############
 ## GTest ##
 #############
-enable_testing()
-find_package(GTest REQUIRED)
-include(GoogleTest)
+option(BUILD_TESTS "Build unit tests" ON)
 
-add_executable(roots_tests tests/src/roots_tests.cc)
-target_link_libraries(roots_tests ${PROJECT_NAME} GTest::GTest GTest::Main)
-gtest_discover_tests(roots_tests)
+if(BUILD_TESTS)
+    enable_testing()
+    find_package(GTest QUIET)
+    
+    if(GTest_FOUND)
+        include(GoogleTest)
+        message(STATUS "GTest found. Building LongTermPlanner tests.")
+        
+        add_executable(roots_tests tests/src/roots_tests.cc)
+        target_link_libraries(roots_tests ${PROJECT_NAME} GTest::GTest GTest::Main)
+        gtest_discover_tests(roots_tests)
 
-add_executable(long_term_planner_tests tests/src/long_term_planner_tests.cc)
-target_include_directories(long_term_planner_tests PUBLIC tests/include)
-target_link_libraries(long_term_planner_tests ${PROJECT_NAME} GTest::GTest GTest::Main)
-gtest_discover_tests(long_term_planner_tests)
+        add_executable(long_term_planner_tests tests/src/long_term_planner_tests.cc)
+        target_include_directories(long_term_planner_tests PUBLIC tests/include)
+        target_link_libraries(long_term_planner_tests ${PROJECT_NAME} GTest::GTest GTest::Main)
+        gtest_discover_tests(long_term_planner_tests)
+    else()
+        message(WARNING "GTest not found. Skipping LongTermPlanner tests. Install GTest or set BUILD_TESTS=OFF to suppress this warning.")
+    endif()
+endif()
